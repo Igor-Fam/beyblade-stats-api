@@ -37,6 +37,21 @@ app.post('/api/part-types', async (req: Request, res: Response): Promise<void> =
         console.error("Error creating part type:", error);
         res.status(500).json({ error: 'Internal server error while creating part type.' });
     }
+})
+
+// Get all Part Types
+app.get('/api/part-types', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Fetch all part types from the database
+    const partTypes = await prisma.partType.findMany();
+
+    // Return the list of part types with status 200
+    res.status(200).json(partTypes);
+  } catch (error) {
+    // Log error and return 500 status code
+    console.error("Error fetching part types:", error);
+    res.status(500).json({ error: 'Internal server error while fetching part types.' });
+  }
 });
 
 // Start the Express server
