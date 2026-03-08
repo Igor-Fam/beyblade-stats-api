@@ -5,10 +5,79 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model PartType {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  parts            Part[]
+  lineCompositions LineComposition[]
+
+  @@map("part_types")
+}
+
+model Line {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  lineCompositions LineComposition[]
+  battleEntries    BattleEntry[]
+
+  @@map("lines")
+}
+
+model LineComposition {
+  lineId     Int      @map("line_id")
+  partTypeId Int      @map("part_type_id")
+  line       Line     @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  partType   PartType @relation(fields: [partTypeId], references: [id], onDelete: Cascade)
+
+  @@id([lineId, partTypeId])
+  @@map("line_compositions")
+}
+
+model Part {
+  id            Int               @id @default(autoincrement())
+  name          String
+  partTypeId    Int               @map("part_type_id")
+  partType      PartType          @relation(fields: [partTypeId], references: [id])
+  battleEntries BattleEntryPart[]
+
+  @@map("parts")
+}
+
+model Battle {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now()) @map("created_at")
+  entries   BattleEntry[]
+
+  @@map("battles")
+}
+
+model BattleEntry {
+  id         Int               @id @default(autoincrement())
+  battleId   Int               @map("battle_id")
+  lineId     Int               @map("line_id")
+  finishType String            @map("finish_type")
+  points     Int
+  comboHash  String            @map("combo_hash")
+  battle     Battle            @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  line       Line              @relation(fields: [lineId], references: [id])
+  parts      BattleEntryPart[]
+
+  @@map("battle_entries")
+}
+
+model BattleEntryPart {
+  battleEntryId Int         @map("battle_entry_id")
+  partId        Int         @map("part_id")
+  battleEntry   BattleEntry @relation(fields: [battleEntryId], references: [id], onDelete: Cascade)
+  part          Part        @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@id([battleEntryId, partId])
+  @@map("battle_entry_parts")
 }
