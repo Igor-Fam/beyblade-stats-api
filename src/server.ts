@@ -81,6 +81,21 @@ app.post('/api/lines', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
+// Get all lines
+app.get('/api/lines', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Fetch all lines from the database
+    const lines = await prisma.line.findMany();
+
+    // Return the list of lines with status 200
+    res.status(200).json(lines);
+  } catch (error) {
+    // Log error and return 500 status code
+    console.error("Error fetching lines:", error);
+    res.status(500).json({ error: 'Internal server error while fetching lines.' });
+  }
+});
+
 // Start the Express server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
