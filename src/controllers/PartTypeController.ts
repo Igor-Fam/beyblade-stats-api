@@ -1,31 +1,31 @@
 import { Request, Response } from 'express';
-import { prisma } from '../database';
+import { PartTypeService } from '../services/PartTypeService';
+import { AppError } from '../errors/AppError';
 
 export class PartTypeController {
 
     async create(req: Request, res: Response): Promise<void> {
         try {
             const { name } = req.body;
-
-            if (!name) {
-                res.status(400).json({ error: 'The "name" field is required.' });
-                return;
-            }
-
-            const newPartType = await prisma.partType.create({
-                data: { name }
-            });
+            const partTypeService = new PartTypeService();
+            const newPartType = await partTypeService.create(name);
 
             res.status(201).json(newPartType);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating part type:", error);
-            res.status(500).json({ error: 'Internal server error while creating part type.' });
+
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                res.status(500).json({ error: 'Internal server error while creating part type.' });
+            }
         }
     }
 
     async list(req: Request, res: Response): Promise<void> {
         try {
-            const partTypes = await prisma.partType.findMany();
+            const partTypeService = new PartTypeService();
+            const partTypes = await partTypeService.list();
             res.status(200).json(partTypes);
         } catch (error) {
             console.error("Error fetching part types:", error);

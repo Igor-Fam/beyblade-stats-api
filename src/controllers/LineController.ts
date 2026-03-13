@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { prisma } from '../database';
+import { LineService } from '../services/LineService';
+import { AppError } from '../errors/AppError';
 
 export class LineController {
 
@@ -7,25 +8,24 @@ export class LineController {
         try {
             const { name } = req.body;
 
-            if (!name) {
-                res.status(400).json({ error: 'The "name" field is required.' });
-                return;
-            }
-
-            const newLine = await prisma.line.create({
-                data: { name }
-            });
+            const lineService = new LineService();
+            const newLine = await lineService.create(name);
 
             res.status(201).json(newLine);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating line:", error);
-            res.status(500).json({ error: 'Internal server error while creating line.' });
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                res.status(500).json({ error: 'Internal server error while creating line.' });
+            }
         }
     }
 
     async list(req: Request, res: Response): Promise<void> {
         try {
-            const lines = await prisma.line.findMany();
+            const lineService = new LineService();
+            const lines = await lineService.list();
             res.status(200).json(lines);
         } catch (error) {
             console.error("Error fetching lines:", error);
