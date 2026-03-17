@@ -16,7 +16,6 @@ model PartType {
   id               Int               @id @default(autoincrement())
   name             String            @unique
   parts            Part[]
-  lineCompositions LineComposition[]
 
   @@map("part_types")
 }
@@ -24,20 +23,10 @@ model PartType {
 model Line {
   id               Int               @id @default(autoincrement())
   name             String            @unique
-  lineCompositions LineComposition[]
   battleEntries    BattleEntry[]
+  parts            Part[]
 
   @@map("lines")
-}
-
-model LineComposition {
-  lineId     Int      @map("line_id")
-  partTypeId Int      @map("part_type_id")
-  line       Line     @relation(fields: [lineId], references: [id], onDelete: Cascade)
-  partType   PartType @relation(fields: [partTypeId], references: [id], onDelete: Cascade)
-
-  @@id([lineId, partTypeId])
-  @@map("line_compositions")
 }
 
 model Part {
@@ -46,6 +35,9 @@ model Part {
   partTypeId    Int               @map("part_type_id")
   partType      PartType          @relation(fields: [partTypeId], references: [id])
   battleEntries BattleEntryPart[]
+  lineId        Int?              @map("line_id")
+  line          Line?             @relation(fields: [lineId], references: [id])
+  metadata      Json?
 
   @@map("parts")
 }

@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
-import { PartService } from '../services/PartService';
+import { PartService, CreatePartDTO } from '../services/PartService';
 import { AppError } from '../errors/AppError';
 
 export class PartController {
 
     async create(req: Request, res: Response): Promise<void> {
         try {
-            const { name, partTypeId } = req.body;
+            const { name, partTypeId, lineId, metadata } = req.body;
 
             const partService = new PartService();
-            const newPart = await partService.create(name, partTypeId);
+            const dto: CreatePartDTO = { name, partTypeId, lineId, metadata };
+            const newPart = await partService.create(dto);
 
             res.status(201).json(newPart);
         } catch (error: any) {
@@ -24,8 +25,12 @@ export class PartController {
 
     async list(req: Request, res: Response): Promise<void> {
         try {
+            // [EXPLICATIVO] O Frontend passará a linha na URL (ex: GET /api/parts?lineId=1)
+            const lineIdQuery = req.query.lineId as string;
+            const lineId = lineIdQuery ? parseInt(lineIdQuery, 10) : undefined;
+
             const partService = new PartService();
-            const parts = await partService.list();
+            const parts = await partService.list(lineId);
             res.status(200).json(parts);
         } catch (error) {
             console.error("Error fetching parts:", error);
