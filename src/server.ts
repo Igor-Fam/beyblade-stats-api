@@ -1,6 +1,14 @@
 import express, { Request, Response } from 'express';
 import { router } from './routes';
 
+import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
+import { StandardComboValidator } from './domain/validators/strategies/StandardComboValidator';
+
+// Inicializando motor do Strategy de validações
+const standardValidator = new StandardComboValidator();
+ComboValidatorFactory.register('BX', standardValidator);
+ComboValidatorFactory.register('UX', standardValidator);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

@@ -5,10 +5,10 @@ import { PartTypes } from '../../enums/PartTypes';
 
 interface PartMetadata {
     consumesSlots?: string[];
-    allowedRatchetHeights?: number[]; // Adicionado: restrições como da ClockMirage
+    allowedRatchetHeights?: number[];
 }
 
-export class BxComboValidator implements IComboValidator {
+export class StandardComboValidator implements IComboValidator {
     public validate(parts: ComboPart[]): boolean {
         const requiredSlots = [PartTypes.BLADE, PartTypes.RATCHET, PartTypes.BIT];
 
@@ -29,7 +29,7 @@ export class BxComboValidator implements IComboValidator {
         }, []);
 
         if (requiredSlots.length !== providedPartTypes.length || requiredSlots.some(slot => !providedPartTypes.includes(slot))) {
-            throw new AppError(`Error: mismatched part types for BX line.`);
+            throw new AppError(`Error: mismatched part types for this line.`);
         }
 
         const ratchetPart = parts.find(p => p.partType.name.toUpperCase() === PartTypes.RATCHET);
