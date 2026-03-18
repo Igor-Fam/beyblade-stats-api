@@ -1,4 +1,3 @@
-import { Part } from '@prisma/client';
 import { IComboValidator } from './IComboValidator';
 
 
