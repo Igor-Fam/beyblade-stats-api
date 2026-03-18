@@ -3,11 +3,12 @@ import { router } from './routes';
 
 import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
 import { StandardComboValidator } from './domain/validators/strategies/StandardComboValidator';
+import { PartTypes } from './domain/enums/PartTypes';
 
 // Inicializando motor do Strategy de validações
-const standardValidator = new StandardComboValidator();
-ComboValidatorFactory.register('BX', standardValidator);
-ComboValidatorFactory.register('UX', standardValidator);
+ComboValidatorFactory.register('BX', new StandardComboValidator([PartTypes.BLADE, PartTypes.RATCHET, PartTypes.BIT]));
+ComboValidatorFactory.register('UX', new StandardComboValidator([PartTypes.BLADE, PartTypes.RATCHET, PartTypes.BIT]));
+ComboValidatorFactory.register('CX', new StandardComboValidator([PartTypes.LOCK_CHIP, PartTypes.MAIN_BLADE, PartTypes.ASSIST_BLADE, PartTypes.RATCHET, PartTypes.BIT]));
 
 const app = express();
 const PORT = process.env.PORT || 3000;

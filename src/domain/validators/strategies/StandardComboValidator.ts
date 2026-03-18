@@ -9,26 +9,30 @@ interface PartMetadata {
 }
 
 export class StandardComboValidator implements IComboValidator {
-    public validate(parts: ComboPart[]): boolean {
-        const requiredSlots = [PartTypes.BLADE, PartTypes.RATCHET, PartTypes.BIT];
+    private requiredSlots: string[];
 
+    constructor(requiredSlots: string[]) {
+        this.requiredSlots = requiredSlots;
+    }
+
+    public validate(parts: ComboPart[]): boolean {
         const providedPartTypes = parts.reduce((types: string[], part) => {
             const partType = part.partType.name.toUpperCase();
-            checkAndPush(requiredSlots, types, partType);
+            checkAndPush(this.requiredSlots, types, partType);
 
             const metadata = part.metadata as unknown as PartMetadata | null;
 
             if (metadata) {
                 metadata.consumesSlots?.forEach(consumedSlot => {
                     const slotSlug = consumedSlot.toUpperCase();
-                    checkAndPush(requiredSlots, types, slotSlug);
+                    checkAndPush(this.requiredSlots, types, slotSlug);
                 });
             }
 
             return types;
         }, []);
 
-        if (requiredSlots.length !== providedPartTypes.length || requiredSlots.some(slot => !providedPartTypes.includes(slot))) {
+        if (this.requiredSlots.length !== providedPartTypes.length || this.requiredSlots.some(slot => !providedPartTypes.includes(slot))) {
             throw new AppError(`Error: mismatched part types for this line.`);
         }
 
