@@ -1,0 +1,218 @@
+{
+  "info": {
+    "_postman_id": "b4a4009a-6afc-4081-acc7-ea9edd692ba6",
+    "name": "Beyblade Stats API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53005952",
+    "_collection_link": "https://go.postman.co/collection/53005952-b4a4009a-6afc-4081-acc7-ea9edd692ba6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create Part Type",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Assist Blade\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/part-types",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "part-types"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Part",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Assist Blade\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/part-types",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "part-types"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Line",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"UX\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/lines",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "lines"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all Part Types",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/part-types",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "part-types"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all Parts",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/parts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "parts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all Lines",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/lines",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "lines"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register battle",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"finishType\": \"OVER\",\r\n  \"winner\": 0,\r\n  \"entries\": [\r\n    {\r\n      \"lineId\": 1,\r\n      \"partsIds\": [1, 3, 5] \r\n    },\r\n    {\r\n      \"lineId\": 1,\r\n      \"partsIds\": [2, 4, 6] \r\n    }\r\n  ]\r\n}\r\n"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/battles",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "battles"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
