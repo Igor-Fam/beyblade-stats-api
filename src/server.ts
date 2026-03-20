@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import { router } from './routes';
 
 import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
@@ -11,6 +12,10 @@ ComboValidatorFactory.register('UX', new StandardComboValidator([PartTypes.BLADE
 ComboValidatorFactory.register('CX', new StandardComboValidator([PartTypes.LOCK_CHIP, PartTypes.MAIN_BLADE, PartTypes.ASSIST_BLADE, PartTypes.RATCHET, PartTypes.BIT]));
 
 const app = express();
+
+// Habilitar CORS para o frontend (Vite)
+app.use(cors());
+
 const PORT = process.env.PORT || 3000;
 
 // Parse incoming JSON requests

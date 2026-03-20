@@ -11,6 +11,17 @@ services:
     depends_on:
       - db
 
+  web:
+    image: node:20
+    working_dir: /app/web
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - api
+
   db:
     image: postgres:15-alpine
     environment:
