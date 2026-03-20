@@ -169,55 +169,55 @@ async function main() {
     // --- Bits ---
     console.log('Creating Bits...');
     const bits: { name: string; abbreviation: string; metadata?: object }[] = [
-        { name: 'Flat',          abbreviation: 'F'  },
-        { name: 'Taper',         abbreviation: 'T'  },
-        { name: 'Ball',          abbreviation: 'B'  },
-        { name: 'Needle',        abbreviation: 'N'  },
-        { name: 'High Needle',   abbreviation: 'HN' },
-        { name: 'Low Flat',      abbreviation: 'LF' },
-        { name: 'Point',         abbreviation: 'P'  },
-        { name: 'Orb',           abbreviation: 'O'  },
-        { name: 'Rush',          abbreviation: 'R'  },
-        { name: 'High Taper',    abbreviation: 'HT' },
-        { name: 'Spike',         abbreviation: 'S'  },
-        { name: 'Gear Flat',     abbreviation: 'GF' },
-        { name: 'Gear Ball',     abbreviation: 'GB' },
-        { name: 'Gear Point',    abbreviation: 'GP' },
-        { name: 'Gear Needle',   abbreviation: 'GN' },
-        { name: 'Accel',         abbreviation: 'A'  },
-        { name: 'Hexa',          abbreviation: 'H'  },
-        { name: 'Disc Ball',     abbreviation: 'DB' },
-        { name: 'Quake',         abbreviation: 'Q'  },
-        { name: 'Metal Needle',  abbreviation: 'MN' },
-        { name: 'Unite',         abbreviation: 'U'  },
-        { name: 'Cyclone',       abbreviation: 'C'  },
-        { name: 'Dot',           abbreviation: 'D'  },
-        { name: 'Glide',         abbreviation: 'G'  },
-        { name: 'Elevate',       abbreviation: 'E'  },
-        { name: 'Free Ball',     abbreviation: 'FB' },
-        { name: 'Bound Spike',   abbreviation: 'BS' },
-        { name: 'Rubber Accel',  abbreviation: 'RA' },
-        { name: 'Level',         abbreviation: 'L'  },
-        { name: 'Trans Point',   abbreviation: 'TP' },
-        { name: 'Low Rush',      abbreviation: 'LR' },
-        { name: 'Under Needle',  abbreviation: 'UN' },
-        { name: 'Vortex',        abbreviation: 'V'  },
-        { name: 'Low Orb',       abbreviation: 'LO' },
-        { name: 'Wedge',         abbreviation: 'W'  },
-        { name: 'Kick',          abbreviation: 'K'  },
-        { name: 'Zap',           abbreviation: 'Z'  },
-        { name: 'Gear Rush',     abbreviation: 'GR' },
-        { name: 'Turbo',         abbreviation: 'Tr', metadata: { consumesSlots: ['RATCHET'] } },
-        { name: 'Wall Ball',     abbreviation: 'WB' },
-        { name: 'Under Flat',    abbreviation: 'UF' },
-        { name: 'Merge',         abbreviation: 'M'  },
-        { name: 'Trans Kick',    abbreviation: 'TK' },
-        { name: 'Operate',       abbreviation: 'Op', metadata: { consumesSlots: ['RATCHET'] } },
-        { name: 'Jolt',          abbreviation: 'J'  },
-        { name: 'Wall Wedge',    abbreviation: 'WW' },
-        { name: 'Ignition',      abbreviation: 'I'  },
-        { name: 'Yielding',      abbreviation: 'Y'  },
-        { name: 'Free Flat',     abbreviation: 'FF' },
+        { name: 'Flat', abbreviation: 'F' },
+        { name: 'Taper', abbreviation: 'T' },
+        { name: 'Ball', abbreviation: 'B' },
+        { name: 'Needle', abbreviation: 'N' },
+        { name: 'High Needle', abbreviation: 'HN' },
+        { name: 'Low Flat', abbreviation: 'LF' },
+        { name: 'Point', abbreviation: 'P' },
+        { name: 'Orb', abbreviation: 'O' },
+        { name: 'Rush', abbreviation: 'R' },
+        { name: 'High Taper', abbreviation: 'HT' },
+        { name: 'Spike', abbreviation: 'S' },
+        { name: 'Gear Flat', abbreviation: 'GF' },
+        { name: 'Gear Ball', abbreviation: 'GB' },
+        { name: 'Gear Point', abbreviation: 'GP' },
+        { name: 'Gear Needle', abbreviation: 'GN' },
+        { name: 'Accel', abbreviation: 'A' },
+        { name: 'Hexa', abbreviation: 'H' },
+        { name: 'Disc Ball', abbreviation: 'DB' },
+        { name: 'Quake', abbreviation: 'Q' },
+        { name: 'Metal Needle', abbreviation: 'MN' },
+        { name: 'Unite', abbreviation: 'U' },
+        { name: 'Cyclone', abbreviation: 'C' },
+        { name: 'Dot', abbreviation: 'D' },
+        { name: 'Glide', abbreviation: 'G' },
+        { name: 'Elevate', abbreviation: 'E' },
+        { name: 'Free Ball', abbreviation: 'FB' },
+        { name: 'Bound Spike', abbreviation: 'BS' },
+        { name: 'Rubber Accel', abbreviation: 'RA' },
+        { name: 'Level', abbreviation: 'L' },
+        { name: 'Trans Point', abbreviation: 'TP' },
+        { name: 'Low Rush', abbreviation: 'LR' },
+        { name: 'Under Needle', abbreviation: 'UN' },
+        { name: 'Vortex', abbreviation: 'V' },
+        { name: 'Low Orb', abbreviation: 'LO' },
+        { name: 'Wedge', abbreviation: 'W' },
+        { name: 'Kick', abbreviation: 'K' },
+        { name: 'Zap', abbreviation: 'Z' },
+        { name: 'Gear Rush', abbreviation: 'GR' },
+        { name: 'Turbo', abbreviation: 'Tr', metadata: { consumesSlots: ['RATCHET'] } },
+        { name: 'Wall Ball', abbreviation: 'WB' },
+        { name: 'Under Flat', abbreviation: 'UF' },
+        { name: 'Merge', abbreviation: 'M' },
+        { name: 'Trans Kick', abbreviation: 'TK' },
+        { name: 'Operate', abbreviation: 'Op', metadata: { consumesSlots: ['RATCHET'] } },
+        { name: 'Jolt', abbreviation: 'J' },
+        { name: 'Wall Wedge', abbreviation: 'WW' },
+        { name: 'Ignition', abbreviation: 'I' },
+        { name: 'Yielding', abbreviation: 'Y' },
+        { name: 'Free Flat', abbreviation: 'FF' },
     ];
 
     for (const { name, abbreviation, metadata } of bits) {
@@ -228,6 +228,91 @@ async function main() {
         });
     }
     console.log('- Bits created');
+
+    // --- Lock Chips (CX Line) ---
+    console.log('Creating Lock Chips...');
+    
+    // Deleta os Lock Chips antigos para garantir que a associação com a linha CX seja apagada
+    await prisma.part.deleteMany({ where: { partType: { name: 'LOCK_CHIP' } } });
+
+    const lockChips: { name: string; metadata?: object }[] = [
+        { name: 'Bahamut' },
+        { name: 'Cerberus' },
+        { name: 'Dran' },
+        { name: 'Emperor', metadata: { isMetal: true } },
+        { name: 'Fox' },
+        { name: 'Hells' },
+        { name: 'Hornet' },
+        { name: 'Knight' },
+        { name: 'Kraken' },
+        { name: 'Leon' },
+        { name: 'Pegasus' },
+        { name: 'Perseus' },
+        { name: 'Phoenix' },
+        { name: 'Ragna' },
+        { name: 'Rhino' },
+        { name: 'Sol' },
+        { name: 'Stag' },
+        { name: 'Valkyrie', metadata: { isMetal: true } },
+        { name: 'Whale' },
+        { name: 'Wizard' },
+        { name: 'Wolf' },
+    ];
+
+    for (const { name, metadata } of lockChips) {
+        await prisma.part.upsert({
+            where: { id: (await prisma.part.findFirst({ where: { name, lineId: null } }))?.id ?? 0 },
+            update: { lineId: null, ...(metadata ? { metadata } : {}) },
+            create: { name, partTypeId: lockChip.id, lineId: null, ...(metadata ? { metadata } : {}) },
+        });
+    }
+    console.log('- Lock Chips created');
+
+    // --- Assist Blades ---
+    console.log('Creating Assist Blades...');
+    const assistBlades: { name: string; abbreviation: string }[] = [
+        { name: 'Assault', abbreviation: 'A' },
+        { name: 'Bumper', abbreviation: 'B' },
+        { name: 'Charge', abbreviation: 'C' },
+        { name: 'Dual', abbreviation: 'D' },
+        { name: 'Erase', abbreviation: 'E' },
+        { name: 'Free', abbreviation: 'F' },
+        { name: 'Heavy', abbreviation: 'H' },
+        { name: 'Jaggy', abbreviation: 'J' },
+        { name: 'Knuckle', abbreviation: 'K' },
+        { name: 'Massive', abbreviation: 'M' },
+        { name: 'Round', abbreviation: 'R' },
+        { name: 'Slash', abbreviation: 'S' },
+        { name: 'Turn', abbreviation: 'T' },
+        { name: 'Vertical', abbreviation: 'V' },
+        { name: 'Wheel', abbreviation: 'W' },
+        { name: 'Zillion', abbreviation: 'Z' },
+    ];
+
+    for (const { name, abbreviation } of assistBlades) {
+        await prisma.part.upsert({
+            where: { id: (await prisma.part.findFirst({ where: { name, lineId: null } }))?.id ?? 0 },
+            update: { abbreviation, lineId: null },
+            create: { name, abbreviation, partTypeId: assistBlade.id, lineId: null },
+        });
+    }
+    console.log('- Assist Blades created');
+
+    // --- Main Blades (CX Line) ---
+    console.log('Creating Main Blades...');
+    const mainBlades: string[] = [
+        'Arc', 'Blast', 'Brave', 'Brush', 'Dark', 'Eclipse', 'Fang', 'Flame',
+        'Flare', 'Fort', 'Hunt', 'Might', 'Reaper', 'Volt', 'Wriggle'
+    ];
+
+    for (const name of mainBlades) {
+        await prisma.part.upsert({
+            where: { id: (await prisma.part.findFirst({ where: { name, lineId: cx.id } }))?.id ?? 0 },
+            update: { lineId: cx.id },
+            create: { name, partTypeId: mainBlade.id, lineId: cx.id },
+        });
+    }
+    console.log('- Main Blades created');
 
     console.log('Seed complete');
 
