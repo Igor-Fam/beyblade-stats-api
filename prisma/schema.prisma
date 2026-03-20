@@ -32,6 +32,7 @@ model Line {
 model Part {
   id            Int               @id @default(autoincrement())
   name          String
+  abbreviation  String?
   partTypeId    Int               @map("part_type_id")
   partType      PartType          @relation(fields: [partTypeId], references: [id])
   battleEntries BattleEntryPart[]
