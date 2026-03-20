@@ -1,0 +1,202 @@
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0f172a;
+
+  /* Color Palette - Beyblade X Theme */
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --accent-bx: #38bdf8; /* Neon Blue */
+  --accent-ux: #fb923c; /* Neon Orange */
+  --accent-cx: #a78bfa; /* Neon Purple */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --success: #4ade80;
+  --error: #f43f5e;
+  
+  --transition-speed: 0.3s;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Typography */
+h1 {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  color: var(--accent-bx);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* Layout */
+.battle-setup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .battle-setup {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Styling */
+.combo-card {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition-speed), border-color var(--transition-speed);
+}
+
+.combo-card.player-0 { border-top: 4px solid var(--accent-bx); }
+.combo-card.player-1 { border-top: 4px solid var(--accent-ux); }
+
+.combo-card h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+}
+
+/* Form Elements */
+.field {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #334155;
+  border: 1px solid #475569;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color var(--transition-speed);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent-bx);
+}
+
+/* Result Section */
+.result-section {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.finish-types {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: var(--accent-bx);
+  color: #0f172a;
+  width: 100%;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}
+
+.btn-primary:hover {
+  background: #7dd3fc;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #475569;
+  color: var(--text-secondary);
+}
+
+.btn-outline.active {
+  background: #334155;
+  border-color: var(--accent-bx);
+  color: var(--accent-bx);
+}
+
+/* Winner Toggle */
+.winner-toggle {
+  display: flex;
+  background: #334155;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.winner-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background var(--transition-speed);
+}
+
+.winner-btn.active.p0 { background: var(--accent-bx); color: #0f172a; }
+.winner-btn.active.p1 { background: var(--accent-ux); color: #0f172a; }
+
+/* Status Toast */
+#status {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  display: none;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
