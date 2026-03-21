@@ -19,14 +19,27 @@ async function main() {
 
     // --- Lines ---
     console.log('Creating lines...');
-    const [bx, ux, cx, bxExpand, uxExpand, cxExpand] = await Promise.all([
-        prisma.line.upsert({ where: { name: 'BX' }, update: {}, create: { name: 'BX' } }),
-        prisma.line.upsert({ where: { name: 'UX' }, update: {}, create: { name: 'UX' } }),
-        prisma.line.upsert({ where: { name: 'CX' }, update: {}, create: { name: 'CX' } }),
-        prisma.line.upsert({ where: { name: 'BX Expand' }, update: {}, create: { name: 'BX Expand' } }),
-        prisma.line.upsert({ where: { name: 'UX Expand' }, update: {}, create: { name: 'UX Expand' } }),
-        prisma.line.upsert({ where: { name: 'CX Expand' }, update: {}, create: { name: 'CX Expand' } }),
-    ]);
+    const lineConfigs: Record<string, { slots: string[], nameTemplate: string }> = {
+      'BX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+      'UX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+      'CX': { slots: ['LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {MAIN_BLADE}{ASSIST_BLADE} {RATCHET} {BIT}' },
+      'BX Expand': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+      'UX Expand': { slots: ['BLADE', 'BIT'], nameTemplate: '{BLADE} {BIT}' },
+      'CX Expand': { slots: ['LOCK_CHIP', 'OVER_BLADE', 'METAL_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {METAL_BLADE} {OVER_BLADE}{ASSIST_BLADE} {RATCHET} {BIT}' },
+    };
+
+    const linesToSeed = ['BX', 'UX', 'CX', 'BX Expand', 'UX Expand', 'CX Expand'];
+    
+    const seededLines = await Promise.all(
+        linesToSeed.map(name => 
+            prisma.line.upsert({ 
+                where: { name }, 
+                update: { metadata: lineConfigs[name] as any }, 
+                create: { name, metadata: lineConfigs[name] as any } 
+            })
+        )
+    );
+    const [bx, ux, cx, bxExpand, uxExpand, cxExpand] = seededLines;
     console.log('- Lines created');
 
     // --- Blades ---
@@ -353,6 +366,7 @@ async function main() {
     for (const { name } of metalBlades) {
         await prisma.part.upsert({
             where: { id: (await prisma.part.findFirst({ where: { name, lineId: null } }))?.id ?? 0 },
+            update: {},
             create: { name, partTypeId: metalBlade.id, lineId: null },
         });
     }

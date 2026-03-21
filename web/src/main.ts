@@ -8,6 +8,8 @@ let allParts: any[] = [];
 let selectedWinner = 0;
 let selectedFinish = 'SPIN';
 
+
+
 // --- DOM Elements ---
 const lineSelects = [
   document.getElementById('line-0') as HTMLSelectElement,
@@ -105,13 +107,10 @@ function updatePartsList(playerIndex: number) {
   const selectedLine = lines.find(l => l.id === lineId);
   if (!selectedLine) return;
 
-  // Determine slots based on line (BX/UX vs CX)
-  let slots = ['BLADE', 'RATCHET', 'BIT'];
-  if (selectedLine.name === 'CX') {
-    slots = ['LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'];
-  }
+  const config = selectedLine.metadata as any || { slots: ['BLADE', 'RATCHET', 'BIT'] };
+  const slots = config.slots as string[];
 
-  slots.forEach(slot => {
+  slots.forEach((slot: string) => {
     const field = document.createElement('div');
     field.className = 'field';
 
@@ -286,14 +285,31 @@ function renderHistory(playerIndex: number) {
     const line = lines.find(l => l.id === combo.lineId);
     const lineName = line ? line.name : '??';
 
-    const partNames = combo.partsIds.map((id: number) => {
-      const part = allParts.find(p => p.id === id);
-      return part ? (part.abbreviation || part.name) : '?';
+    const config = line?.metadata || { nameTemplate: '{BLADE} {RATCHET} {BIT}' };
+    let comboNameStr = config.nameTemplate || '{BLADE} {RATCHET} {BIT}';
+
+    const placeholders = comboNameStr.match(/\{([A_Z_]+)\}/g) || [];
+    placeholders.forEach((placeholder: string) => {
+      const slotName = placeholder.replace(/[{}]/g, '');
+      const partId = combo.partsIds.find((id: number) => {
+        const p = allParts.find((x: any) => x.id === id);
+        return p && p.partType.name === slotName;
+      });
+
+      let displayVal = '';
+      if (partId) {
+        const part = allParts.find((p: any) => p.id === partId);
+        displayVal = part ? (part.abbreviation || part.name) : '?';
+      }
+
+      comboNameStr = comboNameStr.replace(placeholder, displayVal);
     });
+
+    comboNameStr = comboNameStr.replace(/\s{2,}/g, ' ').trim();
 
     const btn = document.createElement('button');
     btn.className = 'history-item';
-    btn.textContent = `${lineName}: ${partNames.join(' ')}`;
+    btn.textContent = `${lineName}: ${comboNameStr}`;
 
     btn.onclick = () => {
       lineSelects[playerIndex].value = combo.lineId.toString();
@@ -437,14 +453,31 @@ function renderFavorites(playerIndex: number) {
     const line = lines.find(l => l.id === combo.lineId);
     const lineName = line ? line.name : '??';
 
-    const partNames = combo.partsIds.map((id: number) => {
-      const part = allParts.find(p => p.id === id);
-      return part ? (part.abbreviation || part.name) : '?';
+    const config = line?.metadata || { nameTemplate: '{BLADE} {RATCHET} {BIT}' };
+    let comboNameStr = config.nameTemplate || '{BLADE} {RATCHET} {BIT}';
+
+    const placeholders = comboNameStr.match(/\{([A_Z_]+)\}/g) || [];
+    placeholders.forEach((placeholder: string) => {
+      const slotName = placeholder.replace(/[{}]/g, '');
+      const partId = combo.partsIds.find((id: number) => {
+        const p = allParts.find((x: any) => x.id === id);
+        return p && p.partType.name === slotName;
+      });
+
+      let displayVal = '';
+      if (partId) {
+        const part = allParts.find((p: any) => p.id === partId);
+        displayVal = part ? (part.abbreviation || part.name) : '?';
+      }
+
+      comboNameStr = comboNameStr.replace(placeholder, displayVal);
     });
+
+    comboNameStr = comboNameStr.replace(/\s{2,}/g, ' ').trim();
 
     const btn = document.createElement('button');
     btn.className = 'history-item';
-    btn.textContent = `${lineName}: ${partNames.join(' ')}`;
+    btn.textContent = `${lineName}: ${comboNameStr}`;
 
     btn.onclick = () => {
       lineSelects[playerIndex].value = combo.lineId.toString();

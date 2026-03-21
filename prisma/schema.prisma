@@ -25,6 +25,7 @@ model Line {
   name             String            @unique
   battleEntries    BattleEntry[]
   parts            Part[]
+  metadata         Json?
 
   @@map("lines")
 }
