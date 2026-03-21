@@ -253,6 +253,8 @@ function applyConstraints(playerIndex: number) {
       }
     }
   });
+
+  checkFavoriteState(playerIndex);
 }
 
 function renderHistory(playerIndex: number) {
@@ -313,6 +315,157 @@ function renderHistory(playerIndex: number) {
   dropdown.classList.remove('hidden');
 }
 
+// --- Favorites System ---
+
+function getComboObj(playerIndex: number) {
+  const lineSelect = lineSelects[playerIndex];
+  const partSelects = document.querySelectorAll(`.part-select-${playerIndex}`) as NodeListOf<HTMLSelectElement>;
+
+  let hasMissing = false;
+  partSelects.forEach(select => {
+    if (!select.disabled && !select.value) hasMissing = true;
+  });
+
+  if (hasMissing || !lineSelect.value) return null;
+
+  return {
+    lineId: parseInt(lineSelect.value),
+    partsIds: Array.from(partSelects).map(s => parseInt(s.value)).filter(id => !isNaN(id))
+  };
+}
+
+function checkFavoriteState(playerIndex: number) {
+  const comboObj = getComboObj(playerIndex);
+  const btnIcon = document.querySelector(`.save-fav-btn[data-player="${playerIndex}"] .fav-star-icon`) as SVGSVGElement;
+  if (!btnIcon) return;
+
+  if (!comboObj) {
+    btnIcon.setAttribute('fill', 'none');
+    btnIcon.style.color = 'currentColor';
+    return;
+  }
+
+  let favorites: any[] = [];
+  try {
+    favorites = JSON.parse(localStorage.getItem('favCombos') || '[]');
+  } catch (e) {
+    favorites = [];
+  }
+
+  const comboStr = JSON.stringify(comboObj);
+  const exists = favorites.some((c: any) => JSON.stringify(c) === comboStr);
+
+  if (exists) {
+    const activeColor = playerIndex === 0 ? 'var(--accent-bx)' : 'var(--accent-ux)';
+    btnIcon.setAttribute('fill', activeColor);
+    btnIcon.style.color = activeColor;
+  } else {
+    btnIcon.setAttribute('fill', 'none');
+    btnIcon.style.color = 'currentColor';
+  }
+}
+
+function toggleFavorite(playerIndex: number) {
+  const comboObj = getComboObj(playerIndex);
+
+  if (!comboObj) {
+    showStatus('Complete the combo visually before saving it!', 'error');
+    return;
+  }
+
+  let favorites: any[] = [];
+  try {
+    favorites = JSON.parse(localStorage.getItem('favCombos') || '[]');
+  } catch (e) {
+    favorites = [];
+  }
+
+  const comboStr = JSON.stringify(comboObj);
+  const existingIndex = favorites.findIndex((c: any) => JSON.stringify(c) === comboStr);
+
+  if (existingIndex !== -1) {
+    favorites.splice(existingIndex, 1);
+    showStatus('Combo removed from favorites!', 'success');
+  } else {
+    favorites.unshift(comboObj);
+    if (favorites.length > 30) {
+      favorites.pop();
+    }
+    showStatus('Combo saved to favorites!', 'success');
+  }
+
+  localStorage.setItem('favCombos', JSON.stringify(favorites));
+  checkFavoriteState(playerIndex);
+  
+  // Refresh dropdown if it's currently open
+  const dropdown = document.getElementById(`fav-dropdown-${playerIndex}`);
+  if (dropdown && !dropdown.classList.contains('hidden')) {
+    dropdown.classList.add('hidden'); 
+    renderFavorites(playerIndex);
+  }
+}
+
+function renderFavorites(playerIndex: number) {
+  const dropdown = document.getElementById(`fav-dropdown-${playerIndex}`) as HTMLDivElement;
+
+  if (!dropdown.classList.contains('hidden')) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+
+  // Close other dropdowns
+  document.getElementById(`history-dropdown-${playerIndex}`)?.classList.add('hidden');
+  document.getElementById(`history-dropdown-${playerIndex === 0 ? 1 : 0}`)?.classList.add('hidden');
+  document.getElementById(`fav-dropdown-${playerIndex === 0 ? 1 : 0}`)?.classList.add('hidden');
+
+  let favorites: any[] = [];
+  try {
+    favorites = JSON.parse(localStorage.getItem('favCombos') || '[]');
+  } catch (e) {
+    favorites = [];
+  }
+
+  if (favorites.length === 0) {
+    dropdown.innerHTML = '<div style="padding: 0.5rem; color: #94a3b8; font-size: 0.8rem; text-align: center;">No favorites saved</div>';
+    dropdown.classList.remove('hidden');
+    return;
+  }
+
+  dropdown.innerHTML = '';
+
+  favorites.forEach((combo) => {
+    const line = lines.find(l => l.id === combo.lineId);
+    const lineName = line ? line.name : '??';
+
+    const partNames = combo.partsIds.map((id: number) => {
+      const part = allParts.find(p => p.id === id);
+      return part ? (part.abbreviation || part.name) : '?';
+    });
+
+    const btn = document.createElement('button');
+    btn.className = 'history-item';
+    btn.textContent = `${lineName}: ${partNames.join(' ')}`;
+
+    btn.onclick = () => {
+      lineSelects[playerIndex].value = combo.lineId.toString();
+      updatePartsList(playerIndex);
+
+      const pSelects = document.querySelectorAll(`.part-select-${playerIndex}`) as NodeListOf<HTMLSelectElement>;
+      combo.partsIds.forEach((id: number, idx: number) => {
+        if (pSelects[idx]) {
+          pSelects[idx].value = id.toString();
+        }
+      });
+      applyConstraints(playerIndex);
+      dropdown.classList.add('hidden');
+    };
+
+    dropdown.appendChild(btn);
+  });
+
+  dropdown.classList.remove('hidden');
+}
+
 function setupEventListeners() {
   lineSelects.forEach((select, i) => {
     select.onchange = () => updatePartsList(i);
@@ -330,15 +483,37 @@ function setupEventListeners() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const playerIndex = parseInt((btn as HTMLElement).dataset.player!);
+      document.getElementById(`fav-dropdown-0`)?.classList.add('hidden');
+      document.getElementById(`fav-dropdown-1`)?.classList.add('hidden');
       renderHistory(playerIndex);
+    });
+  });
+
+  const saveFavBtns = document.querySelectorAll('.save-fav-btn');
+  saveFavBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const playerIndex = parseInt((btn as HTMLElement).dataset.player!);
+      toggleFavorite(playerIndex);
+    });
+  });
+
+  const loadFavBtns = document.querySelectorAll('.load-fav-btn');
+  loadFavBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const playerIndex = parseInt((btn as HTMLElement).dataset.player!);
+      renderFavorites(playerIndex);
     });
   });
 
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    if (!target.closest('.history-dropdown')) {
+    if (!target.closest('.history-dropdown') && !target.closest('.action-buttons')) {
       document.getElementById('history-dropdown-0')?.classList.add('hidden');
       document.getElementById('history-dropdown-1')?.classList.add('hidden');
+      document.getElementById('fav-dropdown-0')?.classList.add('hidden');
+      document.getElementById('fav-dropdown-1')?.classList.add('hidden');
     }
   });
 

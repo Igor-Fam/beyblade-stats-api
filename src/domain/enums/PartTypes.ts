@@ -4,5 +4,7 @@ export const PartTypes = {
     BIT: 'BIT',
     LOCK_CHIP: 'LOCK_CHIP',
     MAIN_BLADE: 'MAIN_BLADE',
-    ASSIST_BLADE: 'ASSIST_BLADE'
+    ASSIST_BLADE: 'ASSIST_BLADE',
+    OVER_BLADE: 'OVER_BLADE',
+    METAL_BLADE: 'METAL_BLADE'
 } as const;

@@ -17,12 +17,25 @@
         <!-- Player 1 Card -->
         <div class="combo-card player-0">
           <div class="combo-header">
-            <h2>Combo A</h2>
-            <div class="history-container">
-              <button class="history-btn" data-player="0" title="Histórico de Combos">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <h2>Combo A</h2>
+              <button class="save-fav-btn fav-action-btn" data-player="0" title="Toggle Favorite">
+                <svg class="fav-star-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </button>
-              <div id="history-dropdown-0" class="history-dropdown hidden"></div>
+            </div>
+            <div class="action-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
+              <div class="history-container">
+                <button class="load-fav-btn fav-action-btn" data-player="0" title="Favorite Combos">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="10 2 12.5 7.5 18 8 13.5 12 15 18 10 15 5 18 6.5 12 2 8 7.5 7.5"/><line x1="19" y1="6" x2="24" y2="6"/><line x1="19" y1="10" x2="24" y2="10"/><line x1="19" y1="14" x2="24" y2="14"/></svg>
+                </button>
+                <div id="fav-dropdown-0" class="history-dropdown hidden"></div>
+              </div>
+              <div class="history-container">
+                <button class="history-btn" data-player="0" title="Recent History">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                </button>
+                <div id="history-dropdown-0" class="history-dropdown hidden"></div>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -37,12 +50,25 @@
         <!-- Player 2 Card -->
         <div class="combo-card player-1">
           <div class="combo-header">
-            <h2>Combo B</h2>
-            <div class="history-container">
-              <button class="history-btn" data-player="1" title="Histórico de Combos">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <h2>Combo B</h2>
+              <button class="save-fav-btn fav-action-btn" data-player="1" title="Toggle Favorite">
+                <svg class="fav-star-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </button>
-              <div id="history-dropdown-1" class="history-dropdown hidden"></div>
+            </div>
+            <div class="action-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
+              <div class="history-container">
+                <button class="load-fav-btn fav-action-btn" data-player="1" title="Favorite Combos">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="10 2 12.5 7.5 18 8 13.5 12 15 18 10 15 5 18 6.5 12 2 8 7.5 7.5"/><line x1="19" y1="6" x2="24" y2="6"/><line x1="19" y1="10" x2="24" y2="10"/><line x1="19" y1="14" x2="24" y2="14"/></svg>
+                </button>
+                <div id="fav-dropdown-1" class="history-dropdown hidden"></div>
+              </div>
+              <div class="history-container">
+                <button class="history-btn" data-player="1" title="Recent History">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                </button>
+                <div id="history-dropdown-1" class="history-dropdown hidden"></div>
+              </div>
             </div>
           </div>
           <div class="field">

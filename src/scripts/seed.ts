@@ -5,7 +5,7 @@ async function main() {
 
     // --- Part Types ---
     console.log('Creating part types...');
-    const [blade, ratchet, bit, lockChip, mainBlade, assistBlade] = await Promise.all([
+    const [blade, ratchet, bit, lockChip, mainBlade, assistBlade, overBlade, metalBlade] = await Promise.all([
         prisma.partType.upsert({ where: { name: 'BLADE' }, update: {}, create: { name: 'BLADE' } }),
         prisma.partType.upsert({ where: { name: 'RATCHET' }, update: {}, create: { name: 'RATCHET' } }),
         prisma.partType.upsert({ where: { name: 'BIT' }, update: {}, create: { name: 'BIT' } }),
@@ -135,7 +135,7 @@ async function main() {
     ];
 
     const uxExpandBlades: { name: string; metadata?: object }[] = [
-        { name: "BulletGriffon", metadata: { consumesSlots: ['RATCHET'] } },
+        { name: "BulletGriffon" },
     ];
 
     const bladeEntries: { name: string; lineId: number; metadata?: object }[] = [
@@ -326,6 +326,37 @@ async function main() {
         });
     }
     console.log('- Main Blades created');
+
+    // --- Over Blades (CX Expand Line) ---
+    console.log('Creating Metal Blades...');
+    const overBlades: { name: string; abbreviation: string }[] = [
+        { name: 'Break', abbreviation: 'B' },
+        { name: 'Flow', abbreviation: 'F' },
+    ];
+
+    for (const { name, abbreviation } of overBlades) {
+        await prisma.part.upsert({
+            where: { id: (await prisma.part.findFirst({ where: { name, lineId: null } }))?.id ?? 0 },
+            update: { abbreviation, lineId: null },
+            create: { name, abbreviation, partTypeId: overBlade.id, lineId: null },
+        });
+    }
+    console.log('- Over Blades created');
+
+    // --- Metal Blades (CX Expand Line) ---
+    console.log('Creating Metal Blades...');
+    const metalBlades: { name: string }[] = [
+        { name: 'Blitz' },
+        { name: 'Rage' },
+    ];
+
+    for (const { name } of metalBlades) {
+        await prisma.part.upsert({
+            where: { id: (await prisma.part.findFirst({ where: { name, lineId: null } }))?.id ?? 0 },
+            create: { name, partTypeId: metalBlade.id, lineId: null },
+        });
+    }
+    console.log('- Metal Blades created');
 
     console.log('Seed complete');
 

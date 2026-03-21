@@ -91,7 +91,7 @@ h1 {
   position: relative;
 }
 
-.history-btn {
+.history-btn, .fav-action-btn {
   background: #334155;
   border: 1px solid #475569;
   color: var(--text-primary);
@@ -104,18 +104,18 @@ h1 {
   transition: all var(--transition-speed);
 }
 
-.history-btn svg {
+.history-btn svg, .fav-action-btn svg {
   width: 20px;
   height: 20px;
 }
 
-.combo-card.player-0 .history-btn:hover {
+.combo-card.player-0 .history-btn:hover, .combo-card.player-0 .fav-action-btn:hover {
   border-color: var(--accent-bx);
   color: var(--accent-bx);
   background: #475569;
 }
 
-.combo-card.player-1 .history-btn:hover {
+.combo-card.player-1 .history-btn:hover, .combo-card.player-1 .fav-action-btn:hover {
   border-color: var(--accent-ux);
   color: var(--accent-ux);
   background: #475569;
