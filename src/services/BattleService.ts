@@ -13,6 +13,7 @@ export interface CreateBattleDTO {
     entries: CreateBattleEntryDTO[];
     finishType: string;
     winner: number;
+    stadiumId: number;
 }
 
 interface Combo {
@@ -23,6 +24,10 @@ interface Combo {
 
 export class BattleService {
     public async registerBattle(data: CreateBattleDTO) {
+        if (!data.stadiumId || isNaN(data.stadiumId)) {
+            throw new AppError('A stadium must be selected.');
+        }
+
         if (data.entries.length !== 2) {
             throw new AppError('A battle must have exactly 2 entries.');
         }
@@ -55,6 +60,7 @@ export class BattleService {
 
         const battle = await prisma.battle.create({
             data: {
+                stadiumId: data.stadiumId,
                 entries: {
                     create: combos.map((combo, index) => {
                         const pureComboHash = combo.parts.map(p => p.id).sort((a, b) => a - b).join('-');

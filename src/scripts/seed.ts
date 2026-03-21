@@ -42,6 +42,20 @@ async function main() {
     const [bx, ux, cx, bxExpand, uxExpand, cxExpand] = seededLines;
     console.log('- Lines created');
 
+    // --- Stadiums ---
+    console.log('Creating Stadiums...');
+    const stadiums = [
+        'Xtreme Stadium', 'Wide Xtreme Stadium', 'Bucket Stadium', 
+        'Hasbro Xtreme Stadium', 'Double Xtreme Stadium', 
+        'Clash And Carry Beystadium', 'Drop Attack Stadium', 'Infinity Stadium'
+    ];
+    await Promise.all(
+        stadiums.map(name => 
+            prisma.stadium.upsert({ where: { name }, update: {}, create: { name } })
+        )
+    );
+    console.log('- Stadiums created');
+
     // --- Blades ---
     console.log('Creating Blades...');
 

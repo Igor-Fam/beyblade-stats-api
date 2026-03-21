@@ -5,8 +5,11 @@ const API_URL = 'http://localhost:3000/api';
 // --- State ---
 let lines: any[] = [];
 let allParts: any[] = [];
+let stadiums: any[] = [];
 let selectedWinner = 0;
 let selectedFinish = 'SPIN';
+let scoreA = parseInt(localStorage.getItem('scoreA') || '0');
+let scoreB = parseInt(localStorage.getItem('scoreB') || '0');
 
 
 
@@ -29,10 +32,11 @@ const statusEl = document.getElementById('status') as HTMLDivElement;
 
 // --- Initialization ---
 async function init() {
-  await Promise.all([fetchLines(), fetchParts()]);
+  await Promise.all([fetchLines(), fetchParts(), fetchStadiums()]);
 
   renderFinishTypes();
   setupEventListeners();
+  renderScore();
 
   // Initial render
   lineSelects.forEach((_, i) => updatePartsList(i));
@@ -70,6 +74,42 @@ async function fetchParts() {
   } catch (err) {
     showStatus('Failed to load parts', 'error');
   }
+}
+
+async function fetchStadiums() {
+  try {
+    const res = await fetch(`${API_URL}/stadiums`);
+    stadiums = await res.json();
+    const select = document.getElementById('stadium-select') as HTMLSelectElement;
+    if (select) {
+      select.innerHTML = '<option value="">-- Select Stadium --</option>';
+      stadiums.forEach((s: any) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        select.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    showStatus('Failed to load stadiums', 'error');
+  }
+}
+
+function renderScore() {
+  const score0El = document.getElementById('score-0');
+  const score1El = document.getElementById('score-1');
+  if (score0El && score1El) {
+    score0El.textContent = scoreA.toString();
+    score1El.textContent = scoreB.toString();
+  }
+}
+
+function resetScore() {
+  scoreA = 0;
+  scoreB = 0;
+  localStorage.setItem('scoreA', '0');
+  localStorage.setItem('scoreB', '0');
+  renderScore();
 }
 
 function renderFinishTypes() {
@@ -550,6 +590,20 @@ function setupEventListeners() {
     }
   });
 
+  document.getElementById('reset-score-btn')?.addEventListener('click', () => {
+    document.getElementById('reset-modal')?.classList.remove('hidden');
+  });
+
+  document.getElementById('cancel-reset-btn')?.addEventListener('click', () => {
+    document.getElementById('reset-modal')?.classList.add('hidden');
+  });
+
+  document.getElementById('confirm-reset-btn')?.addEventListener('click', () => {
+    resetScore();
+    document.getElementById('reset-modal')?.classList.add('hidden');
+    showStatus('Score reset successfully!', 'success');
+  });
+
   submitBtn.onclick = submitBattle;
 }
 
@@ -577,6 +631,16 @@ async function submitBattle() {
     return;
   }
 
+  const stadiumSelect = document.getElementById('stadium-select') as HTMLSelectElement;
+  if (!stadiumSelect.value) {
+    showStatus('Please select a stadium!', 'error');
+    stadiumSelect.style.borderColor = 'var(--error)';
+    setTimeout(() => { if (stadiumSelect) stadiumSelect.style.borderColor = '' }, 3000);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register Battle';
+    return;
+  }
+
   try {
     const entries = [0, 1].map(i => {
       const partSelects = document.querySelectorAll(`.part-select-${i}`) as NodeListOf<HTMLSelectElement>;
@@ -589,6 +653,7 @@ async function submitBattle() {
     });
 
     const payload = {
+      stadiumId: parseInt(stadiumSelect.value),
       finishType: selectedFinish,
       winner: selectedWinner,
       entries
@@ -604,6 +669,18 @@ async function submitBattle() {
 
     if (res.ok) {
       showStatus('Battle successfully registered!', 'success');
+
+      // Update Points
+      const ptsMap: Record<string, number> = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 };
+      const pts = ptsMap[selectedFinish] || 1;
+      if (selectedWinner === 0) {
+        scoreA += pts;
+        localStorage.setItem('scoreA', scoreA.toString());
+      } else {
+        scoreB += pts;
+        localStorage.setItem('scoreB', scoreB.toString());
+      }
+      renderScore();
 
       let history: any[] = [];
       try {

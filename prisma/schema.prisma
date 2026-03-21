@@ -30,6 +30,14 @@ model Line {
   @@map("lines")
 }
 
+model Stadium {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  battles Battle[]
+  
+  @@map("stadiums")
+}
+
 model Part {
   id            Int               @id @default(autoincrement())
   name          String
@@ -47,6 +55,8 @@ model Part {
 model Battle {
   id        Int           @id @default(autoincrement())
   createdAt DateTime      @default(now()) @map("created_at")
+  stadiumId Int?          @map("stadium_id")
+  stadium   Stadium?      @relation(fields: [stadiumId], references: [id])
   entries   BattleEntry[]
 
   @@map("battles")

@@ -13,6 +13,19 @@
     <div id="app">
       <h1>Battle Logger</h1>
       
+      <div class="scoreboard">
+        <div class="score-player p0">
+          <span id="score-0" class="score-value">0</span>
+        </div>
+        <div class="score-divider">-</div>
+        <div class="score-player p1">
+          <span id="score-1" class="score-value">0</span>
+        </div>
+        <button id="reset-score-btn" class="reset-score-btn" title="Reset Score">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
       <div class="battle-setup">
         <!-- Player 1 Card -->
         <div class="combo-card player-0">
@@ -82,7 +95,14 @@
       </div>
 
       <div class="result-section">
-        <h2>Match Result</h2>
+        <h2>Match Details</h2>
+
+        <label>Stadium</label>
+        <div class="field" style="margin-bottom: 1.5rem">
+          <select id="stadium-select">
+            <option value="">-- Loading Stadiums --</option>
+          </select>
+        </div>
         
         <label>Who won?</label>
         <div class="winner-toggle">
@@ -100,6 +120,18 @@
 
     </div>
     
+    <!-- Reset Modal -->
+    <div id="reset-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Reset Scoreboard</h3>
+        <p>Are you sure you want to reset both scores to 0?</p>
+        <div class="modal-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button id="cancel-reset-btn" class="btn" style="flex: 1; background: var(--surface-light)">Cancel</button>
+          <button id="confirm-reset-btn" class="btn btn-primary" style="flex: 1; background: var(--error)">Reset</button>
+        </div>
+      </div>
+    </div>
+
     <div id="status"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
