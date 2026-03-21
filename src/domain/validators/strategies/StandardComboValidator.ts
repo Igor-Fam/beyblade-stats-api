@@ -55,6 +55,14 @@ export class StandardComboValidator implements IComboValidator {
                 if (!metadata.allowedRatchetHeights.includes(heightEndsWith)) {
                     throw new AppError(`Error: The part '${part.name}' requires a Ratchet with height ending in ${metadata.allowedRatchetHeights.join(' or ')}. You provided '${ratchetPart.name}'.`);
                 }
+
+                for (const p of parts) {
+                    const otherMetadata = p.metadata as unknown as PartMetadata | null;
+
+                    if ((otherMetadata?.consumesSlots || []).includes(PartTypes.RATCHET)) {
+                        throw new AppError(`Error: The part '${part.name}' is not compatible with '${p.name}'.`);
+                    }
+                }
             }
         }
 

@@ -40,7 +40,7 @@ async function fetchLines() {
   try {
     const res = await fetch(`${API_URL}/lines`);
     const data = await res.json();
-    
+
     lines = data.sort((a: any, b: any) => a.name.localeCompare(b.name));
 
     lineSelects.forEach(select => {
@@ -48,11 +48,11 @@ async function fetchLines() {
         const opt = document.createElement('option');
         opt.value = line.id.toString();
         opt.textContent = line.name;
-        
+
         if (line.name === 'BX') {
           opt.selected = true;
         }
-        
+
         select.appendChild(opt);
       });
     });
@@ -122,7 +122,7 @@ function updatePartsList(playerIndex: number) {
     select.className = `part-select-${playerIndex}`;
     select.dataset.slot = slot;
 
-    // Filtrar peças que pertencem a essa linha e esse tipo
+    // Filter parts belonging to this line and slot type
     const validParts = allParts.filter(p =>
       (p.lineId === lineId || p.lineId === null) &&
       p.partType.name.toUpperCase() === slot
@@ -163,9 +163,52 @@ function applyConstraints(playerIndex: number) {
   });
 
   // 2. Gather selected parts data
-  const selectedParts = selects
+  let selectedParts = selects
     .map(s => s.value ? allParts.find(p => p.id === parseInt(s.value)) : null)
     .filter(Boolean);
+
+  let selectionChanged = false;
+  const globallyConsumedSlots = new Set<string>();
+
+  selects.forEach(select => {
+    // 1. Check if options in this Select conflict with constraints from upper parts
+    Array.from(select.options).forEach(opt => {
+      if (!opt.value) return;
+      const optPart = allParts.find(p => p.id === parseInt(opt.value));
+      if (!optPart?.metadata) return;
+
+      const optConsumes = optPart.metadata.consumesSlots || [];
+      const conflictsWithHigher = optConsumes.some((slot: string) => globallyConsumedSlots.has(slot));
+      const conflictsWithRestrictedRatchets = optConsumes.includes('RATCHET') && globallyConsumedSlots.has('RESTRICTED_RATCHETS');
+
+      if (conflictsWithHigher || conflictsWithRestrictedRatchets) {
+        opt.disabled = true;
+        opt.style.display = 'none';
+
+        if (select.value === opt.value) {
+          select.value = '';
+          selectionChanged = true;
+        }
+      }
+    });
+
+    // 2. Register slot constraints dictated by the currently selected part
+    const effectivePart = select.value ? allParts.find(p => p.id === parseInt(select.value)) : null;
+    if (effectivePart?.metadata) {
+      if (effectivePart.metadata.consumesSlots) {
+        effectivePart.metadata.consumesSlots.forEach((slot: string) => globallyConsumedSlots.add(slot));
+      }
+      if (effectivePart.metadata.allowedRatchetHeights?.length > 0) {
+        globallyConsumedSlots.add('RESTRICTED_RATCHETS');
+      }
+    }
+  });
+
+  if (selectionChanged) {
+    selectedParts = selects
+      .map(s => s.value ? allParts.find(p => p.id === parseInt(s.value)) : null)
+      .filter(Boolean);
+  }
 
   // 3. Process Generic Constraints
   selectedParts.forEach(part => {
@@ -197,7 +240,7 @@ function applyConstraints(playerIndex: number) {
             const height = parts.length > 1 ? parts[1] : '';
 
             const isAllowed = allowed.some((val: string) => height.endsWith(val));
-            
+
             if (!isAllowed) {
               opt.disabled = true;
               opt.style.display = 'none';
@@ -305,6 +348,26 @@ function setupEventListeners() {
 async function submitBattle() {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Registering...';
+
+  // Require all active dropdowns to be filled
+  let missingParts = false;
+  [0, 1].forEach(i => {
+    const partSelects = document.querySelectorAll(`.part-select-${i}`) as NodeListOf<HTMLSelectElement>;
+    partSelects.forEach(select => {
+      if (!select.disabled && !select.value) {
+        missingParts = true;
+        select.style.borderColor = 'var(--error)';
+        setTimeout(() => select.style.borderColor = '', 3000);
+      }
+    });
+  });
+
+  if (missingParts) {
+    showStatus('Please select all required parts for both players!', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register Battle';
+    return;
+  }
 
   try {
     const entries = [0, 1].map(i => {
