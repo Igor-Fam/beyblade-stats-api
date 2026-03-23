@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Smartphone } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle } from '../lib/api';
 import ComboCard from './ComboCard';
@@ -133,14 +133,21 @@ export default function BattleLogger() {
 
   return (
     <div className="view">
-      <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <Link to="/" className="btn btn-outline" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>
-          <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> Hub
-        </Link>
-        <h1 style={{ margin: 0 }}>Battle Logger</h1>
+      <div className="portrait-lock-overlay">
+        <Smartphone size={64} style={{ marginBottom: '1rem' }} />
+        <h2>Gire seu dispositivo</h2>
+        <p>O Battle Logger exige o modo horizontal para enquadrar perfeitamente a arena e evitar rolagens cegas de tela.</p>
       </div>
 
-      <div className="battle-grid">
+      <div className="battle-logger-container">
+        <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+          <Link to="/" className="btn btn-outline" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>
+            <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> Hub
+          </Link>
+          <h1 style={{ margin: 0 }}>Battle Logger</h1>
+        </div>
+
+        <div className="battle-grid">
         {/* Left Column: Combo A */}
         <div className="combo-column a-side">
           <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={setLineA} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
@@ -207,6 +214,8 @@ export default function BattleLogger() {
           </div>
         </div>
       )}
+      
+      </div>
     </div>
   );
 }
