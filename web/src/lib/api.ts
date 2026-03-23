@@ -25,3 +25,8 @@ export async function registerBattle(payload: any) {
   if (!res.ok) throw new Error('Failed to register battle');
   return res.json();
 }
+
+export async function fetchDatabaseHealth(): Promise<{ status: string, env: 'production' | 'sandbox' }> {
+  const res = await fetch(`${API_URL}/health`);
+  return res.json();
+}
