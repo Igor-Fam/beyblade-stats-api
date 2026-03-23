@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Smartphone } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
-import { fetchLines, fetchParts, fetchStadiums, registerBattle } from '../lib/api';
+import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth } from '../lib/api';
 import ComboCard from './ComboCard';
 
 export default function BattleLogger() {
@@ -22,10 +22,11 @@ export default function BattleLogger() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [status, setStatus] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dbEnv, setDbEnv] = useState<'production' | 'sandbox' | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchLines(), fetchParts(), fetchStadiums()]).then(([l, p, s]) => {
-      setLines(l); setParts(p); setStadiums(s);
+    Promise.all([fetchLines(), fetchParts(), fetchStadiums(), fetchDatabaseHealth()]).then(([l, p, s, h]) => {
+      setLines(l); setParts(p); setStadiums(s); setDbEnv(h.env);
     });
     const sA = localStorage.getItem('scoreA');
     const sB = localStorage.getItem('scoreB');
@@ -144,6 +145,11 @@ export default function BattleLogger() {
           <Link to="/" className="btn btn-outline" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>
             <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> Hub
           </Link>
+          {dbEnv && (
+            <span className={`db-env-badge ${dbEnv}`} title={`Connected to ${dbEnv} database`}>
+              {dbEnv.toUpperCase()}
+            </span>
+          )}
           <h1 style={{ margin: 0 }}>Battle Logger</h1>
         </div>
 

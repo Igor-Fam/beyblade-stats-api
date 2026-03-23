@@ -344,6 +344,30 @@ select option {
 }
 .score-blue { color: var(--accent-bx); justify-self: end; }
 .score-orange { color: var(--accent-ux); justify-self: start; }
+
+.db-env-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.db-env-badge.production {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.db-env-badge.sandbox {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .score-vertical-divider {
   width: 2px;
   height: 120px;
