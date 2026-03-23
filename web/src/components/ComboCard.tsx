@@ -223,12 +223,16 @@ export default function ComboCard({
       
       <div className="field">
         <label className="desktop-only">Line</label>
-        <select value={selectedLineId || ''} onChange={e => onLineChange(parseInt(e.target.value))}>
+        <select 
+          className={!selectedLineId ? 'is-placeholder' : ''}
+          value={selectedLineId || ''} 
+          onChange={e => onLineChange(parseInt(e.target.value))}
+        >
           <option value="">Select Line</option>
           {lines.map(line => <option key={line.id} value={line.id}>{line.name}</option>)}
         </select>
       </div>
-
+      <hr className="field-divider" />
       <div className="parts-container">
         {slots.map(slot => {
           const isSlotDisabled = disabledSlots.has(slot);
@@ -255,6 +259,7 @@ export default function ComboCard({
             <div key={slot} className="field">
               <label className="desktop-only">{slot.replace('_', ' ')} {isSlotDisabled && '(Consumed)'}</label>
               <select 
+                className={!selectedParts[slot] ? 'is-placeholder' : ''}
                 value={selectedParts[slot] || ''} 
                 onChange={e => onPartChange(slot, parseInt(e.target.value))}
                 disabled={isSlotDisabled}
