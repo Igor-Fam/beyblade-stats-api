@@ -26,7 +26,12 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'Beyblade Stats API is online and ready for battles!' });
+    const dbUrl = process.env.DATABASE_URL || '';
+    const isProd = dbUrl.includes('supabase.com') || dbUrl.includes('aws-1-sa-east-1');
+    res.json({ 
+        status: 'online', 
+        env: isProd ? 'production' : 'sandbox' 
+    });
 });
 
 // Delegate '/api' requisitions to router's index.ts file
