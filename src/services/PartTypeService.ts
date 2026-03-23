@@ -1,4 +1,4 @@
-import { PartType } from '@prisma/client';
+import { PartType } from '../../prisma/generated/client';
 import { prisma } from '../database';
 import { AppError } from '../errors/AppError';
 

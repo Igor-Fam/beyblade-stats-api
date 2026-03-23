@@ -1,4 +1,4 @@
-import { Part, PartType } from '@prisma/client';
+import { Part, PartType } from '../../../prisma/generated/client';
 
 export type ComboPart = Part & {
     partType: PartType;

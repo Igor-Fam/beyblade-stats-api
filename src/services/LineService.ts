@@ -1,4 +1,4 @@
-import { Line } from '@prisma/client';
+import { Line } from '../../prisma/generated/client';
 import { prisma } from '../database';
 import { AppError } from '../errors/AppError';
 

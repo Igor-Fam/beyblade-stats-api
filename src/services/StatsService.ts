@@ -1,4 +1,4 @@
-import { BattleEntryPart } from '@prisma/client';
+import { BattleEntryPart } from '../../prisma/generated/client';
 import { prisma } from '../database';
 import { AppError } from '../errors/AppError';
 
