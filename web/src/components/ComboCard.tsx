@@ -222,9 +222,9 @@ export default function ComboCard({
       </div>
       
       <div className="field">
-        <label>Line</label>
+        <label className="desktop-only">Line</label>
         <select value={selectedLineId || ''} onChange={e => onLineChange(parseInt(e.target.value))}>
-          <option value="">-- Select Line --</option>
+          <option value="">Select Line</option>
           {lines.map(line => <option key={line.id} value={line.id}>{line.name}</option>)}
         </select>
       </div>
@@ -253,14 +253,14 @@ export default function ComboCard({
 
           return (
             <div key={slot} className="field">
-              <label>{slot.replace('_', ' ')} {isSlotDisabled && '(Consumed)'}</label>
+              <label className="desktop-only">{slot.replace('_', ' ')} {isSlotDisabled && '(Consumed)'}</label>
               <select 
                 value={selectedParts[slot] || ''} 
                 onChange={e => onPartChange(slot, parseInt(e.target.value))}
                 disabled={isSlotDisabled}
                 style={{ opacity: isSlotDisabled ? 0.5 : 1 }}
               >
-                <option value="">-- Select {slot} --</option>
+                <option value="">{slot.replace('_', ' ')} {isSlotDisabled ? '(Consumed)' : ''}</option>
                 {!isSlotDisabled && availableParts.map(p => <option key={p.id} value={p.id}>{p.name} {p.abbreviation ? `(${p.abbreviation})` : ''}</option>)}
               </select>
             </div>
