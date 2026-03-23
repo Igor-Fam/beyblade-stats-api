@@ -191,6 +191,11 @@ select:focus {
   border-color: var(--accent-bx);
 }
 
+select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
 /* Result Section */
 .result-section {
   background: var(--card-bg);
@@ -302,10 +307,15 @@ select:focus {
 .stadium-selector select {
   background-color: var(--surface-light);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text);
+  color: var(--text-primary);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.9rem;
+}
+
+.stadium-selector select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
 }
 
 .score-display {
