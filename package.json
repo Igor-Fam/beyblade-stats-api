@@ -26,6 +26,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.3.5",
     "@types/pg": "^8.18.0",
+    "@vitejs/plugin-basic-ssl": "^2.2.0",
     "dotenv": "^17.3.1",
     "jest": "^30.3.0",
     "nodemon": "^3.1.14",
