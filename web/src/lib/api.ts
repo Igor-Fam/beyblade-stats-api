@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export interface Line { id: number; name: string; metadata?: { slots: string[], nameTemplate: string } }
-export interface Part { id: number; name: string; abbreviation: string; partTypeId: number; partType: { id: number, name: string } }
+export interface Part { id: number; name: string; abbreviation: string; partTypeId: number; partType: { id: number, name: string }, metadata?: any, lineId?: number | null }
 export interface Stadium { id: number; name: string; }
 
 export async function fetchLines(): Promise<Line[]> {
