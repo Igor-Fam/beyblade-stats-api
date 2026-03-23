@@ -16,8 +16,6 @@ export default function BattleLogger() {
   const [partsB, setPartsB] = useState<Record<string, number>>({});
   
   const [stadiumId, setStadiumId] = useState<number | null>(null);
-  const [winnerIndex, setWinnerIndex] = useState<number>(0);
-  const [finishType, setFinishType] = useState<string>('SPIN');
   
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
@@ -47,7 +45,7 @@ export default function BattleLogger() {
     setShowResetModal(false);
   };
 
-  const submitBattle = async () => {
+  const handleFinish = async (winnerIndex: number, finishType: string) => {
     if (!stadiumId) return setStatus({ msg: 'Please select a stadium!', type: 'error' });
     if (!lineA || !lineB) return setStatus({ msg: 'Please select a line for both combos!', type: 'error' });
 
@@ -63,7 +61,7 @@ export default function BattleLogger() {
         ]
       });
 
-      // Update Session Score
+      // Update App Score
       const points = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 }[finishType] || 1;
       if (winnerIndex === 0) {
         const newScore = scoreA + points;
@@ -75,8 +73,8 @@ export default function BattleLogger() {
         localStorage.setItem('scoreB', newScore.toString());
       }
 
-      setStatus({ msg: 'Battle registered successfully!', type: 'success' });
-      setTimeout(() => setStatus(null), 4000);
+      setStatus({ msg: `Battle Logged: Combo ${winnerIndex === 0 ? 'A' : 'B'} won by ${finishType}!`, type: 'success' });
+      setTimeout(() => setStatus(null), 3000);
     } catch (err: any) {
       setStatus({ msg: err.message || 'Error saving battle', type: 'error' });
       setTimeout(() => setStatus(null), 4000);
@@ -94,53 +92,53 @@ export default function BattleLogger() {
         <h1 style={{ margin: 0 }}>Battle Logger</h1>
       </div>
 
-      <div className="scoreboard">
-        <div className="score-player p0">
-          <span className="score-value">{scoreA}</span>
-        </div>
-        <div className="score-divider">-</div>
-        <div className="score-player p1">
-          <span className="score-value">{scoreB}</span>
-        </div>
-        <button className="reset-score-btn" title="Reset Score" onClick={() => setShowResetModal(true)}>
-          <RotateCcw size={16} />
-        </button>
-      </div>
-
-      <div className="battle-setup">
-        <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={setLineA} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
-        <ComboCard playerId={1} lines={lines} parts={parts} selectedLineId={lineB} selectedParts={partsB} onLineChange={setLineB} onPartChange={(slot, id) => handlePartChange(1, slot, id)} />
-      </div>
-
-      <div className="result-section">
-        <h2>Match Details</h2>
-        
-        <label>Stadium</label>
-        <div className="field" style={{ marginBottom: '1.5rem' }}>
-          <select value={stadiumId || ''} onChange={e => setStadiumId(parseInt(e.target.value))}>
-            <option value="">-- Select Stadium --</option>
-            {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+      <div className="battle-grid">
+        {/* Left Column: Combo A */}
+        <div className="combo-column a-side">
+          <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={setLineA} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
         </div>
 
-        <label>Who won?</label>
-        <div className="winner-toggle">
-          <button className={`winner-btn p0 ${winnerIndex === 0 ? 'active' : ''}`} onClick={() => setWinnerIndex(0)}>Combo A</button>
-          <button className={`winner-btn p1 ${winnerIndex === 1 ? 'active' : ''}`} onClick={() => setWinnerIndex(1)}>Combo B</button>
-        </div>
+        {/* Center Column: Score & Actions */}
+        <div className="action-column">
+          <div className="stadium-selector">
+            <select value={stadiumId || ''} onChange={e => setStadiumId(parseInt(e.target.value))}>
+              <option value="">-- Stadium --</option>
+              {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
 
-        <label style={{ marginTop: '1.5rem', display: 'block' }}>Finish Type</label>
-        <div className="finish-types">
-          {['SPIN', 'OVER', 'BURST', 'XTREME'].map(type => (
-            <button key={type} className={`finish-btn ${finishType === type ? 'active' : ''} ${finishType === type ? type.toLowerCase() : ''}`} onClick={() => setFinishType(type)}>
-              {type}
+          <div className="score-display">
+            <button className="reset-score-icon" title="Reset Score" onClick={() => setShowResetModal(true)}>
+              <RotateCcw size={20} />
             </button>
-          ))}
+            <div className="score-numbers">
+              <span className="score-blue">{scoreA}</span>
+              <div className="score-vertical-divider"></div>
+              <span className="score-orange">{scoreB}</span>
+            </div>
+          </div>
+
+          <div className="finish-buttons-grid">
+            <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'SPIN')}>Spin</button>
+            <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'SPIN')}>Spin</button>
+            <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'OVER')}>Over</button>
+            <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'OVER')}>Over</button>
+            <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'BURST')}>Burst</button>
+            <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'BURST')}>Burst</button>
+            <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'XTREME')}>Xtreme</button>
+            <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'XTREME')}>Xtreme</button>
+          </div>
+
+          <div className="history-actions">
+            <button className="undo-btn" onClick={() => alert('Undo functionality coming next!')}>Undo last battle</button>
+            <button className="history-btn" onClick={() => alert('History Modal coming next!')}>Battle history</button>
+          </div>
         </div>
 
-        <button className="btn btn-primary" onClick={submitBattle} disabled={loading}>
-          {loading ? 'Saving...' : 'Register Battle'}
-        </button>
+        {/* Right Column: Combo B */}
+        <div className="combo-column b-side">
+          <ComboCard playerId={1} lines={lines} parts={parts} selectedLineId={lineB} selectedParts={partsB} onLineChange={setLineB} onPartChange={(slot, id) => handlePartChange(1, slot, id)} />
+        </div>
       </div>
 
       {status && (
