@@ -34,8 +34,16 @@ export default function BattleLogger() {
   }, []);
 
   const handlePartChange = (player: 0|1, slot: string, partId: number) => {
-    if (player === 0) setPartsA(prev => ({ ...prev, [slot]: partId }));
-    else setPartsB(prev => ({ ...prev, [slot]: partId }));
+    const updateRecord = (prev: Record<string, number>) => {
+      if (!partId) {
+        const next = { ...prev };
+        delete next[slot];
+        return next;
+      }
+      return { ...prev, [slot]: partId };
+    };
+    if (player === 0) setPartsA(updateRecord);
+    else setPartsB(updateRecord);
   };
 
   const handleReset = () => {
@@ -60,6 +68,46 @@ export default function BattleLogger() {
           { lineId: lineB, partsIds: Object.values(partsB) }
         ]
       });
+
+      // ---- Save Shared History Snapshots ----
+      const saveCombosToStorage = () => {
+        const arePartsEqual = (p1: Record<string, number>, p2: Record<string, number>) => {
+          if (!p1 || !p2) return false;
+          const k1 = Object.keys(p1);
+          if (k1.length !== Object.keys(p2).length) return false;
+          return k1.every(k => p1[k] === p2[k]);
+        };
+
+        const makeLabel = (lId: number, pMap: Record<string, number>) => {
+          const line = lines.find(l => l.id === lId);
+          if (!line) return 'Custom';
+          const lps = (line.metadata?.slots || []).map(s => {
+            const p = parts.find(px => px.id === pMap[s]);
+            return p?.abbreviation || p?.name || '';
+          }).filter(Boolean);
+          return lps.length > 0 ? lps.join(' ') : line.name;
+        };
+
+        let existing = JSON.parse(localStorage.getItem('comboHistory') || '[]');
+        
+        const processPush = (lId: number, pMap: Record<string, number>) => {
+          existing = existing.filter((c: any) => !(c.lineId === lId && arePartsEqual(c.parts, pMap)));
+          const snap = { id: Date.now() + Math.random(), label: makeLabel(lId, pMap), lineId: lId, parts: pMap };
+          existing.unshift(snap);
+        };
+
+        // Push Player A
+        processPush(lineA, partsA);
+        // Push Player B (skip if identical Mirror Match)
+        if (!(lineA === lineB && arePartsEqual(partsA, partsB))) {
+          processPush(lineB, partsB);
+        }
+        
+        localStorage.setItem('comboHistory', JSON.stringify(existing.slice(0, 20)));
+        window.dispatchEvent(new Event('combomemory'));
+      };
+      saveCombosToStorage();
+      // --------------------------------
 
       // Update App Score
       const points = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 }[finishType] || 1;
