@@ -33,6 +33,8 @@ services:
       - "--all"
       - "--config"
       - "/etc/ngrok.yml"
+    ports:
+      - "4040:4040"
     depends_on:
       - web
       - api
