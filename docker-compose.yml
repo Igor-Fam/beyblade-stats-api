@@ -23,6 +23,20 @@ services:
     depends_on:
       - api
 
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: always
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    depends_on:
+      - web
+      - api
+
   db:
     image: postgres:15-alpine
     environment:
