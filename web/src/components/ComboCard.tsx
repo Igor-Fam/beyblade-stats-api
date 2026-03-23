@@ -257,7 +257,7 @@ export default function ComboCard({
 
           return (
             <div key={slot} className="field">
-              <label className="desktop-only">{slot.replace('_', ' ')} {isSlotDisabled && '(Consumed)'}</label>
+              <label className="desktop-only">{slot.replace('_', ' ')}</label>
               <select 
                 className={!selectedParts[slot] ? 'is-placeholder' : ''}
                 value={selectedParts[slot] || ''} 
@@ -265,7 +265,7 @@ export default function ComboCard({
                 disabled={isSlotDisabled}
                 style={{ opacity: isSlotDisabled ? 0.5 : 1 }}
               >
-                <option value="">{slot.replace('_', ' ')} {isSlotDisabled ? '(Consumed)' : ''}</option>
+                <option value="">{slot.replace('_', ' ')}</option>
                 {!isSlotDisabled && availableParts.map(p => <option key={p.id} value={p.id}>{p.name} {p.abbreviation ? `(${p.abbreviation})` : ''}</option>)}
               </select>
             </div>
