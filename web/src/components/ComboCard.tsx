@@ -229,7 +229,7 @@ export default function ComboCard({
           onChange={e => onLineChange(parseInt(e.target.value))}
         >
           <option value="">Select Line</option>
-          {lines.map(line => <option key={line.id} value={line.id}>{line.name}</option>)}
+          {lines.slice().sort((a, b) => a.name.localeCompare(b.name)).map(line => <option key={line.id} value={line.id}>{line.name}</option>)}
         </select>
       </div>
       <hr className="field-divider" />
@@ -266,7 +266,7 @@ export default function ComboCard({
                 style={{ opacity: isSlotDisabled ? 0.5 : 1 }}
               >
                 <option value="">{slot.replace('_', ' ')}</option>
-                {!isSlotDisabled && availableParts.map(p => <option key={p.id} value={p.id}>{p.name} {p.abbreviation ? `(${p.abbreviation})` : ''}</option>)}
+                {!isSlotDisabled && availableParts.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.id}>{p.name} {p.abbreviation ? `(${p.abbreviation})` : ''}</option>)}
               </select>
             </div>
           );
