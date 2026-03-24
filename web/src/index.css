@@ -453,6 +453,126 @@ select option {
   gap: 0.25rem;
 }
 
+.history-modal-content {
+  width: 90%;
+  max-width: 500px;
+}
+
+.history-table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 0.5rem;
+  border-radius: 0.4rem;
+}
+
+.history-info { display: flex; flex-direction: column; gap: 0.1rem; }
+.history-sub { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
+
+/* New History Row Styles */
+.history-row-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: stretch;
+}
+
+.history-battle-pill {
+  flex: 1;
+  display: flex;
+  background: #273142; /* Darker slate from image */
+  border-radius: 0.75rem;
+  overflow: hidden;
+  min-height: 54px;
+}
+
+.combo-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.combo-side strong {
+  display: block;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.combo-side.side-0 { text-align: left; }
+.combo-side.side-1 { text-align: right; }
+
+.combo-side.winner.side-0 { background-color: var(--accent-bx); color: white; }
+.combo-side.winner.side-1 { background-color: var(--accent-ux); color: white; }
+
+.win-detail {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  opacity: 0.9;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.side-divider {
+  width: 2px;
+  background: #fff;
+  opacity: 0.2;
+}
+
+.trash-btn-box {
+  background: #1e1e1e; /* Dark background from image */
+  border: none;
+  color: #ff4d4d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  transition: filter 0.2s;
+}
+.trash-btn-box:hover { filter: brightness(1.3); }
+
+.trash-btn {
+  background: transparent;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+.trash-btn:hover { opacity: 1; background-color: rgba(239, 68, 68, 0.1); }
+
+.history-reset-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0 1rem;
+  color: var(--error);
+}
+
+.history-reset-divider::before, .history-reset-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0.3;
+}
+
+.history-reset-divider span {
+  padding: 0 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
 .score-player.p0 .score-value { color: var(--accent-bx); }
 .score-player.p1 .score-value { color: var(--accent-ux); }
 
