@@ -86,6 +86,21 @@ export class BattleService {
 
         return { message: "Battle successfully registered!", battleId: battle.id };
     }
+
+    public async deleteBattle(id: number) {
+        try {
+            await prisma.battle.delete({
+                where: { id }
+            });
+
+            return { message: "Battle successfully deleted!" };
+        } catch (error: any) {
+            if (error.code === 'P2025') {
+                throw new AppError("Battle not found or already deleted.", 404);
+            }
+            throw error;
+        }
+    }
 }
 
 async function getComboFromEntry(entry: CreateBattleEntryDTO): Promise<Combo> {
