@@ -274,10 +274,13 @@ select option {
 /* Status Toast */
 #status {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  padding: 1rem 2rem;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.6rem 1.25rem;
   border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 1000;
   display: none;
   animation: slideIn 0.3s ease-out;
 }
@@ -454,8 +457,8 @@ select option {
 }
 
 .history-modal-content {
-  width: 90%;
-  max-width: 500px;
+  width: 95%;
+  max-width: 850px;
 }
 
 .history-table-row {
@@ -501,6 +504,9 @@ select option {
   display: block;
   font-size: 1rem;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .combo-side.side-0 { text-align: left; }

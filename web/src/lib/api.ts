@@ -30,3 +30,10 @@ export async function fetchDatabaseHealth(): Promise<{ status: string, env: 'pro
   const res = await fetch(`${API_URL}/health`);
   return res.json();
 }
+
+export async function deleteBattle(id: number): Promise<void> {
+  const res = await fetch(`${API_URL}/battles/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error('Failed to delete battle');
+}
