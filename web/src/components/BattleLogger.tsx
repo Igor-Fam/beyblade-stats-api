@@ -19,6 +19,8 @@ export default function BattleLogger() {
   
   const [loading, setLoading] = useState(false);
   const [dbEnv, setDbEnv] = useState<'production' | 'sandbox' | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [status, setStatus] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [sessionBattles, setSessionBattles] = useState<any[]>([]);
   const [scoreResetAt, setScoreResetAt] = useState<number>(() => {
     return parseInt(localStorage.getItem('scoreResetAt') || Date.now().toString());
