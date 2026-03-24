@@ -1,0 +1,144 @@
+import { useState, useEffect } from 'react';
+
+export type Language = 'en' | 'pt';
+
+const translations = {
+  en: {
+    // General
+    hub: 'Hub',
+    cancel: 'Cancel',
+    reset: 'Reset',
+    remove: 'Remove',
+    custom: 'Custom',
+    
+    // Battle Logger
+    logger_title: 'Battle Logger',
+    rotate_device: 'Rotate your device',
+    rotate_desc: 'The Battle Logger requires landscape mode to perfectly fit the arena and avoid blind scrolling.',
+    stadium_placeholder: '-- Stadium --',
+    reset_score_title: 'Reset Score',
+    undo_last: 'Undo last battle',
+    battle_history: 'Battle history',
+    
+    // Hub
+    hub_title: 'Beyblade X Hub',
+    hub_logger_desc: 'Register matches, test setups, and tally performance.',
+    hub_stats_title: 'Statistics',
+    hub_stats_desc: 'Coming Soon: Analyze matchups, metagame trends, and counters.',
+    
+    // Status/Toasts
+    status_select_stadium: 'Please select a stadium!',
+    status_select_lines: 'Please select a line for both combos!',
+    status_undo_success: 'Last battle undone!',
+    status_undo_error: 'Failed to undo: ',
+    status_battle_logged: 'Battle Logged: Combo {winner} won by {type}!',
+    status_save_error: 'Error saving battle',
+    status_remove_error: 'Failed to remove: ',
+    
+    // Modals
+    history_title: 'Session Battles',
+    history_empty: 'No battles this session',
+    history_reset_label: 'LATEST SCORE RESET',
+    reset_modal_title: 'Reset Scoreboard',
+    reset_modal_desc: 'Are you sure you want to reset both scores to 0?',
+    
+    // Combo Card
+    combo_title: 'Combo {id}',
+    line_label: 'Line',
+    select_line: 'Select Line',
+    fav_tooltip: 'Favorite this combo',
+    unfav_tooltip: 'Unfavorite',
+    load_favs: 'Load Favorites',
+    load_history: 'Load History',
+    no_combos: 'No combos found',
+    fav_alert: 'Select a Line and Parts to favorite!',
+    custom_combo: 'Custom Combo'
+  },
+  pt: {
+    // General
+    hub: 'Início',
+    cancel: 'Cancelar',
+    reset: 'Resetar',
+    remove: 'Remover',
+    custom: 'Customizado',
+
+    // Battle Logger
+    logger_title: 'Log de Batalha',
+    rotate_device: 'Gire seu dispositivo',
+    rotate_desc: 'O Battle Logger exige o modo horizontal para enquadrar perfeitamente a arena e evitar rolagens cegas.',
+    stadium_placeholder: '-- Arena --',
+    reset_score_title: 'Resetar Placar',
+    undo_last: 'Desfazer última',
+    battle_history: 'Histórico',
+
+    // Hub
+    hub_title: 'Painel Central',
+    hub_logger_desc: 'Registre partidas, teste setups e contabilize performance.',
+    hub_stats_title: 'Estatísticas',
+    hub_stats_desc: 'Em Breve: Analise confrontos, tendências de metagame e counters.',
+
+    // Status/Toasts
+    status_select_stadium: 'Por favor, selecione uma arena!',
+    status_select_lines: 'Selecione as linhas de ambos os combos!',
+    status_undo_success: 'Última batalha desfeita!',
+    status_undo_error: 'Falha ao desfazer: ',
+    status_battle_logged: 'Batalha registrada: Combo {winner} venceu por {type}!',
+    status_save_error: 'Erro ao salvar batalha',
+    status_remove_error: 'Falha ao remover: ',
+
+    // Modals
+    history_title: 'Batalhas da Sessão',
+    history_empty: 'Nenhuma batalha nesta sessão',
+    history_reset_label: 'ÚLTIMO RESET DE PLACAR',
+    reset_modal_title: 'Resetar Placar',
+    reset_modal_desc: 'Tem certeza que deseja zerar os scores?',
+
+    // Combo Card
+    combo_title: 'Combo {id}',
+    line_label: 'Linha',
+    select_line: 'Selecionar Linha',
+    fav_tooltip: 'Favoritar este combo',
+    unfav_tooltip: 'Desfavoritar',
+    load_favs: 'Carregar Favoritos',
+    load_history: 'Carregar Histórico',
+    no_combos: 'Nenhum combo encontrado',
+    fav_alert: 'Selecione uma Linha e Peças para favoritar!',
+    custom_combo: 'Combo Customizado'
+  }
+};
+
+export function getLanguage(): Language {
+  const saved = localStorage.getItem('app_lang');
+  if (saved === 'en' || saved === 'pt') return saved;
+  
+  // Auto-detect browser language
+  const browserLang = navigator.language.toLowerCase();
+  return browserLang.startsWith('pt') ? 'pt' : 'en';
+}
+
+export function setLanguage(lang: Language) {
+  localStorage.setItem('app_lang', lang);
+  window.dispatchEvent(new Event('languagechange'));
+}
+
+export function useTranslation() {
+  const [lang, setLang] = useState<Language>(getLanguage());
+
+  useEffect(() => {
+    const handleLangChange = () => setLang(getLanguage());
+    window.addEventListener('languagechange', handleLangChange);
+    return () => window.removeEventListener('languagechange', handleLangChange);
+  }, []);
+
+  const t = (key: keyof typeof translations.en, params?: Record<string, string | number>) => {
+    let text = translations[lang][key] || translations.en[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
+  };
+
+  return { t, lang, setLanguage };
+}

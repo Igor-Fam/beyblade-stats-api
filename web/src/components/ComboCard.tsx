@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Line, Part } from '../lib/api';
 import { History, Star, Bookmark } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 export interface ComboSnapshot {
   id: number;
@@ -30,6 +31,7 @@ export default function ComboCard({
   playerId, lines, parts, selectedLineId, selectedParts, 
   onLineChange, onPartChange 
 }: Props) {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<ComboSnapshot[]>([]);
   const [favorites, setFavorites] = useState<ComboSnapshot[]>([]);
   
@@ -124,7 +126,7 @@ export default function ComboCard({
   }, [selectedLineId, selectedParts, favorites]);
 
   const toggleFavorite = () => {
-    if (!selectedLineId) return alert('Select a Line and Parts to favorite!');
+    if (!selectedLineId) return alert(t('fav_alert'));
     
     if (isCurrentFav) {
       const updated = favorites.filter(f => !(f.lineId === selectedLineId && arePartsEqual(f.parts, selectedParts)));
@@ -137,7 +139,7 @@ export default function ComboCard({
         return p?.abbreviation || p?.name || '';
       }).filter(Boolean);
       
-      const label = labelParts.length > 0 ? labelParts.join(' ') : (activeLine?.name || 'Custom Combo');
+      const label = labelParts.length > 0 ? labelParts.join(' ') : (activeLine?.name || t('custom_combo'));
 
       const newFaV: ComboSnapshot = {
         id: Date.now(),
@@ -179,22 +181,22 @@ export default function ComboCard({
   };
 
   const currentList = dropdownType === 'history' ? history : favorites;
-  const listName = dropdownType === 'history' ? 'History' : 'Favorites';
+  const listName = dropdownType === 'history' ? t('load_history') : t('load_favs');
 
   return (
     <div className={`combo-card player-${playerId}`}>
       <div className="combo-header">
         <div style={{ display: 'flex', gap: '0.5rem', flex: 1, alignItems: 'center' }}>
-          <h2>Combo {playerId === 0 ? 'A' : 'B'}</h2>
+          <h2>{t('combo_title', { id: playerId === 0 ? 'A' : 'B' })}</h2>
           
           <div className="history-container" ref={dropdownRef} style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-            <button className="fav-action-btn" title={isCurrentFav ? "Unfavorite" : "Favorite this combo"} onClick={toggleFavorite} style={{ color: isCurrentFav ? 'var(--accent-ux)' : 'inherit' }}>
+            <button className="fav-action-btn" title={isCurrentFav ? t('unfav_tooltip') : t('fav_tooltip')} onClick={toggleFavorite} style={{ color: isCurrentFav ? 'var(--accent-ux)' : 'inherit' }}>
               <Star size={18} fill={isCurrentFav ? 'currentColor' : 'none'} />
             </button>
-            <button className="history-btn" title="Load Favorites" onClick={() => setDropdownType(dropdownType === 'favs' ? null : 'favs')}>
+            <button className="history-btn" title={t('load_favs')} onClick={() => setDropdownType(dropdownType === 'favs' ? null : 'favs')}>
               <Bookmark size={18} />
             </button>
-            <button className="history-btn" title="Load History" onClick={() => setDropdownType(dropdownType === 'history' ? null : 'history')}>
+            <button className="history-btn" title={t('load_history')} onClick={() => setDropdownType(dropdownType === 'history' ? null : 'history')}>
               <History size={18} />
             </button>
 
@@ -202,7 +204,7 @@ export default function ComboCard({
               <div className="history-dropdown" style={{ display: 'flex' }}>
                 <div style={{ padding: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8rem', fontWeight: 'bold' }}>{listName}</div>
                 {currentList.length === 0 ? (
-                  <div style={{ padding: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center' }}>No combos found</div>
+                  <div style={{ padding: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center' }}>{t('no_combos')}</div>
                 ) : (
                   currentList.map(snap => (
                     <div key={snap.id} className="history-item" onClick={() => handleLoad(snap)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -210,7 +212,7 @@ export default function ComboCard({
                       <button 
                         onClick={(e) => removeListItem(e, snap.id, dropdownType)}
                         style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: '0.2rem' }}
-                        title="Remove"
+                        title={t('remove')}
                       >×</button>
                     </div>
                   ))
@@ -222,13 +224,13 @@ export default function ComboCard({
       </div>
       
       <div className="field">
-        <label className="desktop-only">Line</label>
+        <label className="desktop-only">{t('line_label')}</label>
         <select 
           className={!selectedLineId ? 'is-placeholder' : ''}
           value={selectedLineId || ''} 
           onChange={e => onLineChange(parseInt(e.target.value))}
         >
-          <option value="">Select Line</option>
+          <option value="">{t('select_line')}</option>
           {lines.slice().sort((a, b) => a.name.localeCompare(b.name)).map(line => <option key={line.id} value={line.id}>{line.name}</option>)}
         </select>
       </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, Smartphone, Trash2, X } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
+import { useTranslation } from '../lib/i18n';
 
 export default function BattleLogger() {
   const [lines, setLines] = useState<Line[]>([]);
@@ -23,6 +24,7 @@ export default function BattleLogger() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [status, setStatus] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
   const [sessionBattles, setSessionBattles] = useState<any[]>([]);
+  const { t, lang, setLanguage } = useTranslation();
   const [scoreResetAt, setScoreResetAt] = useState<number>(() => {
     return parseInt(localStorage.getItem('scoreResetAt') || Date.now().toString());
   });
@@ -66,7 +68,7 @@ export default function BattleLogger() {
       await deleteBattle(battleId);
       setSessionBattles(prev => prev.filter(b => b.id !== battleId));
     } catch (err: any) {
-      setStatus({ msg: 'Failed to remove: ' + err.message, type: 'error' });
+      setStatus({ msg: t('status_remove_error') + err.message, type: 'error' });
       setTimeout(() => setStatus(null), 3000);
     } finally {
       setLoading(false);
@@ -80,18 +82,18 @@ export default function BattleLogger() {
     try {
       await deleteBattle(lastBattle.id);
       setSessionBattles(prev => prev.slice(1));
-      setStatus({ msg: 'Last battle undone!', type: 'success' });
+      setStatus({ msg: t('status_undo_success'), type: 'success' });
       setTimeout(() => setStatus(null), 2000);
     } catch (err: any) {
-      setStatus({ msg: 'Failed to undo: ' + err.message, type: 'error' });
+      setStatus({ msg: t('status_undo_error') + err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleFinish = async (winnerIndex: number, finishType: string) => {
-    if (!stadiumId) return setStatus({ msg: 'Please select a stadium!', type: 'error' });
-    if (!lineA || !lineB) return setStatus({ msg: 'Please select a line for both combos!', type: 'error' });
+    if (!stadiumId) return setStatus({ msg: t('status_select_stadium'), type: 'error' });
+    if (!lineA || !lineB) return setStatus({ msg: t('status_select_lines'), type: 'error' });
 
     setLoading(true);
     try {
@@ -107,7 +109,7 @@ export default function BattleLogger() {
 
       const makeLabel = (lId: number, pMap: Record<string, number>) => {
         const line = lines.find(l => l.id === lId);
-        if (!line) return 'Custom';
+        if (!line) return t('custom');
         const lps = (line.metadata?.slots || []).map(s => {
           const p = parts.find(px => px.id === pMap[s]);
           return p?.abbreviation || p?.name || '';
@@ -160,10 +162,10 @@ export default function BattleLogger() {
       };
       setSessionBattles(prev => [battleRecord, ...prev]);
 
-      setStatus({ msg: `Battle Logged: Combo ${winnerIndex === 0 ? 'A' : 'B'} won by ${finishType}!`, type: 'success' });
+      setStatus({ msg: t('status_battle_logged', { winner: winnerIndex === 0 ? 'A' : 'B', type: finishType }), type: 'success' });
       setTimeout(() => setStatus(null), 3000);
     } catch (err: any) {
-      setStatus({ msg: err.message || 'Error saving battle', type: 'error' });
+      setStatus({ msg: err.message || t('status_save_error'), type: 'error' });
       setTimeout(() => setStatus(null), 4000);
     } finally {
       setLoading(false);
@@ -174,21 +176,32 @@ export default function BattleLogger() {
     <div className="view">
       <div className="portrait-lock-overlay">
         <Smartphone size={64} style={{ marginBottom: '1rem' }} />
-        <h2>Gire seu dispositivo</h2>
-        <p>O Battle Logger exige o modo horizontal para enquadrar perfeitamente a arena e evitar rolagens cegas de tela.</p>
+        <h2>{t('rotate_device')}</h2>
+        <p>{t('rotate_desc')}</p>
       </div>
 
       <div className="battle-logger-container">
         <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <Link to="/" className="btn btn-outline" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>
-            <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> Hub
+            <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> {t('hub')}
           </Link>
           {dbEnv && (
             <span className={`db-env-badge ${dbEnv}`} title={`Connected to ${dbEnv} database`}>
               {dbEnv.toUpperCase()}
             </span>
           )}
-          <h1 style={{ margin: 0 }}>Battle Logger</h1>
+          <h1 style={{ margin: 0 }}>{t('logger_title')}</h1>
+          
+          <div className="lang-toggle" style={{ marginLeft: 'auto' }}>
+            <button 
+              className={`lang-btn ${lang === 'pt' ? 'active' : ''}`} 
+              onClick={() => setLanguage('pt')}
+            >PT</button>
+            <button 
+              className={`lang-btn ${lang === 'en' ? 'active' : ''}`} 
+              onClick={() => setLanguage('en')}
+            >EN</button>
+          </div>
         </div>
 
         <div className="battle-grid">
@@ -201,13 +214,13 @@ export default function BattleLogger() {
           <div className="action-column">
             <div className="stadium-selector">
               <select value={stadiumId || ''} onChange={e => setStadiumId(parseInt(e.target.value))}>
-                <option value="">-- Stadium --</option>
+                <option value="">{t('stadium_placeholder')}</option>
                 {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
 
             <div className="score-display">
-              <button className="reset-score-icon" title="Reset Score" onClick={() => setShowResetModal(true)}>
+              <button className="reset-score-icon" title={t('reset_score_title')} onClick={() => setShowResetModal(true)}>
                 <RotateCcw size={20} />
               </button>
               <div className="score-numbers">
@@ -230,9 +243,9 @@ export default function BattleLogger() {
 
             <div className="history-actions">
               <button className="undo-btn" disabled={loading || sessionBattles.length === 0} onClick={handleUndo}>
-                Undo last battle
+                {t('undo_last')}
               </button>
-              <button className="history-btn" onClick={() => setShowHistoryModal(true)}>Battle history</button>
+              <button className="history-btn" onClick={() => setShowHistoryModal(true)}>{t('battle_history')}</button>
             </div>
           </div>
 
@@ -252,12 +265,12 @@ export default function BattleLogger() {
           <div className="modal">
             <div className="modal-content history-modal-content">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: 0 }}>Session Battles</h3>
+                <h3 style={{ margin: 0 }}>{t('history_title')}</h3>
                 <button className="reset-score-icon" onClick={() => setShowHistoryModal(false)}><X size={24} /></button>
               </div>
 
               <div className="history-list" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                {sessionBattles.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No battles this session</p>}
+                {sessionBattles.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('history_empty')}</p>}
 
                 {sessionBattles.map((b, idx) => {
                   const nextB = sessionBattles[idx - 1]; // We are in descending order
@@ -267,7 +280,7 @@ export default function BattleLogger() {
                     <div key={b.id}>
                       {isFirstAfterReset && (
                         <div className="history-reset-divider">
-                          <span>LATEST SCORE RESET</span>
+                          <span>{t('history_reset_label')}</span>
                         </div>
                       )}
                       <div className="history-row-container">
@@ -297,11 +310,11 @@ export default function BattleLogger() {
         {showResetModal && (
           <div className="modal">
             <div className="modal-content">
-              <h3>Reset Scoreboard</h3>
-              <p>Are you sure you want to reset both scores to 0?</p>
+              <h3>{t('reset_modal_title')}</h3>
+              <p>{t('reset_modal_desc')}</p>
               <div className="modal-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button className="btn" style={{ flex: 1, background: 'var(--surface-light)' }} onClick={() => setShowResetModal(false)}>Cancel</button>
-                <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={handleReset}>Reset</button>
+                <button className="btn" style={{ flex: 1, background: 'var(--surface-light)' }} onClick={() => setShowResetModal(false)}>{t('cancel')}</button>
+                <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={handleReset}>{t('reset')}</button>
               </div>
             </div>
           </div>
