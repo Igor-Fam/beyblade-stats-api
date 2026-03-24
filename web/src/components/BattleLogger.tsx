@@ -105,16 +105,6 @@ export default function BattleLogger() {
         ]
       });
 
-      const points = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 }[finishType] || 1;
-      const battleRecord = {
-        id: battleId,
-        winner: winnerIndex,
-        finishType,
-        points,
-        createdAt: Date.now()
-      };
-      setSessionBattles(prev => [battleRecord, ...prev]);
-
       const makeLabel = (lId: number, pMap: Record<string, number>) => {
         const line = lines.find(l => l.id === lId);
         if (!line) return 'Custom';
@@ -280,13 +270,20 @@ export default function BattleLogger() {
                           <span>LATEST SCORE RESET</span>
                         </div>
                       )}
-                      <div className="history-table-row">
-                        <div className="history-info">
-                          <strong>Combo {b.winner === 0 ? 'A' : 'B'} won</strong>
-                          <span className="history-sub">by {b.finishType} (+{b.points} pts)</span>
+                      <div className="history-row-container">
+                        <div className="history-battle-pill">
+                          <div className={`combo-side side-0 ${b.winner === 0 ? 'winner' : ''}`}>
+                            <strong>{b.labelA}</strong>
+                            {b.winner === 0 && <span className="win-detail">{b.finishType}! +{b.points}</span>}
+                          </div>
+                          <div className="side-divider" />
+                          <div className={`combo-side side-1 ${b.winner === 1 ? 'winner' : ''}`}>
+                            <strong>{b.labelB}</strong>
+                            {b.winner === 1 && <span className="win-detail">{b.finishType}! +{b.points}</span>}
+                          </div>
                         </div>
-                        <button className="trash-btn" disabled={loading} onClick={() => handleRemoveOne(b.id)}>
-                          <Trash2 size={16} />
+                        <button className="trash-btn-box" disabled={loading} onClick={() => handleRemoveOne(b.id)}>
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
