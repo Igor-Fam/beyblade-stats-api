@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Smartphone } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
-import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth } from '../lib/api';
+import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
 
 export default function BattleLogger() {
@@ -17,22 +17,25 @@ export default function BattleLogger() {
   
   const [stadiumId, setStadiumId] = useState<number | null>(null);
   
-  const [scoreA, setScoreA] = useState(0);
-  const [scoreB, setScoreB] = useState(0);
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [status, setStatus] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [loading, setLoading] = useState(false);
   const [dbEnv, setDbEnv] = useState<'production' | 'sandbox' | null>(null);
+  const [sessionBattles, setSessionBattles] = useState<any[]>([]);
+  const [scoreResetAt, setScoreResetAt] = useState<number>(() => {
+    return parseInt(localStorage.getItem('scoreResetAt') || Date.now().toString());
+  });
 
   useEffect(() => {
     Promise.all([fetchLines(), fetchParts(), fetchStadiums(), fetchDatabaseHealth()]).then(([l, p, s, h]) => {
       setLines(l); setParts(p); setStadiums(s); setDbEnv(h.env);
     });
-    const sA = localStorage.getItem('scoreA');
-    const sB = localStorage.getItem('scoreB');
-    if (sA) setScoreA(parseInt(sA));
-    if (sB) setScoreB(parseInt(sB));
   }, []);
+
+  const { scoreA, scoreB } = sessionBattles.reduce((acc, b) => {
+    if (b.createdAt < scoreResetAt) return acc;
+    if (b.winner === 0) acc.scoreA += b.points;
+    else acc.scoreB += b.points;
+    return acc;
+  }, { scoreA: 0, scoreB: 0 });
 
   const handlePartChange = (player: 0|1, slot: string, partId: number) => {
     const updateRecord = (prev: Record<string, number>) => {
@@ -48,10 +51,26 @@ export default function BattleLogger() {
   };
 
   const handleReset = () => {
-    setScoreA(0); setScoreB(0);
-    localStorage.setItem('scoreA', '0');
-    localStorage.setItem('scoreB', '0');
+    const now = Date.now();
+    setScoreResetAt(now);
+    localStorage.setItem('scoreResetAt', now.toString());
     setShowResetModal(false);
+  };
+
+  const handleUndo = async () => {
+    if (sessionBattles.length === 0) return;
+    const lastBattle = sessionBattles[0];
+    setLoading(true);
+    try {
+      await deleteBattle(lastBattle.id);
+      setSessionBattles(prev => prev.slice(1));
+      setStatus({ msg: 'Last battle undone!', type: 'success' });
+      setTimeout(() => setStatus(null), 2000);
+    } catch (err: any) {
+      setStatus({ msg: 'Failed to undo: ' + err.message, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinish = async (winnerIndex: number, finishType: string) => {
@@ -60,7 +79,7 @@ export default function BattleLogger() {
 
     setLoading(true);
     try {
-      await registerBattle({
+      const { battleId } = await registerBattle({
         stadiumId,
         finishType,
         winner: winnerIndex,
@@ -69,6 +88,16 @@ export default function BattleLogger() {
           { lineId: lineB, partsIds: Object.values(partsB) }
         ]
       });
+
+      const points = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 }[finishType] || 1;
+      const battleRecord = {
+        id: battleId,
+        winner: winnerIndex,
+        finishType,
+        points,
+        createdAt: Date.now()
+      };
+      setSessionBattles(prev => [battleRecord, ...prev]);
 
       // ---- Save Shared History Snapshots ----
       const saveCombosToStorage = () => {
@@ -109,18 +138,6 @@ export default function BattleLogger() {
       };
       saveCombosToStorage();
       // --------------------------------
-
-      // Update App Score
-      const points = { 'SPIN': 1, 'OVER': 2, 'BURST': 2, 'XTREME': 3 }[finishType] || 1;
-      if (winnerIndex === 0) {
-        const newScore = scoreA + points;
-        setScoreA(newScore);
-        localStorage.setItem('scoreA', newScore.toString());
-      } else {
-        const newScore = scoreB + points;
-        setScoreB(newScore);
-        localStorage.setItem('scoreB', newScore.toString());
-      }
 
       setStatus({ msg: `Battle Logged: Combo ${winnerIndex === 0 ? 'A' : 'B'} won by ${finishType}!`, type: 'success' });
       setTimeout(() => setStatus(null), 3000);
@@ -191,7 +208,9 @@ export default function BattleLogger() {
           </div>
 
           <div className="history-actions">
-            <button className="undo-btn" onClick={() => alert('Undo functionality coming next!')}>Undo last battle</button>
+            <button className="undo-btn" disabled={loading || sessionBattles.length === 0} onClick={handleUndo}>
+              Undo last battle
+            </button>
             <button className="history-btn" onClick={() => alert('History Modal coming next!')}>Battle history</button>
           </div>
         </div>
