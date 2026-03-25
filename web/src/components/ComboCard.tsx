@@ -225,7 +225,7 @@ export default function ComboCard({
       </div>
       
       <div className={styles.field}>
-        <label className="desktop-only">{t('line_label')}</label>
+        <label className={styles.label}>{t('line_label')}</label>
         <select 
           className={!selectedLineId ? styles['is-placeholder'] : ''}
           value={selectedLineId || ''} 
@@ -260,7 +260,7 @@ export default function ComboCard({
 
           return (
             <div key={slot} className={styles.field}>
-              <label className="desktop-only">{slot.replace('_', ' ')}</label>
+              <label className={styles.label}>{slot.replace('_', ' ')}</label>
               <select 
                 className={!selectedParts[slot] ? styles['is-placeholder'] : ''}
                 value={selectedParts[slot] || ''} 

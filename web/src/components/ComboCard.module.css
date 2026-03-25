@@ -97,7 +97,7 @@
   margin-bottom: 1rem;
 }
 
-.field label {
+.label {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
@@ -149,8 +149,8 @@
   .combo-header { margin-bottom: 0.2rem; }
   .combo-header h2 { font-size: 0.85rem; margin: 0; }
   
-  .field { margin-bottom: 0.2rem; }
-  .field label { font-size: 0.65rem; margin-bottom: 0.1rem; }
+  .field { margin-bottom: 0.25rem; }
+  .label { display: none; }
   .field select { 
     padding: 0.2rem 0.4rem; 
     font-size: 0.75rem; 
