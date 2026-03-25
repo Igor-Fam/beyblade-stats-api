@@ -135,12 +135,22 @@ export default function ComboCard({
       localStorage.setItem('favCombos', JSON.stringify(updated));
       window.dispatchEvent(new Event('combomemory'));
     } else {
-      const labelParts = slots.map(s => {
-        const p = parts.find(p => p.id === selectedParts[s]);
-        return p?.abbreviation || p?.name || '';
-      }).filter(Boolean);
-      
-      const label = labelParts.length > 0 ? labelParts.join(' ') : (activeLine?.name || t('custom_combo'));
+      let label = '';
+      if (activeLine?.metadata?.nameTemplate) {
+        label = activeLine.metadata.nameTemplate;
+        slots.forEach(s => {
+          const p = parts.find(part => part.id === selectedParts[s]);
+          const val = p?.abbreviation || p?.name || '';
+          label = label.replace(`{${s}}`, val);
+        });
+        label = label.trim().replace(/\s+/g, ' ');
+      } else {
+        const labelParts = slots.map(s => {
+          const p = parts.find(p => p.id === selectedParts[s]);
+          return p?.abbreviation || p?.name || '';
+        }).filter(Boolean);
+        label = labelParts.length > 0 ? labelParts.join(' ') : (activeLine?.name || t('custom_combo'));
+      }
 
       const newFaV: ComboSnapshot = {
         id: Date.now(),

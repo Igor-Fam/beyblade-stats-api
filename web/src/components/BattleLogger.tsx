@@ -109,7 +109,19 @@ export default function BattleLogger() {
       const makeLabel = (lId: number, pMap: Record<string, number>) => {
         const line = lines.find(l => l.id === lId);
         if (!line) return t('custom');
-        const lps = (line.metadata?.slots || []).map(s => {
+        
+        const slotList = line.metadata?.slots || [];
+        if (line.metadata?.nameTemplate) {
+          let res = line.metadata.nameTemplate;
+          slotList.forEach(s => {
+            const p = parts.find(px => px.id === pMap[s]);
+            const val = p?.abbreviation || p?.name || '';
+            res = res.replace(`{${s}}`, val);
+          });
+          return res.trim().replace(/\s+/g, ' ');
+        }
+
+        const lps = slotList.map(s => {
           const p = parts.find(px => px.id === pMap[s]);
           return p?.abbreviation || p?.name || '';
         }).filter(Boolean);
