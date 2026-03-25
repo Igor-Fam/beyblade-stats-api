@@ -170,6 +170,16 @@ export default function BattleLogger() {
     }
   };
 
+  const handleLineChange = (player: 0 | 1, lineId: number) => {
+    if (player === 0) {
+      setLineA(lineId);
+      setPartsA({});
+    } else {
+      setLineB(lineId);
+      setPartsB({});
+    }
+  };
+
   return (
     <div className="view">
       <div className="portrait-lock-overlay">
@@ -186,7 +196,7 @@ export default function BattleLogger() {
         <div className="battle-grid">
           {/* Left Column: Combo A */}
           <div className="combo-column a-side">
-            <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={setLineA} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
+            <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={(id) => handleLineChange(0, id)} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
           </div>
 
           {/* Center Column: Score & Actions */}
@@ -232,7 +242,7 @@ export default function BattleLogger() {
 
           {/* Right Column: Combo B */}
           <div className="combo-column b-side">
-            <ComboCard playerId={1} lines={lines} parts={parts} selectedLineId={lineB} selectedParts={partsB} onLineChange={setLineB} onPartChange={(slot, id) => handlePartChange(1, slot, id)} />
+            <ComboCard playerId={1} lines={lines} parts={parts} selectedLineId={lineB} selectedParts={partsB} onLineChange={(id) => handleLineChange(1, id)} onPartChange={(slot, id) => handlePartChange(1, slot, id)} />
           </div>
         </div>
 
