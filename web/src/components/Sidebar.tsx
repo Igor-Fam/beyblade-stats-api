@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Swords, BarChart3 } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import { fetchDatabaseHealth } from '../lib/api';
+import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,19 +25,19 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
-        <div className="sidebar-wrapper">
-          <div className="sidebar-header" onClick={toggleSidebar} style={{ cursor: 'pointer', position: 'relative' }}>
-             <div className="nav-icon menu-icon">
+      <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.collapsed}`}>
+        <div className={styles['sidebar-wrapper']}>
+          <div className={styles['sidebar-header']} onClick={toggleSidebar} style={{ cursor: 'pointer', position: 'relative' }}>
+             <div className={`${styles['nav-icon']} ${styles['menu-icon']}`}>
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
                 {!isOpen && dbEnv && (
-                  <div className={`env-dot ${dbEnv}`} title={`Environment: ${dbEnv.toUpperCase()}`} />
+                  <div className={`${styles['env-dot']} ${styles[dbEnv]}`} title={`Environment: ${dbEnv.toUpperCase()}`} />
                 )}
              </div>
-             <div className="logo-text">
+             <div className={styles['logo-text']}>
                 BX Stats
                 {isOpen && dbEnv && (
-                  <span className={`db-env-badge-small ${dbEnv}`}>
+                  <span className={`${styles['db-env-badge-small']} ${styles[dbEnv]}`}>
                     {dbEnv.toUpperCase()}
                   </span>
                 )}
@@ -44,32 +45,32 @@ export default function Sidebar() {
           </div>
 
           {isOpen && (
-            <div className="sidebar-content-fade-in">
-              <nav className="sidebar-nav">
+            <div className={styles['sidebar-content-fade-in']}>
+              <nav className={styles['sidebar-nav']}>
                 {navItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`nav-item ${location.pathname === item.path ? 'active' : ''} ${item.disabled ? 'disabled' : ''}`}
+                    className={`${styles['nav-item']} ${location.pathname === item.path ? styles.active : ''} ${item.disabled ? styles.disabled : ''}`}
                     onClick={item.disabled ? (e) => e.preventDefault() : () => setIsOpen(false)}
                   >
-                    <div className="nav-icon">{item.icon}</div>
-                    <span className="nav-label">{item.label}</span>
-                    {item.disabled && <span className="coming-soon-badge small">Soon</span>}
+                    <div className={styles['nav-icon']}>{item.icon}</div>
+                    <span className={styles['nav-label']}>{item.label}</span>
+                    {item.disabled && <span className={`${styles['coming-soon-badge']} ${styles.small}`}>Soon</span>}
                   </Link>
                 ))}
               </nav>
 
-              <div className="sidebar-footer">
-                <div className="lang-toggle-container">
-                  <span className="lang-label">{lang.toUpperCase()}</span>
-                  <div className="lang-toggle-sidebar">
+              <div className={styles['sidebar-footer']}>
+                <div className={styles['lang-toggle-container']}>
+                  <span className={styles['lang-label']}>{lang.toUpperCase()}</span>
+                  <div className={styles['lang-toggle-sidebar']}>
                     <button 
-                      className={`lang-btn ${lang === 'pt' ? 'active' : ''}`} 
+                      className={`${styles['lang-btn']} ${lang === 'pt' ? styles.active : ''}`} 
                       onClick={() => setLanguage('pt')}
                     >PT</button>
                     <button 
-                      className={`lang-btn ${lang === 'en' ? 'active' : ''}`} 
+                      className={`${styles['lang-btn']} ${lang === 'en' ? styles.active : ''}`} 
                       onClick={() => setLanguage('en')}
                     >EN</button>
                   </div>
@@ -81,7 +82,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Backdrop for mobile overlays when expanded */}
-      {isOpen && <div className="sidebar-backdrop" onClick={toggleSidebar} />}
+      {isOpen && <div className={styles['sidebar-backdrop']} onClick={toggleSidebar} />}
     </>
   );
 }
