@@ -750,6 +750,22 @@ select option {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+}
+
 .modal-content h3 {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -885,7 +901,7 @@ select option {
   
   .field { margin-bottom: 0.2rem; }
   label { font-size: 0.65rem; margin-bottom: 0.1rem; }
-  select { padding: 0.2rem 0.4rem; font-size: 0.75rem; border-radius: 0.25rem; height: 1.8rem; }
+  select { padding: 0.2rem 0.4rem; font-size: 0.75rem; border-radius: 0.25rem; height: auto; min-height: 2rem; }
   
   .score-numbers { 
     font-size: 3.5rem; 
@@ -895,16 +911,22 @@ select option {
     align-items: center;
     gap: 0 !important;
   }
-  .score-numbers span { text-align: center; }
+  .score-numbers span { 
+    text-align: center; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   .score-middle-column {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0;
+    justify-content: flex-start;
+    padding-top: 0.5rem;
+    gap: 8px;
   }
   .score-vertical-divider { 
-    height: 60px; 
+    height: 35px; 
     width: 2px;
     background: rgba(255, 255, 255, 0.2);
     display: block;
@@ -930,6 +952,7 @@ select option {
   .history-dropdown { max-height: 120px; width: 180px; font-size: 0.75rem; }
   .history-item { padding: 0.3rem; }
 
+  .combo-card.dropdown-open { min-height: 180px; }
   .field-divider { margin: 0.25rem 0 !important; }
 }
 

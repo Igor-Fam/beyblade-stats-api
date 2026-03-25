@@ -184,7 +184,7 @@ export default function ComboCard({
   const listName = dropdownType === 'history' ? t('load_history') : t('load_favs');
 
   return (
-    <div className={`combo-card player-${playerId}`}>
+    <div className={`combo-card player-${playerId} ${dropdownType ? 'dropdown-open' : ''}`}>
       <div className="combo-header">
         <div style={{ display: 'flex', gap: '0.5rem', flex: 1, alignItems: 'center' }}>
           <h2>{t('combo_title', { id: playerId === 0 ? 'A' : 'B' })}</h2>
