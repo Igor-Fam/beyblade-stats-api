@@ -4,6 +4,7 @@ import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
 import { useTranslation } from '../lib/i18n';
+import styles from './BattleLogger.module.css';
 
 export default function BattleLogger() {
   const [lines, setLines] = useState<Line[]>([]);
@@ -182,85 +183,85 @@ export default function BattleLogger() {
 
   return (
     <div className="view">
-      <div className="portrait-lock-overlay">
+      <div className={styles['portrait-lock-overlay']}>
         <Smartphone size={64} style={{ marginBottom: '1rem' }} />
         <h2>{t('rotate_device')}</h2>
         <p>{t('rotate_desc')}</p>
       </div>
 
-      <div className="battle-logger-container">
-        <div className="view-header">
+      <div className={styles['battle-logger-container']}>
+        <div className={styles['view-header']}>
           <h1>{t('logger_title')}</h1>
         </div>
 
-        <div className="battle-grid">
+        <div className={styles['battle-grid']}>
           {/* Left Column: Combo A */}
-          <div className="combo-column a-side">
+          <div className={`${styles['combo-column']} ${styles['a-side']}`}>
             <ComboCard playerId={0} lines={lines} parts={parts} selectedLineId={lineA} selectedParts={partsA} onLineChange={(id) => handleLineChange(0, id)} onPartChange={(slot, id) => handlePartChange(0, slot, id)} />
           </div>
 
           {/* Center Column: Score & Actions */}
-          <div className="action-column">
-            <div className="stadium-selector">
+          <div className={styles['action-column']}>
+            <div className={styles['stadium-selector']}>
               <select value={stadiumId || ''} onChange={e => setStadiumId(parseInt(e.target.value))}>
                 <option value="">{t('stadium_placeholder')}</option>
                 {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
 
-            <div className="score-display">
-              <div className="score-numbers">
-                <span className="score-blue">{scoreA}</span>
-                <div className="score-middle-column">
-                  <button className="reset-score-icon" title={t('reset_score_title')} onClick={() => setShowResetModal(true)}>
+            <div className={styles['score-display']}>
+              <div className={styles['score-numbers']}>
+                <span className={styles['score-blue']}>{scoreA}</span>
+                <div className={styles['score-middle-column']}>
+                  <button className={styles['reset-score-icon']} title={t('reset_score_title')} onClick={() => setShowResetModal(true)}>
                     <RotateCcw size={20} />
                   </button>
-                  <div className="score-vertical-divider"></div>
+                  <div className={styles['score-vertical-divider']}></div>
                 </div>
-                <span className="score-orange">{scoreB}</span>
+                <span className={styles['score-orange']}>{scoreB}</span>
               </div>
             </div>
 
-            <div className="finish-buttons-grid">
-              <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'SPIN')}>Spin</button>
-              <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'SPIN')}>Spin</button>
-              <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'OVER')}>Over</button>
-              <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'OVER')}>Over</button>
-              <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'BURST')}>Burst</button>
-              <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'BURST')}>Burst</button>
-              <button className="finish-btn blue" disabled={loading} onClick={() => handleFinish(0, 'XTREME')}>Xtreme</button>
-              <button className="finish-btn orange" disabled={loading} onClick={() => handleFinish(1, 'XTREME')}>Xtreme</button>
+            <div className={styles['finish-buttons-grid']}>
+              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'SPIN')}>Spin</button>
+              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'SPIN')}>Spin</button>
+              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'OVER')}>Over</button>
+              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'OVER')}>Over</button>
+              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'BURST')}>Burst</button>
+              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'BURST')}>Burst</button>
+              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'XTREME')}>Xtreme</button>
+              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'XTREME')}>Xtreme</button>
             </div>
 
-            <div className="history-actions">
-              <button className="undo-btn" disabled={loading || sessionBattles.length === 0} onClick={handleUndo}>
+            <div className={styles['history-actions']}>
+              <button className={styles['undo-btn']} disabled={loading || sessionBattles.length === 0} onClick={handleUndo}>
                 {t('undo_last')}
               </button>
-              <button className="history-btn" onClick={() => setShowHistoryModal(true)}>{t('battle_history')}</button>
+              <button className={styles['history-btn']} onClick={() => setShowHistoryModal(true)}>{t('battle_history')}</button>
             </div>
           </div>
 
           {/* Right Column: Combo B */}
-          <div className="combo-column b-side">
+          <div className={`${styles['combo-column']} ${styles['b-side']}`}>
             <ComboCard playerId={1} lines={lines} parts={parts} selectedLineId={lineB} selectedParts={partsB} onLineChange={(id) => handleLineChange(1, id)} onPartChange={(slot, id) => handlePartChange(1, slot, id)} />
           </div>
         </div>
 
         {status && (
-          <div id="status" style={{ display: 'block', background: status.type === 'success' ? 'var(--success)' : 'var(--error)', color: '#0f172a' }}>
+          <div id={styles.status} style={{ display: 'block', background: status.type === 'success' ? 'var(--success)' : 'var(--error)', color: '#0f172a' }}>
             {status.msg}
           </div>
         )}
 
         {showHistoryModal && (
-          <div className="modal">
-            <div className="modal-content history-modal-content">
+          <div className={styles.modal}>
+            <div className={`${styles['modal-content']} ${styles['history-modal-content']}`}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0 }}>{t('history_title')}</h3>
-                <button className="reset-score-icon" onClick={() => setShowHistoryModal(false)}><X size={24} /></button>
+                <button className={styles['reset-score-icon']} onClick={() => setShowHistoryModal(false)}><X size={24} /></button>
               </div>
 
-              <div className="history-list" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <div className={styles['history-list']}>
                 {sessionBattles.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('history_empty')}</p>}
 
                 {sessionBattles.map((b, idx) => {
@@ -270,23 +271,23 @@ export default function BattleLogger() {
                   return (
                     <div key={b.id}>
                       {isFirstAfterReset && (
-                        <div className="history-reset-divider">
+                        <div className={styles['history-reset-divider']}>
                           <span>{t('history_reset_label')}</span>
                         </div>
                       )}
-                      <div className="history-row-container">
-                        <div className="history-battle-pill">
-                          <div className={`combo-side side-0 ${b.winner === 0 ? 'winner' : ''}`}>
+                      <div className={styles['history-row-container']}>
+                        <div className={styles['history-battle-pill']}>
+                          <div className={`${styles['combo-side']} ${styles['side-0']} ${b.winner === 0 ? styles.winner : ''}`}>
                             <strong>{b.labelA}</strong>
-                            {b.winner === 0 && <span className="win-detail">{b.finishType}! +{b.points}</span>}
+                            {b.winner === 0 && <span className={styles['win-detail']}>{b.finishType}! +{b.points}</span>}
                           </div>
-                          <div className="side-divider" />
-                          <div className={`combo-side side-1 ${b.winner === 1 ? 'winner' : ''}`}>
+                          <div className={styles['side-divider']} />
+                          <div className={`${styles['combo-side']} ${styles['side-1']} ${b.winner === 1 ? styles.winner : ''}`}>
                             <strong>{b.labelB}</strong>
-                            {b.winner === 1 && <span className="win-detail">{b.finishType}! +{b.points}</span>}
+                            {b.winner === 1 && <span className={styles['win-detail']}>{b.finishType}! +{b.points}</span>}
                           </div>
                         </div>
-                        <button className="trash-btn-box" disabled={loading} onClick={() => handleRemoveOne(b.id)}>
+                        <button className={styles['trash-btn-box']} disabled={loading} onClick={() => handleRemoveOne(b.id)}>
                           <Trash2 size={20} />
                         </button>
                       </div>
@@ -299,11 +300,11 @@ export default function BattleLogger() {
         )}
 
         {showResetModal && (
-          <div className="modal">
-            <div className="modal-content">
+          <div className={styles.modal}>
+            <div className={styles['modal-content']}>
               <h3>{t('reset_modal_title')}</h3>
               <p>{t('reset_modal_desc')}</p>
-              <div className="modal-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <div className={styles['modal-actions']}>
                 <button className="btn" style={{ flex: 1, background: 'var(--surface-light)' }} onClick={() => setShowResetModal(false)}>{t('cancel')}</button>
                 <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={handleReset}>{t('reset')}</button>
               </div>
