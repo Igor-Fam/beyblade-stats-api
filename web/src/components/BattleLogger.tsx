@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, Smartphone, Trash2, X } from 'lucide-react';
+import { RotateCcw, Smartphone, Trash2, X } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
@@ -24,7 +23,7 @@ export default function BattleLogger() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [status, setStatus] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
   const [sessionBattles, setSessionBattles] = useState<any[]>([]);
-  const { t, lang, setLanguage } = useTranslation();
+  const { t } = useTranslation();
   const [scoreResetAt, setScoreResetAt] = useState<number>(() => {
     return parseInt(localStorage.getItem('scoreResetAt') || Date.now().toString());
   });
@@ -181,27 +180,13 @@ export default function BattleLogger() {
       </div>
 
       <div className="battle-logger-container">
-        <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-          <Link to="/" className="btn btn-outline" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>
-            <ArrowLeft size={16} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'text-bottom' }} /> {t('hub')}
-          </Link>
+        <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', paddingLeft: '4rem' }}>
           {dbEnv && (
             <span className={`db-env-badge ${dbEnv}`} title={`Connected to ${dbEnv} database`}>
               {dbEnv.toUpperCase()}
             </span>
           )}
           <h1 style={{ margin: 0 }}>{t('logger_title')}</h1>
-          
-          <div className="lang-toggle" style={{ marginLeft: 'auto' }}>
-            <button 
-              className={`lang-btn ${lang === 'pt' ? 'active' : ''}`} 
-              onClick={() => setLanguage('pt')}
-            >PT</button>
-            <button 
-              className={`lang-btn ${lang === 'en' ? 'active' : ''}`} 
-              onClick={() => setLanguage('en')}
-            >EN</button>
-          </div>
         </div>
 
         <div className="battle-grid">
