@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RotateCcw, Smartphone, Trash2, X } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
-import { fetchLines, fetchParts, fetchStadiums, registerBattle, fetchDatabaseHealth, deleteBattle } from '../lib/api';
+import { fetchLines, fetchParts, fetchStadiums, registerBattle, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
 import { useTranslation } from '../lib/i18n';
 
@@ -18,7 +18,6 @@ export default function BattleLogger() {
   const [stadiumId, setStadiumId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
-  const [dbEnv, setDbEnv] = useState<'production' | 'sandbox' | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [status, setStatus] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
@@ -29,15 +28,15 @@ export default function BattleLogger() {
   });
 
   useEffect(() => {
-    Promise.all([fetchLines(), fetchParts(), fetchStadiums(), fetchDatabaseHealth()]).then(([l, p, s, h]) => {
-      setLines(l); setParts(p); setStadiums(s); setDbEnv(h.env);
+    Promise.all([fetchLines(), fetchParts(), fetchStadiums()]).then(([l, p, s]) => {
+      setLines(l); setParts(p); setStadiums(s);
     });
   }, []);
 
   const { scoreA, scoreB } = sessionBattles.reduce((acc, battle) => {
     if (battle.createdAt < scoreResetAt) return acc;
-    if (battle.winner === 0) acc.scoreA += battle.points;
-    else acc.scoreB += battle.points;
+    if (battle.winner === 0) acc.scoreA = Math.min(99, acc.scoreA + battle.points);
+    else acc.scoreB = Math.min(99, acc.scoreB + battle.points);
     return acc;
   }, { scoreA: 0, scoreB: 0 });
 
@@ -180,13 +179,8 @@ export default function BattleLogger() {
       </div>
 
       <div className="battle-logger-container">
-        <div className="view-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', paddingLeft: '4rem' }}>
-          {dbEnv && (
-            <span className={`db-env-badge ${dbEnv}`} title={`Connected to ${dbEnv} database`}>
-              {dbEnv.toUpperCase()}
-            </span>
-          )}
-          <h1 style={{ margin: 0 }}>{t('logger_title')}</h1>
+        <div className="view-header">
+          <h1>{t('logger_title')}</h1>
         </div>
 
         <div className="battle-grid">
@@ -205,12 +199,14 @@ export default function BattleLogger() {
             </div>
 
             <div className="score-display">
-              <button className="reset-score-icon" title={t('reset_score_title')} onClick={() => setShowResetModal(true)}>
-                <RotateCcw size={20} />
-              </button>
               <div className="score-numbers">
                 <span className="score-blue">{scoreA}</span>
-                <div className="score-vertical-divider"></div>
+                <div className="score-middle-column">
+                  <button className="reset-score-icon" title={t('reset_score_title')} onClick={() => setShowResetModal(true)}>
+                    <RotateCcw size={20} />
+                  </button>
+                  <div className="score-vertical-divider"></div>
+                </div>
                 <span className="score-orange">{scoreB}</span>
               </div>
             </div>

@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Swords, BarChart3 } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
+import { fetchDatabaseHealth } from '../lib/api';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [dbEnv, setDbEnv] = useState<'production' | 'sandbox' | null>(null);
   const location = useLocation();
   const { t, lang, setLanguage } = useTranslation();
+
+  useState(() => {
+    fetchDatabaseHealth().then(h => setDbEnv(h.env));
+  });
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -20,11 +26,21 @@ export default function Sidebar() {
     <>
       <aside className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
         <div className="sidebar-wrapper">
-          <div className="sidebar-header" onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
+          <div className="sidebar-header" onClick={toggleSidebar} style={{ cursor: 'pointer', position: 'relative' }}>
              <div className="nav-icon menu-icon">
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
+                {!isOpen && dbEnv && (
+                  <div className={`env-dot ${dbEnv}`} title={`Environment: ${dbEnv.toUpperCase()}`} />
+                )}
              </div>
-             <div className="logo-text">BX Stats</div>
+             <div className="logo-text">
+                BX Stats
+                {isOpen && dbEnv && (
+                  <span className={`db-env-badge-small ${dbEnv}`}>
+                    {dbEnv.toUpperCase()}
+                  </span>
+                )}
+             </div>
           </div>
 
           {isOpen && (
