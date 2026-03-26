@@ -20,22 +20,22 @@ async function main() {
     // --- Lines ---
     console.log('Creating lines...');
     const lineConfigs: Record<string, { slots: string[], nameTemplate: string }> = {
-      'BX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
-      'UX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
-      'CX': { slots: ['LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {MAIN_BLADE}{ASSIST_BLADE} {RATCHET} {BIT}' },
-      'BX Expand': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
-      'UX Expand': { slots: ['BLADE', 'BIT'], nameTemplate: '{BLADE} {BIT}' },
-      'CX Expand': { slots: ['LOCK_CHIP', 'OVER_BLADE', 'METAL_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {METAL_BLADE} {OVER_BLADE}{ASSIST_BLADE} {RATCHET} {BIT}' },
+        'BX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+        'UX': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+        'CX': { slots: ['LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {MAIN_BLADE} {ASSIST_BLADE} {RATCHET} {BIT}' },
+        'BX Expand': { slots: ['BLADE', 'RATCHET', 'BIT'], nameTemplate: '{BLADE} {RATCHET} {BIT}' },
+        'UX Expand': { slots: ['BLADE', 'BIT'], nameTemplate: '{BLADE} {BIT}' },
+        'CX Expand': { slots: ['LOCK_CHIP', 'OVER_BLADE', 'METAL_BLADE', 'ASSIST_BLADE', 'RATCHET', 'BIT'], nameTemplate: '{LOCK_CHIP} {METAL_BLADE} {OVER_BLADE}{ASSIST_BLADE} {RATCHET} {BIT}' },
     };
 
     const linesToSeed = ['BX', 'UX', 'CX', 'BX Expand', 'UX Expand', 'CX Expand'];
-    
+
     const seededLines = await Promise.all(
-        linesToSeed.map(name => 
-            prisma.line.upsert({ 
-                where: { name }, 
-                update: { metadata: lineConfigs[name] as any }, 
-                create: { name, metadata: lineConfigs[name] as any } 
+        linesToSeed.map(name =>
+            prisma.line.upsert({
+                where: { name },
+                update: { metadata: lineConfigs[name] as any },
+                create: { name, metadata: lineConfigs[name] as any }
             })
         )
     );
@@ -45,12 +45,12 @@ async function main() {
     // --- Stadiums ---
     console.log('Creating Stadiums...');
     const stadiums = [
-        'Xtreme Stadium', 'Wide Xtreme Stadium', 'Bucket Stadium', 
-        'Hasbro Xtreme Stadium', 'Double Xtreme Stadium', 
+        'Xtreme Stadium', 'Wide Xtreme Stadium', 'Bucket Stadium',
+        'Hasbro Xtreme Stadium', 'Double Xtreme Stadium',
         'Clash And Carry Beystadium', 'Drop Attack Stadium', 'Infinity Stadium'
     ];
     await Promise.all(
-        stadiums.map(name => 
+        stadiums.map(name =>
             prisma.stadium.upsert({ where: { name }, update: {}, create: { name } })
         )
     );
