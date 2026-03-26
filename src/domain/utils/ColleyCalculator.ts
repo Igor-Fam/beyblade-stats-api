@@ -3,14 +3,14 @@
  *
  * Implements the Colley Matrix Method for ranking parts based on battle history.
  * This method is completely order-independent: the result is always the same
- * regardless of the sequence in which battles occurred, making it compatible
- * with dynamic filters
+ * regardless of the sequence in which battles occurred.
  *
  * Each part starts with a prior of 0.5 (neutral) and is adjusted based on
  * wins, losses, and the strength of the opponents faced.
  *
- * Finish-type weights are applied to the result vector (b) to reflect
- * finish type point weights.
+ * Finish-type weights are represented as a number of virtual additional battles.
+ * A 1× win SPIN = 1 battle; 1× win XTREME = 3 battles. This preserves the
+ * mathematical [0,1] guarantee of the Colley method (unlike direct b-weighting).
  */
 
 export interface ColleyBattle {
@@ -23,16 +23,24 @@ const DISPLAY_SCALE = 1000;
 
 export class ColleyCalculator {
 
+    /**
+     * Number of virtual battles each finish type counts as.
+     * Integer values preserve the [0,1] mathematical guarantee of the Colley method:
+     *   SPIN   → 1  (baseline)
+     *   OVER   → 2  (≈1.8 rounded)
+     *   BURST  → 2  (≈1.8 rounded)
+     *   XTREME → 3  (≈2.5 rounded)
+     */
     private static readonly FINISH_WEIGHTS: Record<string, number> = {
-        SPIN: 1.0,
-        OVER: 1.8,
-        BURST: 1.8,
-        XTREME: 2.5,
+        SPIN:   1,
+        OVER:   2,
+        BURST:  2,
+        XTREME: 3,
     };
 
-    // Maps a finish type string to its weight multiplier.
+    // Returns the virtual-battle count for a given finish type (defaults to 1).
     public static getFinishWeight(finishType: string): number {
-        return this.FINISH_WEIGHTS[finishType] ?? 1.0;
+        return this.FINISH_WEIGHTS[finishType] ?? 1;
     }
 
     /**
@@ -60,49 +68,40 @@ export class ColleyCalculator {
      * Builds the Colley matrix C and result vector b.
      *
      * For each part i:
-     *   C[i][i]  = 2 + total_battles[i]
-     *   C[i][j]  = -confrontations_between_i_and_j  (for j ≠ i)
-     *   b[i]     = 1 + Σ(finish_weight for win) / 2 - Σ(finish_weight for loss) / 2
+     *   C[i][i]  = 2 + virtual_battles[i]
+     *   C[i][j]  = -virtual_confrontations_between_i_and_j  (for j ≠ i)
+     *   b[i]     = 1 + (virtual_wins[i] - virtual_losses[i]) / 2
+     *
+     * Each real battle is repeated `finishWeight` times (an integer) so that
+     * the [0, 1] invariant of the standard Colley method is preserved.
      */
     private static buildSystem(partIds: number[], battles: ColleyBattle[]): { C: number[][], b: number[] } {
         const p = partIds.length;
         const idx = new Map(partIds.map((id, i) => [id, i]));
 
-        // Initialise C and b
         const C: number[][] = Array.from({ length: p }, () => Array(p).fill(0));
         const b: number[] = Array(p).fill(1); // prior = 1 (encodes 0.5 neutral rating)
 
         for (const battle of battles) {
-            const w = battle.finishWeight;
+            const n = battle.finishWeight; // integer virtual-battle count
 
             for (const winnerId of battle.winnerPartIds) {
                 const wi = idx.get(winnerId);
                 if (wi === undefined) continue;
 
-                // Diagonal: total battles played by this part
-                C[wi][wi] += 1;
-                // Result: weighted win contribution
-                b[wi] += w / 2;
-
-                // Cross-terms: reduce rating coupling with each opponent
                 for (const loserId of battle.loserPartIds) {
                     const li = idx.get(loserId);
                     if (li === undefined) continue;
-                    C[wi][li] -= 1;
-                }
-            }
 
-            for (const loserId of battle.loserPartIds) {
-                const li = idx.get(loserId);
-                if (li === undefined) continue;
-
-                C[li][li] += 1;
-                b[li] -= w / 2;
-
-                for (const winnerId of battle.winnerPartIds) {
-                    const wi = idx.get(winnerId);
-                    if (wi === undefined) continue;
-                    C[li][wi] -= 1;
+                    // One symmetric (winner_i, loser_j) interaction × n virtual battles.
+                    // Both diagonals grow equally so C row sums stay 0 (before +2 prior),
+                    // preserving the [0, 1] mathematical guarantee for any combo size.
+                    C[wi][wi] += n;
+                    C[li][li] += n;
+                    C[wi][li] -= n;
+                    C[li][wi] -= n;
+                    b[wi] += n / 2;
+                    b[li] -= n / 2;
                 }
             }
         }
