@@ -2,21 +2,21 @@
  * ColleyCalculator
  *
  * Implements the Colley Matrix Method for ranking parts based on battle history.
- * This method is completely order-independent — the result is always the same
+ * This method is completely order-independent: the result is always the same
  * regardless of the sequence in which battles occurred, making it compatible
- * with the import/export multi-database model.
+ * with dynamic filters
  *
  * Each part starts with a prior of 0.5 (neutral) and is adjusted based on
  * wins, losses, and the strength of the opponents faced.
  *
  * Finish-type weights are applied to the result vector (b) to reflect
- * that dominant victories (Xtreme) are worth more than narrow ones (Spin).
+ * finish type point weights.
  */
 
 export interface ColleyBattle {
     winnerPartIds: number[];
-    loserPartIds:  number[];
-    finishWeight:  number;
+    loserPartIds: number[];
+    finishWeight: number;
 }
 
 const DISPLAY_SCALE = 1000;
@@ -24,9 +24,9 @@ const DISPLAY_SCALE = 1000;
 export class ColleyCalculator {
 
     private static readonly FINISH_WEIGHTS: Record<string, number> = {
-        SPIN:   1.0,
-        OVER:   1.8,
-        BURST:  1.8,
+        SPIN: 1.0,
+        OVER: 1.8,
+        BURST: 1.8,
         XTREME: 2.5,
     };
 
@@ -63,9 +63,6 @@ export class ColleyCalculator {
      *   C[i][i]  = 2 + total_battles[i]
      *   C[i][j]  = -confrontations_between_i_and_j  (for j ≠ i)
      *   b[i]     = 1 + Σ(finish_weight for win) / 2 - Σ(finish_weight for loss) / 2
-     *
-     * Using full credit (1.0) per part — no fractional credit — to avoid
-     * systematic bias against combos from lines with more parts (e.g. CX vs BX).
      */
     private static buildSystem(partIds: number[], battles: ColleyBattle[]): { C: number[][], b: number[] } {
         const p = partIds.length;
@@ -73,7 +70,7 @@ export class ColleyCalculator {
 
         // Initialise C and b
         const C: number[][] = Array.from({ length: p }, () => Array(p).fill(0));
-        const b: number[]   = Array(p).fill(1); // prior = 1 (encodes 0.5 neutral rating)
+        const b: number[] = Array(p).fill(1); // prior = 1 (encodes 0.5 neutral rating)
 
         for (const battle of battles) {
             const w = battle.finishWeight;
