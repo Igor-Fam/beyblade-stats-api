@@ -21,17 +21,17 @@ describe('EloCalculator', () => {
     describe('calculateRatingChange', () => {
         it('should return 0 for a draw (if we implemented draws, but here we use win/loss)', () => {
             // If expected is 0.5 and actual is 0.5 (not possible in our binary win/loss)
-            const change = EloCalculator.calculateRatingChange(0.5, 0.5);
+            const change = EloCalculator.calculateRatingChange(0.5, 0.5, 1);
             expect(change).toBe(0);
         });
 
         it('should return a positive value for a win', () => {
-            const change = EloCalculator.calculateRatingChange(1, 0.5);
+            const change = EloCalculator.calculateRatingChange(1, 0.5, 1);
             expect(change).toBeGreaterThan(0);
         });
 
         it('should return a negative value for a loss', () => {
-            const change = EloCalculator.calculateRatingChange(0, 0.5);
+            const change = EloCalculator.calculateRatingChange(0, 0.5, 1);
             expect(change).toBeLessThan(0);
         });
 
@@ -39,8 +39,8 @@ describe('EloCalculator', () => {
             const smallExpectation = 0.1; // Expected to lose
             const largeExpectation = 0.9; // Expected to win
 
-            const upsetChange = EloCalculator.calculateRatingChange(1, smallExpectation);
-            const expectedChange = EloCalculator.calculateRatingChange(1, largeExpectation);
+            const upsetChange = EloCalculator.calculateRatingChange(1, smallExpectation, 1);
+            const expectedChange = EloCalculator.calculateRatingChange(1, largeExpectation, 1);
 
             expect(upsetChange).toBeGreaterThan(expectedChange);
         });

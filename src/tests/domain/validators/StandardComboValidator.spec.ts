@@ -16,6 +16,7 @@ describe('StandardComboValidator', () => {
         return {
             id: Math.floor(Math.random() * 100),
             name: name,
+            abbreviation: null,
             lineId: null,
             partTypeId: 1,
             metadata: metadata,
