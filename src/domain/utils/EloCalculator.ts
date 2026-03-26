@@ -23,8 +23,8 @@ export class EloCalculator {
      * @param expectedScore Calculated expected score.
      * @returns The amount to add/subtract from the current rating.
      */
-    public static calculateRatingChange(actualScore: number, expectedScore: number): number {
-        return Math.round(this.K_FACTOR * (actualScore - expectedScore));
+    public static calculateRatingChange(actualScore: number, expectedScore: number, kMultiplier: number): number {
+        return Math.round(this.K_FACTOR * kMultiplier * (actualScore - expectedScore));
     }
 
     /**
