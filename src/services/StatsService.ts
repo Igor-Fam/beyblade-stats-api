@@ -198,8 +198,13 @@ export class StatsService {
             };
         });
 
-        // Default sort: BP (Colley) desc
-        return stats.sort((a, b) => b.bp - a.bp);
+        // Default sort: BP (Colley) desc; parts with no battles always go to the bottom.
+        return stats.sort((a, b) => {
+            if (a.totalMatches === 0 && b.totalMatches === 0) return 0;
+            if (a.totalMatches === 0) return 1;
+            if (b.totalMatches === 0) return -1;
+            return b.bp - a.bp;
+        });
     }
 
     async getPartDetails(partId: number): Promise<PartDetailsDTO> {
