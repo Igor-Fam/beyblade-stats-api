@@ -72,6 +72,21 @@ export default function StatsPage() {
     ? 'Colley — order-independent, strength-aware'
     : 'Batch Elo — sequential, strength-aware';
 
+  const exportCsv = () => {
+    const headers = ['Name', 'Type', 'Elo', 'BP', 'Avg Pts', 'Battles', 'Wins', 'Losses', 'Win Rate'];
+    const rows = sorted.map(p => [
+      p.name, p.type, p.elo, p.bp, p.avgPoints, p.totalMatches, p.wins, p.losses, p.winRate
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'parts_stats.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className={`view ${styles.page}`}>
       <div className={styles.header}>
@@ -97,6 +112,13 @@ export default function StatsPage() {
           </div>
           <span className={styles.modeDesc}>{rankDesc}</span>
         </div>
+
+        {/* DEV-ONLY: remove before release */}
+        {sorted.length > 0 && (
+          <button onClick={exportCsv} style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', fontSize: '0.75rem', background: '#334155', border: '1px dashed #475569', color: '#94a3b8', borderRadius: '0.4rem', cursor: 'pointer' }}>
+            ⬇ Export CSV (dev)
+          </button>
+        )}
       </div>
 
       {loading ? (
