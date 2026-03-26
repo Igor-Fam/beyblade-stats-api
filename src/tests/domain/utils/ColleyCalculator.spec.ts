@@ -5,21 +5,21 @@ const NEUTRAL = 500;
 describe('ColleyCalculator', () => {
 
     describe('getFinishWeight', () => {
-        it('should return 1.0 for SPIN', () => {
-            expect(ColleyCalculator.getFinishWeight('SPIN')).toBe(1.0);
+        it('should return 1 for SPIN', () => {
+            expect(ColleyCalculator.getFinishWeight('SPIN')).toBe(1);
         });
 
-        it('should return 1.8 for OVER and BURST', () => {
-            expect(ColleyCalculator.getFinishWeight('OVER')).toBe(1.8);
-            expect(ColleyCalculator.getFinishWeight('BURST')).toBe(1.8);
+        it('should return 2 for OVER and BURST', () => {
+            expect(ColleyCalculator.getFinishWeight('OVER')).toBe(2);
+            expect(ColleyCalculator.getFinishWeight('BURST')).toBe(2);
         });
 
-        it('should return 2.5 for XTREME', () => {
-            expect(ColleyCalculator.getFinishWeight('XTREME')).toBe(2.5);
+        it('should return 3 for XTREME', () => {
+            expect(ColleyCalculator.getFinishWeight('XTREME')).toBe(3);
         });
 
-        it('should return 1.0 for unknown finish types', () => {
-            expect(ColleyCalculator.getFinishWeight('UNKNOWN')).toBe(1.0);
+        it('should return 1 for unknown finish types', () => {
+            expect(ColleyCalculator.getFinishWeight('UNKNOWN')).toBe(1);
         });
     });
 
@@ -72,13 +72,11 @@ describe('ColleyCalculator', () => {
             expect(result.get(4)).toBeLessThan(result.get(3)!);
         });
 
-        it('should validate Colley mathematical invariant: ratings sum to number of parts', () => {
-            // The sum of all Colley ratings (on 0–1 scale) must equal p/2.
-            // On the 0–1000 display scale, the sum must equal p * 500.
+        it('should validate Colley mathematical invariant: ratings sum to number of parts * 500', () => {
             const battles: ColleyBattle[] = [
-                { winnerPartIds: [1], loserPartIds: [2], finishWeight: 1.0 },
-                { winnerPartIds: [2], loserPartIds: [3], finishWeight: 1.8 },
-                { winnerPartIds: [1], loserPartIds: [3], finishWeight: 2.5 },
+                { winnerPartIds: [1], loserPartIds: [2], finishWeight: 1 },
+                { winnerPartIds: [2], loserPartIds: [3], finishWeight: 2 },
+                { winnerPartIds: [1], loserPartIds: [3], finishWeight: 3 },
             ];
             const partIds = [1, 2, 3];
             const result = ColleyCalculator.calculate(partIds, battles);
