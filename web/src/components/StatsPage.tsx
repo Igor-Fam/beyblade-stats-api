@@ -48,6 +48,11 @@ export default function StatsPage() {
 
   const sorted = useMemo(() => {
     return [...parts].sort((a, b) => {
+      // Parts with no battles always sink to the bottom
+      if (a.totalMatches === 0 && b.totalMatches === 0) return 0;
+      if (a.totalMatches === 0) return 1;
+      if (b.totalMatches === 0) return -1;
+
       const av = a[sortKey];
       const bv = b[sortKey];
       const cmp = typeof av === 'string'
