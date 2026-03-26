@@ -3,6 +3,7 @@ import { AppError } from '../errors/AppError';
 import { ComboValidatorFactory } from '../domain/validators/ComboValidatorFactory';
 import { ComboPart } from '../domain/validators/IComboValidator';
 import { FinishTypes } from '../domain/enums/FinishTypes';
+import { EloCalculator } from '../domain/utils/EloCalculator';
 
 export interface CreateBattleEntryDTO {
     lineId: number;
@@ -19,7 +20,9 @@ export interface CreateBattleDTO {
 interface Combo {
     line: string,
     parts: ComboPart[],
-    points: number
+    points: number,
+    avgRating: number,
+    ratingChange: number
 }
 
 export class BattleService {
@@ -51,40 +54,81 @@ export class BattleService {
             "XTREME": 3
         }
 
+        const eloMultipliers = {
+            "SPIN": 1.0,
+            "OVER": 1.8,
+            "BURST": 1.8,
+            "XTREME": 2.5
+        };
+
+        const eloMultiplier = eloMultipliers[data.finishType as keyof typeof eloMultipliers];
         const battlePoints = finishTypePoints[data.finishType as keyof typeof finishTypePoints];
 
+        // Validation, Points and Avg Rating calculation
         combos.forEach((combo: Combo, index: number) => {
             ComboValidatorFactory.getValidator(combo.line).validate(combo.parts);
-            combo.points = battlePoints * (data.winner === index ? 1 : -1);
+
+            const isWinner = data.winner === index;
+            combo.points = battlePoints * (isWinner ? 1 : -1);
+            combo.avgRating = EloCalculator.calculateAverageRating(combo.parts.map(p => p.eloRating));
         });
 
-        const battle = await prisma.battle.create({
-            data: {
-                stadiumId: data.stadiumId,
-                entries: {
-                    create: combos.map((combo, index) => {
-                        const pureComboHash = combo.parts.map(p => p.id).sort((a, b) => a - b).join('-');
+        // Elo Change calculation (needs avgRating from both sides)
+        combos.forEach((combo: Combo, index: number) => {
+            const otherCombo = combos[index === 1 ? 0 : 1];
+            const expectedScore = EloCalculator.calculateExpectedScore(combo.avgRating, otherCombo.avgRating);
+            const isWinner = data.winner === index;
 
-                        return {
-                            lineId: data.entries[index].lineId,
-                            finishType: data.finishType,
-                            points: combo.points,
-                            comboHash: pureComboHash,
-                            parts: {
-                                create: combo.parts.map(p => ({
-                                    partId: p.id
-                                }))
-                            }
-                        };
-                    })
+            // Calculate Δ using the 1.0/1.8/2.5 multipliers
+            combo.ratingChange = EloCalculator.calculateRatingChange(isWinner ? 1 : 0, expectedScore, eloMultiplier);
+        });
+
+        // Battle creation + Elo updates for all parts
+        const [battle] = await prisma.$transaction([
+            prisma.battle.create({
+                data: {
+                    stadiumId: data.stadiumId,
+                    entries: {
+                        create: combos.map((combo, index) => {
+                            const pureComboHash = combo.parts.map(p => p.id).sort((a, b) => a - b).join('-');
+
+                            return {
+                                lineId: data.entries[index].lineId,
+                                finishType: data.finishType,
+                                points: combo.points,
+                                comboHash: pureComboHash,
+                                parts: {
+                                    create: combo.parts.map(p => ({
+                                        partId: p.id
+                                    }))
+                                }
+                            };
+                        })
+                    }
+                },
+                include: {
+                    entries: true
                 }
-            },
-            include: {
-                entries: true
-            }
-        });
+            }),
+            // Update Elo for both combos' parts
+            ...combos[0].parts.map(p => prisma.part.update({
+                where: { id: p.id },
+                data: { eloRating: { increment: combos[0].ratingChange } }
+            })),
+            ...combos[1].parts.map(p => prisma.part.update({
+                where: { id: p.id },
+                data: { eloRating: { increment: combos[1].ratingChange } }
+            }))
+        ]);
 
-        return { message: "Battle successfully registered!", battleId: battle.id };
+        return {
+            message: "Battle successfully registered!",
+            battleId: (battle as any).id,
+            eloChanges: {
+                winner: combos[data.winner].ratingChange,
+                loser: combos[data.winner === 0 ? 1 : 0].ratingChange
+            }
+        };
     }
 
     public async deleteBattle(id: number) {
@@ -134,6 +178,8 @@ async function getComboFromEntry(entry: CreateBattleEntryDTO): Promise<Combo> {
     return {
         line: line.name,
         parts: parts as ComboPart[],
-        points: 0
+        points: 0,
+        avgRating: 0,
+        ratingChange: 0
     };
 }
