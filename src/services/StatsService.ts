@@ -2,12 +2,14 @@ import { BattleEntryPart, Part } from '../../prisma/generated/client';
 import { prisma } from '../database';
 import { AppError } from '../errors/AppError';
 import { ColleyCalculator, ColleyBattle } from '../domain/utils/ColleyCalculator';
+import { EloCalculator } from '../domain/utils/EloCalculator';
 
 export interface PartStatsDTO {
     id: number;
     name: string;
     type: string;
-    elo: number;
+    elo: number;  // Batch Elo (sequential, strength-aware)
+    bp: number;   // Battle Power — Colley Rating (0–1000, order-independent)
     totalMatches: number;
     wins: number;
     losses: number;
@@ -41,8 +43,36 @@ interface WinRateData {
 
 export class StatsService {
 
-    // Fetches all battles within an optional filter, converts them into ColleyBattle
-    // format, and delegates the rating calculation to ColleyCalculator.
+    // Runs the sequential Batch Elo calculation across all battles.
+    private async calculateBatchElo(filter?: any): Promise<Map<number, number>> {
+        const battles = await prisma.battle.findMany({
+            where: filter,
+            orderBy: { createdAt: 'asc' },
+            include: { entries: { include: { parts: true } } }
+        });
+
+        const ratings = new Map<number, number>();
+        const getRating = (id: number) => ratings.get(id) ?? 1000;
+        const eloMultipliers: Record<string, number> = { SPIN: 1.0, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
+
+        for (const battle of battles) {
+            const entry0 = battle.entries[0];
+            const entry1 = battle.entries[1];
+            const avgRating0 = EloCalculator.calculateAverageRating(entry0.parts.map(p => getRating(p.partId)));
+            const avgRating1 = EloCalculator.calculateAverageRating(entry1.parts.map(p => getRating(p.partId)));
+            const multiplier = eloMultipliers[entry0.finishType] ?? 1.0;
+            const expected0 = EloCalculator.calculateExpectedScore(avgRating0, avgRating1);
+            const expected1 = EloCalculator.calculateExpectedScore(avgRating1, avgRating0);
+            const isWinner0 = entry0.points > 0;
+            const change0 = EloCalculator.calculateRatingChange(isWinner0 ? 1 : 0, expected0, multiplier);
+            const change1 = EloCalculator.calculateRatingChange(!isWinner0 ? 1 : 0, expected1, multiplier);
+            entry0.parts.forEach(p => ratings.set(p.partId, getRating(p.partId) + change0));
+            entry1.parts.forEach(p => ratings.set(p.partId, getRating(p.partId) + change1));
+        }
+        return ratings;
+    }
+
+    // Fetches all battles, converts to ColleyBattle format, and delegates to ColleyCalculator.
     private async calculateColleyRatings(filter?: any): Promise<Map<number, number>> {
         const battles = await prisma.battle.findMany({
             where: filter,
@@ -133,7 +163,10 @@ export class StatsService {
             }
         });
 
-        const colleyRatings = await this.calculateColleyRatings();
+        const [eloRatings, colleyRatings] = await Promise.all([
+            this.calculateBatchElo(),
+            this.calculateColleyRatings(),
+        ]);
 
         const stats = parts.map(part => {
             const totalMatches = part.battleEntries.length;
@@ -155,7 +188,8 @@ export class StatsService {
                 id: part.id,
                 name: part.name,
                 type: part.partType.name,
-                elo: colleyRatings.get(part.id) ?? 500,
+                elo: Math.round(eloRatings.get(part.id) ?? 1000),
+                bp: colleyRatings.get(part.id) ?? 500,
                 totalMatches,
                 wins,
                 losses,
@@ -164,8 +198,8 @@ export class StatsService {
             };
         });
 
-        // Sort by Elo Rating DESC
-        return stats.sort((a, b) => b.elo - a.elo);
+        // Default sort: BP (Colley) desc
+        return stats.sort((a, b) => b.bp - a.bp);
     }
 
     async getPartDetails(partId: number): Promise<PartDetailsDTO> {
@@ -259,13 +293,17 @@ export class StatsService {
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
 
-        const colleyRatings = await this.calculateColleyRatings();
+        const [eloRatings, colleyRatings] = await Promise.all([
+            this.calculateBatchElo(),
+            this.calculateColleyRatings(),
+        ]);
 
         return {
             id: part.id,
             name: part.name,
             type: part.partType.name,
-            elo: colleyRatings.get(part.id) ?? 500,
+            elo: Math.round(eloRatings.get(part.id) ?? 1000),
+            bp: colleyRatings.get(part.id) ?? 500,
             totalMatches,
             wins,
             losses,

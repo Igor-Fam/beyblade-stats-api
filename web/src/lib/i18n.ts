@@ -52,7 +52,22 @@ const translations = {
     load_history: 'Load History',
     no_combos: 'No combos found',
     fav_alert: 'Select a Line and Parts to favorite!',
-    custom_combo: 'Custom Combo'
+    custom_combo: 'Custom Combo',
+
+    // Stats Page
+    stats_title: 'Parts Statistics',
+    stats_loading: 'Calculating ratings...',
+    stats_empty: 'No battle data yet.',
+    stats_ranking_mode: 'Ranking by',
+    col_part: 'Part',
+    col_type: 'Type',
+    col_elo: 'Elo',
+    col_bp: 'BP',
+    col_avg_pts: 'Avg. Pts',
+    col_battles: 'Battles',
+    col_wins: 'Wins',
+    col_losses: 'Losses',
+    col_winrate: 'Win Rate',
   },
   pt: {
     // General
@@ -103,7 +118,22 @@ const translations = {
     load_history: 'Carregar Histórico',
     no_combos: 'Nenhum combo encontrado',
     fav_alert: 'Selecione uma Linha e Peças para favoritar!',
-    custom_combo: 'Combo Customizado'
+    custom_combo: 'Combo Customizado',
+
+    // Stats Page
+    stats_title: 'Estatísticas de Peças',
+    stats_loading: 'Calculando ratings...',
+    stats_empty: 'Sem dados de batalha ainda.',
+    stats_ranking_mode: 'Ranking por',
+    col_part: 'Peça',
+    col_type: 'Tipo',
+    col_elo: 'Elo',
+    col_bp: 'BP',
+    col_avg_pts: 'Pts Méd.',
+    col_battles: 'Batalhas',
+    col_wins: 'Vitórias',
+    col_losses: 'Derrotas',
+    col_winrate: 'Taxa',
   }
 };
 

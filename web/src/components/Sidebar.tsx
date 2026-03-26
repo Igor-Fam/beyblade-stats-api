@@ -20,7 +20,7 @@ export default function Sidebar() {
   const navItems = [
     { path: '/', label: t('hub'), icon: <Home size={20} /> },
     { path: '/logger', label: t('logger_title'), icon: <Swords size={20} /> },
-    { path: '#', label: t('hub_stats_title'), icon: <BarChart3 size={20} />, disabled: true },
+    { path: '/stats', label: t('hub_stats_title'), icon: <BarChart3 size={20} /> },
   ];
 
   return (
@@ -51,12 +51,11 @@ export default function Sidebar() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`${styles['nav-item']} ${location.pathname === item.path ? styles.active : ''} ${item.disabled ? styles.disabled : ''}`}
-                    onClick={item.disabled ? (e) => e.preventDefault() : () => setIsOpen(false)}
+                    className={`${styles['nav-item']} ${location.pathname === item.path ? styles.active : ''}`}
+                    onClick={() => setIsOpen(false)}
                   >
                     <div className={styles['nav-icon']}>{item.icon}</div>
                     <span className={styles['nav-label']}>{item.label}</span>
-                    {item.disabled && <span className={`${styles['coming-soon-badge']} ${styles.small}`}>Soon</span>}
                   </Link>
                 ))}
               </nav>

@@ -3,6 +3,18 @@ const API_URL = '/api';
 export interface Line { id: number; name: string; metadata?: { slots: string[], nameTemplate: string } }
 export interface Part { id: number; name: string; abbreviation: string; partTypeId: number; partType: { id: number, name: string }, metadata?: any, lineId?: number | null }
 export interface Stadium { id: number; name: string; }
+export interface PartStats {
+  id: number;
+  name: string;
+  type: string;
+  elo: number;
+  bp: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: string;
+  avgPoints: number;
+}
 
 export async function fetchLines(): Promise<Line[]> {
   const res = await fetch(`${API_URL}/lines`);
@@ -36,4 +48,9 @@ export async function deleteBattle(id: number): Promise<void> {
     method: 'DELETE'
   });
   if (!res.ok) throw new Error('Failed to delete battle');
+}
+export async function fetchPartsList(): Promise<PartStats[]> {
+  const res = await fetch(`${API_URL}/stats/parts`);
+  if (!res.ok) throw new Error('Failed to fetch parts stats');
+  return res.json();
 }

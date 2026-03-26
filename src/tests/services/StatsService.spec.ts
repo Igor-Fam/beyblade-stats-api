@@ -48,9 +48,9 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         const statsA = stats.find(p => p.id === 1);
         const statsB = stats.find(p => p.id === 2);
 
-        expect(statsA?.elo).toBe(625);
-        expect(statsB?.elo).toBe(375);
-        expect(statsA?.elo).toBeGreaterThan(statsB?.elo!);
+        expect(statsA?.bp).toBe(625);
+        expect(statsB?.bp).toBe(375);
+        expect(statsA?.bp).toBeGreaterThan(statsB?.bp!);
     });
 
     it('should apply XTREME weight and produce a more decisive rating gap', async () => {
@@ -85,7 +85,7 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         const statsA = stats.find(p => p.id === 1);
         const statsB = stats.find(p => p.id === 2);
 
-        expect(statsA?.elo).toBe(792);
-        expect(statsB?.elo).toBe(208);
+        expect(statsA?.bp).toBe(792);
+        expect(statsB?.bp).toBe(208);
     });
 });
