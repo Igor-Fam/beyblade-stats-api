@@ -49,8 +49,7 @@ model Part {
   lineId        Int?              @map("line_id")
   line          Line?             @relation(fields: [lineId], references: [id])
   metadata      Json?
-  eloRating     Int               @default(1000) @map("elo_rating")
-
+  
   @@map("parts")
 }
 
