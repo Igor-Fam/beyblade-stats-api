@@ -14,6 +14,7 @@ export interface PartStats {
   losses: number;
   winRate: string;
   avgPoints: number;
+  scoringRate: number;
 }
 
 export async function fetchLines(): Promise<Line[]> {
@@ -56,8 +57,8 @@ export async function fetchPartsList(): Promise<PartStats[]> {
 }
 
 export interface PartDetails extends PartStats {
-  bestPartners: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
-  bestCounters: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+  bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+  bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   winFinishes: Record<string, number>;
   lossFinishes: Record<string, number>;
 }
