@@ -19,6 +19,8 @@ export interface PartStatsDTO {
 }
 
 export interface PartDetailsDTO extends PartStatsDTO {
+    totalGained: number;
+    totalConceded: number;
     bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
     bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
     winFinishes: Record<string, number>;
@@ -363,6 +365,8 @@ export class StatsService {
             winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
             scoringRate,
+            totalGained,
+            totalConceded,
             bestPartners,
             bestCounters,
             winFinishes,
