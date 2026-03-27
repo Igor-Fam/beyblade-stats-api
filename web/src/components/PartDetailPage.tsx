@@ -102,13 +102,6 @@ export default function PartDetailPage() {
           </div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: '#4ade80' }}><Target size={24} /></div>
-          <div className={styles.statContent}>
-            <span className={styles.statLabel}>{t('col_scoring_rate')}</span>
-            <span className={styles.statValue}>{part.scoringRate}%</span>
-          </div>
-        </div>
-        <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ color: '#facc15' }}><BarChart3 size={24} /></div>
           <div className={styles.statContent}>
             <span className={styles.statLabel}>{t('col_avg_pts')}</span>
@@ -138,6 +131,23 @@ export default function PartDetailPage() {
         <div className={styles.performanceItem}>
           <span className={styles.perfLabel}>{t('col_losses')}</span>
           <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
+        </div>
+      </div>
+
+      <div className={styles.performanceOverview} style={{ marginTop: '-1.5rem' }}>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_scoring_rate')}</span>
+          <span className={styles.perfValue} style={{ color: part.scoringRate > 50 ? '#4ade80' : '#f87171' }}>
+            {part.scoringRate}%
+          </span>
+        </div>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_points_gained')}</span>
+          <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.totalGained}</span>
+        </div>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_points_conceded')}</span>
+          <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.totalConceded}</span>
         </div>
       </div>
 

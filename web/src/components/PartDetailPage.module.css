@@ -315,6 +315,31 @@
   .name {
     font-size: 1.8rem;
   }
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  .statCard {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: center;
+    border-radius: 0.75rem;
+  }
+  .statIcon {
+    padding: 0.4rem;
+    margin: 0 auto;
+  }
+  .statIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .statValue {
+    font-size: 1rem;
+  }
+  .statLabel {
+    font-size: 0.65rem;
+  }
   .analyticalGrid {
     grid-template-columns: 1fr;
   }
