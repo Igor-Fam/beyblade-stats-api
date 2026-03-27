@@ -194,7 +194,7 @@ export default function BattleLogger() {
   };
 
   return (
-    <div className="view">
+    <div className={`view ${styles.loggerView}`}>
       <div className={styles['portrait-lock-overlay']}>
         <Smartphone size={64} style={{ marginBottom: '1rem' }} />
         <h2>{t('rotate_device')}</h2>
