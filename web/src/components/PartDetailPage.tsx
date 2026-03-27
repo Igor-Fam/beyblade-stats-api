@@ -1,0 +1,187 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target } from 'lucide-react';
+import { fetchPartDetails, type PartDetails } from '../lib/api';
+import { useTranslation } from '../lib/i18n';
+import styles from './PartDetailPage.module.css';
+
+const TYPE_COLORS: Record<string, string> = {
+  Blade: '#38bdf8',
+  Ratchet: '#fb923c',
+  Bit: '#4ade80',
+  'Lock Chip': '#a78bfa',
+  'Metal Blade': '#facc15',
+  'Assist Blade': '#f472b6',
+};
+
+const FINISH_LABELS: Record<string, string> = {
+  SPIN: 'finish_spin',
+  OVER: 'finish_over',
+  BURST: 'finish_burst',
+  XTREME: 'finish_xtreme',
+};
+
+export default function PartDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
+  const [part, setPart] = useState<PartDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetchPartDetails(Number(id))
+      .then(setPart)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <div className="view"><div className={styles.loading}>{t('stats_loading')}</div></div>;
+  if (error || !part) return <div className="view"><div className={styles.error}>{error || 'Part not found'}</div></div>;
+
+  const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
+
+  const renderFinishStats = (finishes: Record<string, number>, total: number, title: string) => {
+    return (
+      <div className={styles.finishSection}>
+        <h3 className={styles.finishTitle}>{title}</h3>
+        <div className={styles.finishList}>
+          {Object.entries(finishes).map(([type, count]) => {
+            const percentage = total > 0 ? (count / total) * 100 : 0;
+            return (
+              <div key={type} className={styles.finishItem}>
+                <div className={styles.finishLabelInfo}>
+                  <span className={styles.finishTypeLabel}>{t(FINISH_LABELS[type] as any)}</span>
+                  <span className={styles.finishCount}>{count}</span>
+                </div>
+                <div className={styles.progressBar}>
+                  <div 
+                    className={styles.progressFill} 
+                    style={{ 
+                        width: `${percentage}%`, 
+                        backgroundColor: type === 'XTREME' ? '#f43f5e' : type === 'BURST' ? '#fb923c' : type === 'OVER' ? '#fbbf24' : '#38bdf8' 
+                    }} 
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className={`view ${styles.page}`}>
+      <header className={styles.header}>
+        <Link to="/stats" className={styles.backLink}>
+          <ArrowLeft size={20} /> {t('back_to_stats')}
+        </Link>
+        <div className={styles.titleInfo}>
+          <h1 className={styles.name}>{part.name}</h1>
+          <span className={styles.typeBadge} style={{ backgroundColor: `${typeColor}22`, color: typeColor, borderColor: `${typeColor}44` }}>
+            {part.type}
+          </span>
+        </div>
+      </header>
+
+      <section className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ color: '#38bdf8' }}><Activity size={24} /></div>
+          <div className={styles.statContent}>
+            <span className={styles.statLabel}>BP (Colley)</span>
+            <span className={styles.statValue}>{part.bp}</span>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ color: '#a78bfa' }}><TrendingUp size={24} /></div>
+          <div className={styles.statContent}>
+            <span className={styles.statLabel}>Elo</span>
+            <span className={styles.statValue}>{part.elo}</span>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ color: '#facc15' }}><BarChart3 size={24} /></div>
+          <div className={styles.statContent}>
+            <span className={styles.statLabel}>{t('col_avg_pts')}</span>
+            <span className={styles.statValue}>{part.avgPoints}</span>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ color: '#94a3b8' }}><Users size={24} /></div>
+          <div className={styles.statContent}>
+            <span className={styles.statLabel}>{t('col_battles')}</span>
+            <span className={styles.statValue}>{part.totalMatches}</span>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.performanceOverview}>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_winrate')}</span>
+          <span className={styles.perfValue} style={{ color: Number(part.winRate.replace('%', '')) > 50 ? '#4ade80' : '#f87171' }}>
+            {part.winRate}
+          </span>
+        </div>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_wins')}</span>
+          <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.wins}</span>
+        </div>
+        <div className={styles.performanceItem}>
+          <span className={styles.perfLabel}>{t('col_losses')}</span>
+          <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
+        </div>
+      </div>
+
+      <section className={styles.finishContainer}>
+        {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'))}
+        {renderFinishStats(part.lossFinishes, part.losses, t('loss_finishes'))}
+      </section>
+
+      <div className={styles.analyticalGrid}>
+        <section className={styles.analyticsSection}>
+          <h2 className={styles.sectionTitle}>
+            <Target size={20} className={styles.sectionIcon} /> {t('best_synergies')}
+          </h2>
+          <p className={styles.sectionDesc}>{t('best_synergies_desc')}</p>
+          <div className={styles.partsList}>
+            {part.bestPartners.length > 0 ? part.bestPartners.map(p => (
+              <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.partItem}>
+                <div className={styles.partInfo}>
+                  <span className={styles.partItemName}>{p.name}</span>
+                  <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                </div>
+                <div className={styles.partMetrics}>
+                  <span className={styles.metricValue}>{p.avgPoints} pts</span>
+                  <span className={styles.metricLabel}>{p.totalMatches} battles</span>
+                </div>
+              </Link>
+            )) : <div className={styles.emptyMsg}>{t('no_analytics_data')}</div>}
+          </div>
+        </section>
+
+        <section className={styles.analyticsSection}>
+          <h2 className={styles.sectionTitle}>
+            <Sword size={20} className={styles.sectionIcon} /> {t('best_counters')}
+          </h2>
+          <p className={styles.sectionDesc}>{t('best_counters_desc')}</p>
+          <div className={styles.partsList}>
+            {part.bestCounters.length > 0 ? part.bestCounters.map(p => (
+              <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.partItem}>
+                <div className={styles.partInfo}>
+                  <span className={styles.partItemName}>{p.name}</span>
+                  <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                </div>
+                <div className={styles.partMetrics}>
+                  <span className={styles.metricValue}>{p.avgPoints} pts</span>
+                  <span className={styles.metricLabel}>{p.totalMatches} battles</span>
+                </div>
+              </Link>
+            )) : <div className={styles.emptyMsg}>{t('no_analytics_data')}</div>}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
