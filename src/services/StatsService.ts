@@ -18,8 +18,10 @@ export interface PartStatsDTO {
 }
 
 export interface PartDetailsDTO extends PartStatsDTO {
-    bestPartners: { id: number; name: string; type: string; count: number }[];
-    bestCounters: { id: number; name: string; type: string; count: number }[];
+    bestPartners: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+    bestCounters: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+    winFinishes: Record<string, number>;
+    lossFinishes: Record<string, number>;
 }
 
 export interface ComboStatsDTO {
@@ -250,8 +252,11 @@ export class StatsService {
         let losses = 0;
         let totalPoints = 0;
 
-        const partnerCounts: Record<number, { name: string, type: string, count: number }> = {};
-        const counterCounts: Record<number, { name: string, type: string, count: number }> = {};
+        const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
+        const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
+
+        const partnerStats: Record<number, { name: string, type: string, totalPoints: number, matches: number }> = {};
+        const counterStats: Record<number, { name: string, type: string, myTotalPoints: number, matches: number }> = {};
 
         part.battleEntries.forEach(participation => {
             const myEntry = (participation as any).battleEntry;
@@ -259,44 +264,61 @@ export class StatsService {
             const isWin = myEntry.points > 0;
 
             totalPoints += myEntry.points;
-            if (isWin) wins++;
-            else losses++;
-
-            // Synergy: If I won, who was with me in the same combo?
             if (isWin) {
-                myEntry.parts.forEach((p: any) => {
-                    if (p.partId !== partId) {
-                        if (!partnerCounts[p.partId]) {
-                            partnerCounts[p.partId] = { name: p.part.name, type: p.part.partType.name, count: 0 };
-                        }
-                        partnerCounts[p.partId].count++;
-                    }
-                });
+                wins++;
+                winFinishes[myEntry.finishType] = (winFinishes[myEntry.finishType] || 0) + 1;
+            } else {
+                losses++;
+                lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
             }
 
-            // Counters: If I lost, which parts were on the winning opponent's side?
-            if (!isWin) {
-                const opponentEntry = battle.entries.find((e: any) => e.id !== myEntry.id);
-                if (opponentEntry) {
-                    opponentEntry.parts.forEach((p: any) => {
-                        if (!counterCounts[p.partId]) {
-                            counterCounts[p.partId] = { name: p.part.name, type: p.part.partType.name, count: 0 };
-                        }
-                        counterCounts[p.partId].count++;
-                    });
+            // Synergies: Same combo
+            myEntry.parts.forEach((p: any) => {
+                if (p.partId !== partId) {
+                    if (!partnerStats[p.partId]) {
+                        partnerStats[p.partId] = { name: p.part.name, type: p.part.partType.name, totalPoints: 0, matches: 0 };
+                    }
+                    partnerStats[p.partId].totalPoints += myEntry.points;
+                    partnerStats[p.partId].matches++;
                 }
+            });
+
+            // Counters: Opponent combo
+            const opponentEntry = battle.entries.find((e: any) => e.id !== myEntry.id);
+            if (opponentEntry) {
+                opponentEntry.parts.forEach((p: any) => {
+                    if (!counterStats[p.partId]) {
+                        counterStats[p.partId] = { name: p.part.name, type: p.part.partType.name, myTotalPoints: 0, matches: 0 };
+                    }
+                    counterStats[p.partId].myTotalPoints += myEntry.points;
+                    counterStats[p.partId].matches++;
+                });
             }
         });
 
-        const bestPartners = Object.entries(partnerCounts)
-            .map(([id, data]) => ({ id: Number(id), ...data }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
+        const bestPartners = Object.entries(partnerStats)
+            .map(([id, data]) => ({ 
+                id: Number(id), 
+                name: data.name, 
+                type: data.type, 
+                totalMatches: data.matches,
+                avgPoints: Number((data.totalPoints / data.matches).toFixed(2))
+            }))
+            .filter(p => p.totalMatches >= 10)
+            .sort((a, b) => b.avgPoints - a.avgPoints)
+            .slice(0, 6);
 
-        const bestCounters = Object.entries(counterCounts)
-            .map(([id, data]) => ({ id: Number(id), ...data }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
+        const bestCounters = Object.entries(counterStats)
+            .map(([id, data]) => ({ 
+                id: Number(id), 
+                name: data.name, 
+                type: data.type, 
+                totalMatches: data.matches,
+                avgPoints: Number((data.myTotalPoints / data.matches).toFixed(2))
+            }))
+            .filter(p => p.totalMatches >= 10)
+            .sort((a, b) => a.avgPoints - b.avgPoints) // lowest points first = best counter to me
+            .slice(0, 6);
 
         const [eloRatings, colleyRatings] = await Promise.all([
             this.calculateBatchElo(),
@@ -315,7 +337,9 @@ export class StatsService {
             winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
             bestPartners,
-            bestCounters
+            bestCounters,
+            winFinishes,
+            lossFinishes
         };
     }
 

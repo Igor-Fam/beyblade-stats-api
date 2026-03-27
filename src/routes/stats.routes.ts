@@ -5,4 +5,5 @@ export const statsRoutes = Router();
 const statsController = new StatsController();
 
 statsRoutes.get('/parts', statsController.getPartsList);
+statsRoutes.get('/parts/:id', statsController.getPartDetails);
 statsRoutes.get('/parts/:id/winrate', statsController.getPartWinRate);
