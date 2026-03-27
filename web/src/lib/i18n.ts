@@ -54,6 +54,8 @@ const translations = {
     fav_alert: 'Select a Line and Parts to favorite!',
     custom_combo: 'Custom Combo',
     clear_history: 'Clear History',
+    clear_history_confirm_title: 'Clear Combo History',
+    clear_history_confirm_desc: 'Are you sure you want to delete all recently used combos from this list?',
 
     // Stats Page
     stats_title: 'Parts Statistics',
@@ -136,6 +138,8 @@ const translations = {
     fav_alert: 'Selecione uma Linha e Peças para favoritar!',
     custom_combo: 'Combo Customizado',
     clear_history: 'Limpar Histórico',
+    clear_history_confirm_title: 'Limpar Histórico de Combos',
+    clear_history_confirm_desc: 'Tem certeza que deseja apagar todos os combos usados recentemente desta lista?',
 
     // Stats Page
     stats_title: 'Estatísticas de Peças',

@@ -37,6 +37,7 @@ export default function ComboCard({
   const [favorites, setFavorites] = useState<ComboSnapshot[]>([]);
   
   const [dropdownType, setDropdownType] = useState<'history' | 'favs' | null>(null);
+  const [showClearModal, setShowClearModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchMemory = () => {
@@ -190,11 +191,17 @@ export default function ComboCard({
     }
   };
 
-  const clearHistory = (e: React.MouseEvent) => {
+  const handleClearHistory = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setShowClearModal(true);
+  };
+
+  const confirmClearHistory = () => {
     setHistory([]);
     localStorage.removeItem('comboHistory');
     window.dispatchEvent(new Event('combomemory'));
+    setShowClearModal(false);
+    setDropdownType(null);
   };
 
   const currentList = dropdownType === 'history' ? history : favorites;
@@ -235,7 +242,7 @@ export default function ComboCard({
                   ))
                 )}
                 {currentList.length > 0 && dropdownType === 'history' && (
-                  <button className={styles['clear-history-btn']} onClick={clearHistory}>
+                  <button className={styles['clear-history-btn']} onClick={handleClearHistory}>
                     <Trash2 size={14} />
                     {t('clear_history')}
                   </button>
@@ -297,6 +304,19 @@ export default function ComboCard({
           );
         })}
       </div>
+
+      {showClearModal && (
+        <div className={styles.modal}>
+          <div className={styles['modal-content']}>
+            <h3>{t('clear_history_confirm_title')}</h3>
+            <p>{t('clear_history_confirm_desc')}</p>
+            <div className={styles['modal-actions']}>
+              <button className="btn" style={{ flex: 1, background: 'var(--surface-light)' }} onClick={() => setShowClearModal(false)}>{t('cancel')}</button>
+              <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={confirmClearHistory}>{t('reset')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
