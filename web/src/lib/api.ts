@@ -57,6 +57,8 @@ export async function fetchPartsList(): Promise<PartStats[]> {
 }
 
 export interface PartDetails extends PartStats {
+  totalGained: number;
+  totalConceded: number;
   bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   winFinishes: Record<string, number>;
