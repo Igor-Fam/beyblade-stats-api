@@ -53,6 +53,7 @@ const translations = {
     no_combos: 'No combos found',
     fav_alert: 'Select a Line and Parts to favorite!',
     custom_combo: 'Custom Combo',
+    clear_history: 'Clear History',
 
     // Stats Page
     stats_title: 'Parts Statistics',
@@ -134,6 +135,7 @@ const translations = {
     no_combos: 'Nenhum combo encontrado',
     fav_alert: 'Selecione uma Linha e Peças para favoritar!',
     custom_combo: 'Combo Customizado',
+    clear_history: 'Limpar Histórico',
 
     // Stats Page
     stats_title: 'Estatísticas de Peças',

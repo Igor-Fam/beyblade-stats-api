@@ -168,3 +168,24 @@
   .combo-card.dropdown-open { min-height: 280px; }
   .field-divider { margin: 0.25rem 0 !important; }
 }
+
+.clear-history-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--transition-speed);
+}
+
+.clear-history-btn:hover {
+  background: var(--error);
+  color: #0f172a;
+}

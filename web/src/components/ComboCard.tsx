@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Line, Part } from '../lib/api';
-import { History, Star, Bookmark } from 'lucide-react';
+import { History, Star, Bookmark, Trash2 } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import styles from './ComboCard.module.css';
 
@@ -175,7 +175,6 @@ export default function ComboCard({
     }, 50);
     setDropdownType(null);
   };
-
   const removeListItem = (e: React.MouseEvent, id: number, type: 'history'|'favs') => {
     e.stopPropagation();
     if (type === 'history') {
@@ -189,6 +188,13 @@ export default function ComboCard({
       localStorage.setItem('favCombos', JSON.stringify(updated));
       window.dispatchEvent(new Event('combomemory'));
     }
+  };
+
+  const clearHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHistory([]);
+    localStorage.removeItem('comboHistory');
+    window.dispatchEvent(new Event('combomemory'));
   };
 
   const currentList = dropdownType === 'history' ? history : favorites;
@@ -227,6 +233,12 @@ export default function ComboCard({
                       >×</button>
                     </div>
                   ))
+                )}
+                {currentList.length > 0 && dropdownType === 'history' && (
+                  <button className={styles['clear-history-btn']} onClick={clearHistory}>
+                    <Trash2 size={14} />
+                    {t('clear_history')}
+                  </button>
                 )}
               </div>
             )}
