@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { type PartStats, fetchPartsList } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -18,6 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function StatsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [parts, setParts] = useState<PartStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [rankingMode, setRankingMode] = useState<RankingMode>('bp');
@@ -161,7 +163,12 @@ export default function StatsPage() {
                 const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
                 const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
                 return (
-                  <tr key={part.id} className={`${styles.row} ${i % 2 === 0 ? styles.even : ''}`}>
+                  <tr 
+                    key={part.id} 
+                    className={`${styles.row} ${i % 2 === 0 ? styles.even : ''}`}
+                    onClick={() => navigate(`/stats/parts/${part.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <td className={styles.tdPart}>
                       <span className={styles.partName}>{part.name}</span>
                       <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>

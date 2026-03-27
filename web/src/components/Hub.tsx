@@ -11,13 +11,13 @@ export default function Hub() {
       <h1 className={styles['hub-title']}>
         {t('hub_title')}
       </h1>
-      
+
       <div className={styles['menu-cards']}>
         <Link to="/logger" className={styles['menu-card']}>
           <h2><Swords style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} /> {t('logger_title')}</h2>
           <p>{t('hub_logger_desc')}</p>
         </Link>
-        
+
         <Link to="/stats" className={styles['menu-card']}>
           <h2><BarChart3 style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} /> {t('hub_stats_title')}</h2>
           <p>{t('hub_stats_desc')}</p>
