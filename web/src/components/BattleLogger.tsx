@@ -16,7 +16,19 @@ export default function BattleLogger() {
   const [partsA, setPartsA] = useState<Record<string, number>>({});
   const [partsB, setPartsB] = useState<Record<string, number>>({});
 
-  const [stadiumId, setStadiumId] = useState<number | null>(null);
+  const [stadiumId, setStadiumId] = useState<number | null>(() => {
+    const saved = localStorage.getItem('lastStadiumId');
+    return saved ? parseInt(saved) : null;
+  });
+
+  const handleStadiumChange = (id: number) => {
+    setStadiumId(id);
+    if (id) {
+      localStorage.setItem('lastStadiumId', id.toString());
+    } else {
+      localStorage.removeItem('lastStadiumId');
+    }
+  };
 
   const [loading, setLoading] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -215,7 +227,10 @@ export default function BattleLogger() {
           {/* Center Column: Score & Actions */}
           <div className={styles['action-column']}>
             <div className={styles['stadium-selector']}>
-              <select value={stadiumId || ''} onChange={e => setStadiumId(parseInt(e.target.value))}>
+              <select 
+                value={stadiumId || ''} 
+                onChange={e => handleStadiumChange(parseInt(e.target.value))}
+              >
                 <option value="">{t('stadium_placeholder')}</option>
                 {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
