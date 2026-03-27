@@ -25,14 +25,25 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Floating Trigger Button (Mobile & Desktop) */}
+      {!isOpen && (
+        <button 
+          className={styles.floatingTrigger} 
+          onClick={toggleSidebar}
+          aria-label="Open Menu"
+        >
+          <Menu size={24} />
+          {dbEnv && (
+            <div className={`${styles['env-dot-floating']} ${styles[dbEnv]}`} />
+          )}
+        </button>
+      )}
+
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : styles.collapsed}`}>
         <div className={styles['sidebar-wrapper']}>
-          <div className={styles['sidebar-header']} onClick={toggleSidebar} style={{ cursor: 'pointer', position: 'relative' }}>
-             <div className={`${styles['nav-icon']} ${styles['menu-icon']}`}>
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
-                {!isOpen && dbEnv && (
-                  <div className={`${styles['env-dot']} ${styles[dbEnv]}`} title={`Environment: ${dbEnv.toUpperCase()}`} />
-                )}
+          <div className={styles['sidebar-header']}>
+             <div className={`${styles['nav-icon']} ${styles['menu-icon']}`} onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
+                <X size={24} />
              </div>
              <div className={styles['logo-text']}>
                 BX Stats
