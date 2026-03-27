@@ -102,6 +102,13 @@ export default function PartDetailPage() {
           </div>
         </div>
         <div className={styles.statCard}>
+          <div className={styles.statIcon} style={{ color: '#4ade80' }}><Target size={24} /></div>
+          <div className={styles.statContent}>
+            <span className={styles.statLabel}>{t('col_scoring_rate')}</span>
+            <span className={styles.statValue}>{part.scoringRate}%</span>
+          </div>
+        </div>
+        <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ color: '#facc15' }}><BarChart3 size={24} /></div>
           <div className={styles.statContent}>
             <span className={styles.statLabel}>{t('col_avg_pts')}</span>
@@ -153,7 +160,7 @@ export default function PartDetailPage() {
                   <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
                 </div>
                 <div className={styles.partMetrics}>
-                  <span className={styles.metricValue}>{p.avgPoints} pts</span>
+                  <span className={styles.metricValue}>{p.scoringRate}%</span>
                   <span className={styles.metricLabel}>{p.totalMatches} battles</span>
                 </div>
               </Link>
@@ -174,7 +181,7 @@ export default function PartDetailPage() {
                   <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
                 </div>
                 <div className={styles.partMetrics}>
-                  <span className={styles.metricValue}>{p.avgPoints} pts</span>
+                  <span className={styles.metricValue}>{p.scoringRate}%</span>
                   <span className={styles.metricLabel}>{p.totalMatches} battles</span>
                 </div>
               </Link>
