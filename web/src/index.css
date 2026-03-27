@@ -47,13 +47,13 @@ body {
 
 .view {
   min-height: 100vh;
-  padding: 2rem;
+  padding: 4.5rem 2rem 2rem; /* Leave space for floating trigger at the top */
   box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
   .view {
-    padding: 1rem;
+    padding: 3.5rem 1rem 1.5rem;
   }
 }
 
@@ -189,6 +189,8 @@ select option {
   color: var(--text-secondary);
   cursor: pointer;
   font-weight: 600;
+}
+
 /* Status Toast */
 #status {
   position: fixed;
