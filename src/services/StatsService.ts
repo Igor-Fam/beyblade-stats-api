@@ -15,11 +15,12 @@ export interface PartStatsDTO {
     losses: number;
     winRate: string;
     avgPoints: number;
+    scoringRate: number;
 }
 
 export interface PartDetailsDTO extends PartStatsDTO {
-    bestPartners: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
-    bestCounters: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+    bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+    bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
     winFinishes: Record<string, number>;
     lossFinishes: Record<string, number>;
 }
@@ -175,16 +176,23 @@ export class StatsService {
             let wins = 0;
             let losses = 0;
             let totalPoints = 0;
+            let totalGained = 0;
+            let totalConceded = 0;
 
             part.battleEntries.forEach(participation => {
                 const entry = participation.battleEntry;
                 totalPoints += entry.points;
                 if (entry.points > 0) {
                     wins++;
+                    totalGained += entry.points;
                 } else {
                     losses++;
+                    totalConceded += Math.abs(entry.points);
                 }
             });
+
+            const pointsSum = totalGained + totalConceded;
+            const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
 
             return {
                 id: part.id,
@@ -196,7 +204,8 @@ export class StatsService {
                 wins,
                 losses,
                 winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
-                avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0
+                avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
+                scoringRate
             };
         });
 
@@ -251,12 +260,14 @@ export class StatsService {
         let wins = 0;
         let losses = 0;
         let totalPoints = 0;
+        let totalGained = 0;
+        let totalConceded = 0;
 
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const partnerStats: Record<number, { name: string, type: string, totalPoints: number, matches: number }> = {};
-        const counterStats: Record<number, { name: string, type: string, myTotalPoints: number, matches: number }> = {};
+        const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number }> = {};
+        const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number }> = {};
 
         part.battleEntries.forEach(participation => {
             const myEntry = (participation as any).battleEntry;
@@ -266,9 +277,11 @@ export class StatsService {
             totalPoints += myEntry.points;
             if (isWin) {
                 wins++;
+                totalGained += myEntry.points;
                 winFinishes[myEntry.finishType] = (winFinishes[myEntry.finishType] || 0) + 1;
             } else {
                 losses++;
+                totalConceded += Math.abs(myEntry.points);
                 lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
             }
 
@@ -276,9 +289,10 @@ export class StatsService {
             myEntry.parts.forEach((p: any) => {
                 if (p.partId !== partId) {
                     if (!partnerStats[p.partId]) {
-                        partnerStats[p.partId] = { name: p.part.name, type: p.part.partType.name, totalPoints: 0, matches: 0 };
+                        partnerStats[p.partId] = { name: p.part.name, type: p.part.partType.name, gained: 0, conceded: 0, matches: 0 };
                     }
-                    partnerStats[p.partId].totalPoints += myEntry.points;
+                    if (myEntry.points > 0) partnerStats[p.partId].gained += myEntry.points;
+                    else partnerStats[p.partId].conceded += Math.abs(myEntry.points);
                     partnerStats[p.partId].matches++;
                 }
             });
@@ -288,42 +302,54 @@ export class StatsService {
             if (opponentEntry) {
                 opponentEntry.parts.forEach((p: any) => {
                     if (!counterStats[p.partId]) {
-                        counterStats[p.partId] = { name: p.part.name, type: p.part.partType.name, myTotalPoints: 0, matches: 0 };
+                        counterStats[p.partId] = { name: p.part.name, type: p.part.partType.name, myGained: 0, myConceded: 0, matches: 0 };
                     }
-                    counterStats[p.partId].myTotalPoints += myEntry.points;
+                    if (myEntry.points > 0) counterStats[p.partId].myGained += myEntry.points;
+                    else counterStats[p.partId].myConceded += Math.abs(myEntry.points);
                     counterStats[p.partId].matches++;
                 });
             }
         });
 
         const bestPartners = Object.entries(partnerStats)
-            .map(([id, data]) => ({ 
-                id: Number(id), 
-                name: data.name, 
-                type: data.type, 
-                totalMatches: data.matches,
-                avgPoints: Number((data.totalPoints / data.matches).toFixed(2))
-            }))
+            .map(([id, data]) => {
+                const sum = data.gained + data.conceded;
+                return { 
+                    id: Number(id), 
+                    name: data.name, 
+                    type: data.type, 
+                    totalMatches: data.matches,
+                    avgPoints: Number(( (data.gained - data.conceded) / data.matches).toFixed(2)),
+                    scoringRate: sum > 0 ? Number(((data.gained * 100) / sum).toFixed(2)) : 50
+                };
+            })
             .filter(p => p.totalMatches >= 10)
-            .sort((a, b) => b.avgPoints - a.avgPoints)
+            .sort((a, b) => b.scoringRate - a.scoringRate)
             .slice(0, 6);
 
         const bestCounters = Object.entries(counterStats)
-            .map(([id, data]) => ({ 
-                id: Number(id), 
-                name: data.name, 
-                type: data.type, 
-                totalMatches: data.matches,
-                avgPoints: Number((data.myTotalPoints / data.matches).toFixed(2))
-            }))
+            .map(([id, data]) => {
+                const sum = data.myGained + data.myConceded;
+                return { 
+                    id: Number(id), 
+                    name: data.name, 
+                    type: data.type, 
+                    totalMatches: data.matches,
+                    avgPoints: Number(( (data.myGained - data.myConceded) / data.matches).toFixed(2)),
+                    scoringRate: sum > 0 ? Number(((data.myGained * 100) / sum).toFixed(2)) : 50
+                };
+            })
             .filter(p => p.totalMatches >= 10)
-            .sort((a, b) => a.avgPoints - b.avgPoints) // lowest points first = best counter to me
+            .sort((a, b) => a.scoringRate - b.scoringRate) // lowest rate = best counter to me
             .slice(0, 6);
 
         const [eloRatings, colleyRatings] = await Promise.all([
             this.calculateBatchElo(),
             this.calculateColleyRatings(),
         ]);
+
+        const totalPointsSum = totalGained + totalConceded;
+        const scoringRate = totalPointsSum > 0 ? Number(((totalGained * 100) / totalPointsSum).toFixed(2)) : 50;
 
         return {
             id: part.id,
@@ -336,6 +362,7 @@ export class StatsService {
             losses,
             winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
+            scoringRate,
             bestPartners,
             bestCounters,
             winFinishes,
