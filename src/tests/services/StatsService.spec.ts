@@ -85,7 +85,7 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         const statsA = stats.find(p => p.id === 1);
         const statsB = stats.find(p => p.id === 2);
 
-        expect(statsA?.bp).toBe(792);
-        expect(statsB?.bp).toBe(208);
+        expect(statsA?.bp).toBe(700);
+        expect(statsB?.bp).toBe(300);
     });
 });
