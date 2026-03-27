@@ -18,10 +18,10 @@ export default function Hub() {
           <p>{t('hub_logger_desc')}</p>
         </Link>
         
-        <div className={`${styles['menu-card']} ${styles.disabled}`} style={{ cursor: 'not-allowed' }}>
+        <Link to="/stats" className={styles['menu-card']}>
           <h2><BarChart3 style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} /> {t('hub_stats_title')}</h2>
           <p>{t('hub_stats_desc')}</p>
-        </div>
+        </Link>
       </div>
     </div>
   );
