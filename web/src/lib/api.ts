@@ -54,3 +54,16 @@ export async function fetchPartsList(): Promise<PartStats[]> {
   if (!res.ok) throw new Error('Failed to fetch parts stats');
   return res.json();
 }
+
+export interface PartDetails extends PartStats {
+  bestPartners: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+  bestCounters: { id: number; name: string; type: string; avgPoints: number; totalMatches: number }[];
+  winFinishes: Record<string, number>;
+  lossFinishes: Record<string, number>;
+}
+
+export async function fetchPartDetails(id: number): Promise<PartDetails> {
+  const res = await fetch(`${API_URL}/stats/parts/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch part details');
+  return res.json();
+}

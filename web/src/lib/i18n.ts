@@ -68,6 +68,18 @@ const translations = {
     col_wins: 'Wins',
     col_losses: 'Losses',
     col_winrate: 'Win Rate',
+    back_to_stats: 'Back to Stats',
+    best_synergies: 'Best Synergies',
+    best_synergies_desc: 'Parts that result in a higher average score when used in the same combo.',
+    best_counters: 'Best Counters',
+    best_counters_desc: 'Parts against which this piece performs worse (lowest average points).',
+    no_analytics_data: 'Not enough data (min. 10 battles).',
+    win_finishes: 'Winning Methods',
+    loss_finishes: 'Losing Methods',
+    finish_spin: 'Spin Finish',
+    finish_over: 'Over Finish',
+    finish_burst: 'Burst Finish',
+    finish_xtreme: 'Xtreme Finish',
   },
   pt: {
     // General
@@ -134,6 +146,18 @@ const translations = {
     col_wins: 'Vitórias',
     col_losses: 'Derrotas',
     col_winrate: 'Taxa',
+    back_to_stats: 'Voltar para Estatísticas',
+    best_synergies: 'Melhores Sinergias',
+    best_synergies_desc: 'Peças que resultam em maior pontuação média quando usadas no mesmo combo.',
+    best_counters: 'Melhores Counters',
+    best_counters_desc: 'Peças contra as quais esta peça tem o pior desempenho (menor média de pontos).',
+    no_analytics_data: 'Dados insuficientes (mín. 10 batalhas).',
+    win_finishes: 'Como venceu',
+    loss_finishes: 'Como perdeu',
+    finish_spin: 'Spin Finish',
+    finish_over: 'Over Finish',
+    finish_burst: 'Burst Finish',
+    finish_xtreme: 'Xtreme Finish',
   }
 };
 
