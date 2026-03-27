@@ -312,7 +312,7 @@ export default function ComboCard({
             <p>{t('clear_history_confirm_desc')}</p>
             <div className={styles['modal-actions']}>
               <button className="btn" style={{ flex: 1, background: 'var(--surface-light)' }} onClick={() => setShowClearModal(false)}>{t('cancel')}</button>
-              <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={confirmClearHistory}>{t('reset')}</button>
+              <button className="btn btn-primary" style={{ flex: 1, background: 'var(--error)' }} onClick={confirmClearHistory}>{t('btn_clear')}</button>
             </div>
           </div>
         </div>

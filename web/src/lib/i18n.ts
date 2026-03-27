@@ -10,6 +10,7 @@ const translations = {
     reset: 'Reset',
     remove: 'Remove',
     custom: 'Custom',
+    btn_clear: 'Clear',
     
     // Battle Logger
     logger_title: 'Battle Logger',
@@ -94,6 +95,7 @@ const translations = {
     reset: 'Resetar',
     remove: 'Remover',
     custom: 'Customizado',
+    btn_clear: 'Limpar',
 
     // Battle Logger
     logger_title: 'Log de Batalha',
