@@ -8,6 +8,8 @@ const DEFAULT_ELO = 1000;
 const DEFAULT_COLLEY = 500;
 const DEPENDENCY_PERCENTAGE_THRESHOLD = 0.7;
 const DEPENDENCY_POINTS_THRESHOLD = 20;
+const VIABILITY_POINTS_THRESHOLD = 20;
+const VIABILITY_SCORING_RATE_MIN = 40;
 const ANALYTICS_MIN_BATTLES = 10;
 const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
@@ -207,29 +209,29 @@ export class StatsService {
             let totalPoints = 0;
             let totalGained = 0;
             let totalConceded = 0;
-            const partnerPoints: Record<number, { name: string, type: string, points: number, isInfluential: boolean }> = {};
+            const partnerStats: Record<number, { isInfluential: boolean, gained: number, conceded: number }> = {};
 
             part.battleEntries.forEach(participation => {
                 const entry = participation.battleEntry;
                 totalPoints += entry.points;
+
+                // Track matches with partners regardless of win/loss
+                entry.parts.forEach(p => {
+                    if (p.partId !== part.id) {
+                        if (!partnerStats[p.partId]) {
+                            partnerStats[p.partId] = { isInfluential: p.part.partType.isInfluential, gained: 0, conceded: 0 };
+                        }
+                        if (entry.points > 0) {
+                            partnerStats[p.partId].gained += entry.points;
+                        } else {
+                            partnerStats[p.partId].conceded += Math.abs(entry.points);
+                        }
+                    }
+                });
+
                 if (entry.points > 0) {
                     wins++;
                     totalGained += entry.points;
-
-                    // Track points with each partner
-                    entry.parts.forEach(p => {
-                        if (p.partId !== part.id) {
-                            if (!partnerPoints[p.partId]) {
-                                partnerPoints[p.partId] = {
-                                    name: p.part.name,
-                                    type: p.part.partType.name,
-                                    points: 0,
-                                    isInfluential: p.part.partType.isInfluential
-                                };
-                            }
-                            partnerPoints[p.partId].points += entry.points;
-                        }
-                    });
                 } else {
                     losses++;
                     totalConceded += Math.abs(entry.points);
@@ -239,10 +241,22 @@ export class StatsService {
             const pointsSum = totalGained + totalConceded;
             const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
-            // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
+            // Check dependency: > 70% of points gained with a single influential partner AND at least 20 points
             let isDependent = false;
             if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
-                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.points >= DEPENDENCY_POINTS_THRESHOLD);
+                const dominantPartners = Object.values(partnerStats).filter(p => {
+                    if (!p.isInfluential) return false;
+                    const isShareDominant = (p.gained / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.gained >= DEPENDENCY_POINTS_THRESHOLD;
+                    if (!isShareDominant) return false;
+
+                    const gainedWithout = totalGained - p.gained;
+                    const concededWithout = totalConceded - p.conceded;
+                    const pointsSumWithout = gainedWithout + concededWithout;
+                    const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
+
+                    const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
+                    return !isViableIndependently;
+                });
                 isDependent = dominantPartners.length > 0;
             }
 
@@ -319,9 +333,8 @@ export class StatsService {
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number }> = {};
+        const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number, isInfluential: boolean }> = {};
         const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number }> = {};
-        const partnerPoints: Record<number, { name: string, type: string, points: number, isInfluential: boolean }> = {};
 
         part.battleEntries.forEach(participation => {
             const myEntry = (participation as any).battleEntry;
@@ -348,21 +361,13 @@ export class StatsService {
                             type: p.part.partType.name,
                             gained: 0,
                             conceded: 0,
-                            matches: 0
-                        };
-                    }
-                    if (!partnerPoints[p.partId]) {
-                        partnerPoints[p.partId] = {
-                            name: p.part.name,
-                            type: p.part.partType.name,
-                            points: 0,
+                            matches: 0,
                             isInfluential: p.part.partType.isInfluential
                         };
                     }
 
                     if (myEntry.points > 0) {
                         partnerStats[p.partId].gained += myEntry.points;
-                        partnerPoints[p.partId].points += myEntry.points;
                     } else {
                         partnerStats[p.partId].conceded += Math.abs(myEntry.points);
                     }
@@ -424,10 +429,22 @@ export class StatsService {
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
-        // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
+        // Check dependency: > 70% of points gained with a single influential partner AND at least 20 points
         let isDependent = false;
         if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
-            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.points >= DEPENDENCY_POINTS_THRESHOLD);
+            const dominantPartners = Object.values(partnerStats).filter(p => {
+                if (!p.isInfluential) return false;
+                const isShareDominant = (p.gained / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.gained >= DEPENDENCY_POINTS_THRESHOLD;
+                if (!isShareDominant) return false;
+
+                const gainedWithout = totalGained - p.gained;
+                const concededWithout = totalConceded - p.conceded;
+                const pointsSumWithout = gainedWithout + concededWithout;
+                const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
+
+                const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
+                return !isViableIndependently;
+            });
             isDependent = dominantPartners.length > 0;
         }
 
@@ -452,15 +469,29 @@ export class StatsService {
             lossFinishes,
 
             // Explicit dependencies: Influential partners with > 70% share of points gained
-            dependencies: totalGained === 0 ? [] : Object.entries(partnerPoints)
+            dependencies: totalGained === 0 ? [] : Object.entries(partnerStats)
                 .map(([id, data]) => ({
                     id: Number(id),
-                    name: (data as any).name,
-                    type: (data as any).type,
-                    pointsGained: (data as any).points,
-                    share: Number((((data as any).points * 100) / totalGained).toFixed(2))
+                    name: data.name,
+                    type: data.type,
+                    pointsGained: data.gained,
+                    conceded: data.conceded,
+                    share: Number(((data.gained * 100) / totalGained).toFixed(2)),
+                    isInfluential: data.isInfluential
                 }))
-                .filter(d => d.share > (DEPENDENCY_PERCENTAGE_THRESHOLD * 100) && d.pointsGained >= DEPENDENCY_POINTS_THRESHOLD && (partnerPoints[d.id] as any).isInfluential)
+                .filter(d => {
+                    if (!d.isInfluential) return false;
+                    const isShareDominant = d.share > (DEPENDENCY_PERCENTAGE_THRESHOLD * 100) && d.pointsGained >= DEPENDENCY_POINTS_THRESHOLD;
+                    if (!isShareDominant) return false;
+
+                    const gainedWithout = totalGained - d.pointsGained;
+                    const concededWithout = totalConceded - d.conceded;
+                    const pointsSumWithout = gainedWithout + concededWithout;
+                    const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
+
+                    const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
+                    return !isViableIndependently;
+                })
         };
     }
 
