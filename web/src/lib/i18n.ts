@@ -11,7 +11,7 @@ const translations = {
     remove: 'Remove',
     custom: 'Custom',
     btn_clear: 'Clear',
-    
+
     // Battle Logger
     logger_title: 'Battle Logger',
     rotate_device: 'Rotate your device',
@@ -20,13 +20,13 @@ const translations = {
     reset_score_title: 'Reset Score',
     undo_last: 'Undo last battle',
     battle_history: 'Battle history',
-    
+
     // Hub
     hub_title: 'Beyblade X Hub',
     hub_logger_desc: 'Register matches, test setups, and tally performance.',
     hub_stats_title: 'Statistics',
     hub_stats_desc: 'Coming Soon: Analyze matchups, metagame trends, and counters.',
-    
+
     // Status/Toasts
     status_select_stadium: 'Please select a stadium!',
     status_select_lines: 'Please select a line for both combos!',
@@ -35,14 +35,14 @@ const translations = {
     status_battle_logged: 'Battle Logged: Combo {winner} won by {type}!',
     status_save_error: 'Error saving battle',
     status_remove_error: 'Failed to remove: ',
-    
+
     // Modals
     history_title: 'Session Battles',
     history_empty: 'No battles this session',
     history_reset_label: 'LATEST SCORE RESET',
     reset_modal_title: 'Reset Scoreboard',
     reset_modal_desc: 'Are you sure you want to reset both scores to 0?',
-    
+
     // Combo Card
     combo_title: 'Combo {id}',
     line_label: 'Line',
@@ -89,7 +89,16 @@ const translations = {
     finish_xtreme: 'Xtreme Finish',
     tag_dependent: 'Dependent',
     dependency_modal_title: 'Dependency Analysis',
-    dependency_modal_desc: 'This part earned more than 70% of its total points in conjunction with the following parts (excluding low-influence parts like Ratchets):',
+    dependency_modal_desc: 'This part earned more than 70% of its total points in conjunction with the following parts:',
+    btn_add_filter: 'Add Filter',
+    filter_op_eq: 'Equals',
+    filter_op_gt: 'Greater than',
+    filter_op_gte: 'Greater or equal',
+    filter_op_lt: 'Less than',
+    filter_op_lte: 'Less or equal',
+    modal_filter_title: 'Filters',
+    btn_clear_filters: 'Clear All',
+    btn_filters: 'Filters',
   },
   pt: {
     // General
@@ -177,14 +186,23 @@ const translations = {
     finish_xtreme: 'Xtreme Finish',
     tag_dependent: 'Dependente',
     dependency_modal_title: 'Análise de Dependência',
-    dependency_modal_desc: 'Esta peça obteve mais de 70% de seus pontos totais em conjunto com as seguintes peças (excluindo peças pouco influentes como Ratchets):',
+    dependency_modal_desc: 'Esta peça obteve mais de 70% de seus pontos totais em conjunto com as seguintes peças:',
+    btn_add_filter: 'Adicionar Filtro',
+    filter_op_eq: 'Igual a',
+    filter_op_gt: 'Maior que',
+    filter_op_gte: 'Maior ou igual a',
+    filter_op_lt: 'Menor que',
+    filter_op_lte: 'Menor ou igual a',
+    modal_filter_title: 'Filtros',
+    btn_clear_filters: 'Limpar Todos',
+    btn_filters: 'Filtros',
   }
 };
 
 export function getLanguage(): Language {
   const saved = localStorage.getItem('app_lang');
   if (saved === 'en' || saved === 'pt') return saved;
-  
+
   // Auto-detect browser language
   const browserLang = navigator.language.toLowerCase();
   return browserLang.startsWith('pt') ? 'pt' : 'en';

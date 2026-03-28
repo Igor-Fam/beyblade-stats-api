@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Filter, X } from 'lucide-react';
 import { type PartStats, fetchPartsList } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -8,6 +8,31 @@ import styles from './StatsPage.module.css';
 type RankingMode = 'elo' | 'bp';
 type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'avgPoints' | 'totalMatches' | 'wins' | 'losses' | 'winRate'>;
 type SortDir = 'asc' | 'desc';
+
+interface Filter {
+  id: string;
+  field: string;
+  operator: string;
+  value: string | number;
+}
+
+const OPERATORS = [
+  { id: 'eq', label: 'filter_op_eq', symbol: '=' },
+  { id: 'gt', label: 'filter_op_gt', symbol: '>' },
+  { id: 'gte', label: 'filter_op_gte', symbol: '>=' },
+  { id: 'lt', label: 'filter_op_lt', symbol: '<' },
+  { id: 'lte', label: 'filter_op_lte', symbol: '<=' },
+];
+
+const FILTER_FIELDS = [
+  { id: 'type', label: 'col_type', type: 'categorical' },
+  { id: 'bp', label: 'col_bp', type: 'numeric' },
+  { id: 'avgPoints', label: 'col_avg_pts', type: 'numeric' },
+  { id: 'totalMatches', label: 'col_battles', type: 'numeric' },
+  { id: 'wins', label: 'col_wins', type: 'numeric' },
+  { id: 'losses', label: 'col_losses', type: 'numeric' },
+  { id: 'winRate', label: 'col_winrate', type: 'numeric' },
+];
 
 const TYPE_COLORS: Record<string, string> = {
   Blade: '#38bdf8',
@@ -26,6 +51,19 @@ export default function StatsPage() {
   const [rankingMode, setRankingMode] = useState<RankingMode>('bp');
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<Filter[]>(() => {
+    try {
+      const saved = localStorage.getItem('parts_filters');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('parts_filters', JSON.stringify(filters));
+  }, [filters]);
 
   useEffect(() => {
     fetchPartsList()
@@ -49,8 +87,45 @@ export default function StatsPage() {
     }
   };
 
-  const sorted = useMemo(() => {
-    return [...parts].sort((a, b) => {
+  const availableTypes = useMemo(() => {
+    const types = new Set(parts.map(p => p.type));
+    return Array.from(types).sort();
+  }, [parts]);
+
+  const filteredAndSorted = useMemo(() => {
+    let result = [...parts];
+
+    // Apply filters
+    filters.forEach(f => {
+      if (f.value === '' || f.value === undefined) return;
+
+      result = result.filter((p: PartStats) => {
+        const fieldInfo = FILTER_FIELDS.find(ff => ff.id === f.field);
+        const rawValue = p[f.field as keyof PartStats];
+        
+        if (fieldInfo?.type === 'categorical') {
+          return String(rawValue) === String(f.value);
+        }
+
+        // Numeric comparison
+        const pValue = f.field === 'winRate' 
+          ? parseFloat(String(rawValue)) 
+          : Number(rawValue);
+        const fValue = Number(f.value);
+
+        switch (f.operator) {
+          case 'eq': return pValue === fValue;
+          case 'gt': return pValue > fValue;
+          case 'gte': return pValue >= fValue;
+          case 'lt': return pValue < fValue;
+          case 'lte': return pValue <= fValue;
+          default: return true;
+        }
+      });
+    });
+
+    // Apply sorting
+    return result.sort((a, b) => {
       // Parts with no battles always sink to the bottom
       if (a.totalMatches === 0 && b.totalMatches === 0) return 0;
       if (a.totalMatches === 0) return 1;
@@ -63,7 +138,22 @@ export default function StatsPage() {
         : (av as number) - (bv as number);
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [parts, sortKey, sortDir]);
+  }, [parts, sortKey, sortDir, filters]);
+
+  const addFilter = () => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setFilters([...filters, { id, field: 'type', operator: 'eq', value: '' }]);
+  };
+
+  const removeFilter = (id: string) => {
+    setFilters(filters.filter(f => f.id !== id));
+  };
+
+  const updateFilter = (id: string, updates: Partial<Filter>) => {
+    setFilters(filters.map(f => f.id === id ? { ...f, ...updates } : f));
+  };
+
+  const clearFilters = () => setFilters([]);
 
   const SortIndicator = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <span className={styles.sortIcon}>↕</span>;
@@ -77,7 +167,7 @@ export default function StatsPage() {
 
   const exportCsv = () => {
     const headers = ['Name', 'Type', 'Elo', 'BP', 'Avg Pts', 'Battles', 'Wins', 'Losses', 'Win Rate'];
-    const rows = sorted.map(p => [
+    const rows = filteredAndSorted.map(p => [
       p.name, p.type, p.elo, p.bp, p.avgPoints, p.totalMatches, p.wins, p.losses, p.winRate
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
@@ -114,10 +204,102 @@ export default function StatsPage() {
             </button>
           </div>
           <span className={styles.modeDesc}>{rankDesc}</span>
+          
+          <button 
+            className={`${styles.filterToggle} ${filters.length > 0 ? styles.activeFilters : ''}`}
+            onClick={() => setIsFilterModalOpen(true)}
+          >
+            <Filter size={16} />
+            {t('btn_filters')}
+            {filters.length > 0 && <span className={styles.filterBadge}>{filters.length}</span>}
+          </button>
         </div>
 
+        {isFilterModalOpen && (
+          <div className={styles.modalOverlay} onClick={() => setIsFilterModalOpen(false)}>
+            <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <div className={styles.modalTitleRow}>
+                  <Filter className={styles.modalTitleIcon} size={20} />
+                  <h2>{t('modal_filter_title')}</h2>
+                </div>
+                <button className={styles.closeBtn} onClick={() => setIsFilterModalOpen(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                <div className={styles.filterList}>
+                  {filters.map(f => {
+                    const fieldInfo = FILTER_FIELDS.find(ff => ff.id === f.field);
+                    return (
+                      <div key={f.id} className={styles.filterRow}>
+                        <select 
+                          value={f.field} 
+                          onChange={e => updateFilter(f.id, { field: e.target.value, value: '', operator: 'eq' })}
+                          className={styles.filterSelect}
+                        >
+                          {FILTER_FIELDS.map(ff => (
+                            <option key={ff.id} value={ff.id}>{t(ff.label as any)}</option>
+                          ))}
+                        </select>
+
+                        {fieldInfo?.type === 'numeric' && (
+                          <select 
+                            value={f.operator} 
+                            onChange={e => updateFilter(f.id, { operator: e.target.value })}
+                            className={styles.filterOperator}
+                          >
+                            {OPERATORS.map(op => (
+                              <option key={op.id} value={op.id}>{t(op.label as any)}</option>
+                            ))}
+                          </select>
+                        )}
+
+                        {fieldInfo?.type === 'categorical' ? (
+                          <select 
+                            value={String(f.value)} 
+                            onChange={e => updateFilter(f.id, { value: e.target.value })}
+                            className={styles.filterValueSelect}
+                          >
+                            <option value="">-- {t('col_type')} --</option>
+                            {availableTypes.map(type => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input 
+                            type="number" 
+                            value={f.value} 
+                            onChange={e => updateFilter(f.id, { value: e.target.value })}
+                            placeholder="0"
+                            className={styles.filterInput}
+                          />
+                        )}
+
+                        <button className={styles.removeFilterBtn} onClick={() => removeFilter(f.id)}>&times;</button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button className={styles.addFilterBtn} onClick={addFilter}>
+                    + {t('btn_add_filter')}
+                  </button>
+                  {filters.length > 0 && (
+                    <button className={styles.clearAllBtn} onClick={clearFilters}>
+                      {t('btn_clear_filters')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* DEV-ONLY: remove before release */}
-        {sorted.length > 0 && (
+        {filteredAndSorted.length > 0 && (
           <button onClick={exportCsv} style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', fontSize: '0.75rem', background: '#334155', border: '1px dashed #475569', color: '#94a3b8', borderRadius: '0.4rem', cursor: 'pointer' }}>
             ⬇ Export CSV (dev)
           </button>
@@ -126,7 +308,7 @@ export default function StatsPage() {
 
       {loading ? (
         <div className={styles.feedback}>{t('stats_loading')}</div>
-      ) : sorted.length === 0 ? (
+      ) : filteredAndSorted.length === 0 ? (
         <div className={styles.feedback}>{t('stats_empty')}</div>
       ) : (
         <div className={styles.tableWrapper}>
@@ -159,7 +341,7 @@ export default function StatsPage() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((part, i) => {
+              {filteredAndSorted.map((part, i) => {
                 const noData = part.totalMatches === 0;
                 const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
                 const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
