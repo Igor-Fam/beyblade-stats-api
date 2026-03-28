@@ -7,7 +7,7 @@ import { EloCalculator } from '../domain/utils/EloCalculator';
 const DEFAULT_ELO = 1000;
 const DEFAULT_COLLEY = 500;
 const DEPENDENCY_PERCENTAGE_THRESHOLD = 0.7;
-const DEPENDENCY_POINTS_THRESHOLD = 80;
+const DEPENDENCY_POINTS_THRESHOLD = 20;
 const ANALYTICS_MIN_BATTLES = 10;
 const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
