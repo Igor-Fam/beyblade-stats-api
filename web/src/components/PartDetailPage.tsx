@@ -92,7 +92,8 @@ export default function PartDetailPage() {
           {part.isDependent && (
             <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
               <HelpCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
-              {t('tag_dependent')}
+              <span className="tag-full">{t('tag_dependent')}</span>
+              <span className="tag-short">{t('tag_dependent_short')}</span>
             </button>
           )}
           <span className={styles.typeBadge} style={{ backgroundColor: `${typeColor}22`, color: typeColor, borderColor: `${typeColor}44` }}>

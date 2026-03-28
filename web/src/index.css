@@ -288,3 +288,27 @@ select.is-placeholder {
   box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
   filter: brightness(1.1);
 }
+
+.tag-short {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .dependent-tag {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.65rem;
+    margin-left: 0.35rem;
+  }
+}
+
+@media (max-width: 450px) {
+  .tag-full {
+    display: none;
+  }
+  .tag-short {
+    display: inline;
+  }
+  .dependent-tag {
+    padding: 0.15rem 0.3rem;
+  }
+}

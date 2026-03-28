@@ -364,7 +364,8 @@ export default function StatsPage() {
                             }}
                           >
                             <HelpCircle size={10} style={{ marginRight: '3px' }} />
-                            {t('tag_dependent')}
+                            <span className="tag-full">{t('tag_dependent')}</span>
+                            <span className="tag-short">{t('tag_dependent_short')}</span>
                           </button>
                         )}
                       </div>
