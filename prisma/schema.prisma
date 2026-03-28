@@ -16,6 +16,7 @@ datasource db {
 model PartType {
   id               Int               @id @default(autoincrement())
   name             String            @unique
+  isInfluential    Boolean           @default(true) @map("is_influential")
   parts            Part[]
 
   @@map("part_types")

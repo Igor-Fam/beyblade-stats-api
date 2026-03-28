@@ -6,14 +6,14 @@ async function main() {
     // --- Part Types ---
     console.log('Creating part types...');
     const [blade, ratchet, bit, lockChip, mainBlade, assistBlade, overBlade, metalBlade] = await Promise.all([
-        prisma.partType.upsert({ where: { name: 'BLADE' }, update: {}, create: { name: 'BLADE' } }),
-        prisma.partType.upsert({ where: { name: 'RATCHET' }, update: {}, create: { name: 'RATCHET' } }),
-        prisma.partType.upsert({ where: { name: 'BIT' }, update: {}, create: { name: 'BIT' } }),
-        prisma.partType.upsert({ where: { name: 'LOCK_CHIP' }, update: {}, create: { name: 'LOCK_CHIP' } }),
-        prisma.partType.upsert({ where: { name: 'MAIN_BLADE' }, update: {}, create: { name: 'MAIN_BLADE' } }),
-        prisma.partType.upsert({ where: { name: 'ASSIST_BLADE' }, update: {}, create: { name: 'ASSIST_BLADE' } }),
-        prisma.partType.upsert({ where: { name: 'OVER_BLADE' }, update: {}, create: { name: 'OVER_BLADE' } }),
-        prisma.partType.upsert({ where: { name: 'METAL_BLADE' }, update: {}, create: { name: 'METAL_BLADE' } }),
+        prisma.partType.upsert({ where: { name: 'BLADE' }, update: { isInfluential: true }, create: { name: 'BLADE', isInfluential: true } }),
+        prisma.partType.upsert({ where: { name: 'RATCHET' }, update: { isInfluential: false }, create: { name: 'RATCHET', isInfluential: false } }),
+        prisma.partType.upsert({ where: { name: 'BIT' }, update: { isInfluential: true }, create: { name: 'BIT', isInfluential: true } }),
+        prisma.partType.upsert({ where: { name: 'LOCK_CHIP' }, update: { isInfluential: false }, create: { name: 'LOCK_CHIP', isInfluential: false } }),
+        prisma.partType.upsert({ where: { name: 'MAIN_BLADE' }, update: { isInfluential: true }, create: { name: 'MAIN_BLADE', isInfluential: true } }),
+        prisma.partType.upsert({ where: { name: 'ASSIST_BLADE' }, update: { isInfluential: true }, create: { name: 'ASSIST_BLADE', isInfluential: true } }),
+        prisma.partType.upsert({ where: { name: 'OVER_BLADE' }, update: { isInfluential: false }, create: { name: 'OVER_BLADE', isInfluential: false } }),
+        prisma.partType.upsert({ where: { name: 'METAL_BLADE' }, update: { isInfluential: true }, create: { name: 'METAL_BLADE', isInfluential: true } }),
     ]);
     console.log('- Part types created');
 
