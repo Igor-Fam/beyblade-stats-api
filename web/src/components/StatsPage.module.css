@@ -212,6 +212,29 @@
   color: var(--accent-bx);
 }
 
+.helpIconBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.helpIconBtn:hover {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.helpDesc {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
 /* ─── Rows ────────────────────────────────────────────── */
 .row {
   display: table-row;
@@ -387,8 +410,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(8px);
   z-index: 1000;

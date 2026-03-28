@@ -100,6 +100,10 @@ const translations = {
     modal_filter_title: 'Filters',
     btn_clear_filters: 'Clear All',
     btn_filters: 'Filters',
+    modal_help_bp_title: 'Battle Power (BP) / Elo',
+    modal_help_bp_desc: 'A score that takes into account not only the part\'s performance but also the strength of the opponents it wins or loses against.',
+    modal_help_scoring_title: 'Scoring Rate',
+    modal_help_scoring_desc: 'The percentage of net points gained by the part. Calculated by dividing the points gained by the total sum of points gained and conceded in battles.',
   },
   pt: {
     // General
@@ -198,6 +202,10 @@ const translations = {
     modal_filter_title: 'Filtros',
     btn_clear_filters: 'Limpar Todos',
     btn_filters: 'Filtros',
+    modal_help_bp_title: 'Battle Power (BP) / Elo',
+    modal_help_bp_desc: 'Uma pontuação que leva em consideração não apenas o desempenho da peça, mas também a força dos oponentes contra os quais a peça ganha ou perde.',
+    modal_help_scoring_title: 'Taxa de Pontuação',
+    modal_help_scoring_desc: 'O percentual de pontos reais ganhos pela peça. É calculado dividindo os pontos ganhos pela soma total dos pontos ganhos e cedidos nas batalhas.',
   }
 };
 

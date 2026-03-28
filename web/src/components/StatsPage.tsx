@@ -52,6 +52,7 @@ export default function StatsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [helpModal, setHelpModal] = useState<{ title: string; desc: string } | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -307,6 +308,25 @@ export default function StatsPage() {
           </div>
         )}
 
+        {helpModal && (
+          <div className={styles.modalOverlay} onClick={() => setHelpModal(null)}>
+            <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <div className={styles.modalTitleRow}>
+                  <HelpCircle className={styles.modalTitleIcon} size={20} />
+                  <h2>{helpModal.title}</h2>
+                </div>
+                <button className={styles.closeBtn} onClick={() => setHelpModal(null)}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                <p className={styles.helpDesc}>{helpModal.desc}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* DEV-ONLY: remove before release */}
         {filteredAndSorted.length > 0 && (
           <button onClick={exportCsv} style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', fontSize: '0.75rem', background: '#334155', border: '1px dashed #475569', color: '#94a3b8', borderRadius: '0.4rem', cursor: 'pointer' }}>
@@ -332,12 +352,27 @@ export default function StatsPage() {
                   <th
                     className={`${styles.th} ${styles.rankCellHeader} ${sortKey === rankingMode ? styles.activeCol : ''}`}
                     onClick={() => handleSort(rankingMode)}
-                    title={rankDesc}
                   >
-                    {rankLabel} <SortIndicator col={rankingMode} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {rankLabel} <SortIndicator col={rankingMode} />
+                      <button 
+                        className={styles.helpIconBtn} 
+                        onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_bp_title'), desc: t('modal_help_bp_desc') }); }}
+                      >
+                        <HelpCircle size={14} />
+                      </button>
+                    </div>
                   </th>
                   <th className={`${styles.th} ${styles.scoringCellHeader}`} onClick={() => handleSort('scoringRate')}>
-                    {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
+                      <button 
+                        className={styles.helpIconBtn} 
+                        onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_scoring_title'), desc: t('modal_help_scoring_desc') }); }}
+                      >
+                        <HelpCircle size={14} />
+                      </button>
+                    </div>
                   </th>
                   <th className={styles.th} onClick={() => handleSort('winRate')}>
                     {t('col_winrate')} <SortIndicator col="winRate" />
