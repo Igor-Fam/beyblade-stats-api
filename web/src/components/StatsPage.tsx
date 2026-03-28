@@ -6,7 +6,7 @@ import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 
 type RankingMode = 'elo' | 'bp';
-type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'avgPoints' | 'totalMatches' | 'wins' | 'losses' | 'winRate'>;
+type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'winRate' | 'wins' | 'losses' | 'totalMatches'>;
 type SortDir = 'asc' | 'desc';
 
 interface Filter {
@@ -27,11 +27,11 @@ const OPERATORS = [
 const FILTER_FIELDS = [
   { id: 'type', label: 'col_type', type: 'categorical' },
   { id: 'bp', label: 'col_bp', type: 'numeric' },
-  { id: 'avgPoints', label: 'col_avg_pts', type: 'numeric' },
-  { id: 'totalMatches', label: 'col_battles', type: 'numeric' },
+  { id: 'scoringRate', label: 'col_scoring_rate', type: 'numeric' },
+  { id: 'winRate', label: 'col_winrate', type: 'numeric' },
   { id: 'wins', label: 'col_wins', type: 'numeric' },
   { id: 'losses', label: 'col_losses', type: 'numeric' },
-  { id: 'winRate', label: 'col_winrate', type: 'numeric' },
+  { id: 'totalMatches', label: 'col_battles', type: 'numeric' },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -175,9 +175,9 @@ export default function StatsPage() {
     : 'Batch Elo — sequential, strength-aware';
 
   const exportCsv = () => {
-    const headers = ['Name', 'Type', 'Elo', 'BP', 'Avg Pts', 'Battles', 'Wins', 'Losses', 'Win Rate'];
+    const headers = ['Name', 'Type', 'Elo', 'BP', 'Scoring Rate', 'Win Rate', 'Wins', 'Losses', 'Battles'];
     const rows = filteredAndSorted.map(p => [
-      p.name, p.type, p.elo, p.bp, p.avgPoints, p.totalMatches, p.wins, p.losses, p.winRate
+      p.name, p.type, p.elo, p.bp, p.scoringRate, p.winRate, p.wins, p.losses, p.totalMatches
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -336,11 +336,11 @@ export default function StatsPage() {
                   >
                     {rankLabel} <SortIndicator col={rankingMode} />
                   </th>
-                  <th className={styles.th} onClick={() => handleSort('avgPoints')}>
-                    {t('col_avg_pts')} <SortIndicator col="avgPoints" />
+                  <th className={`${styles.th} ${styles.scoringCellHeader}`} onClick={() => handleSort('scoringRate')}>
+                    {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
                   </th>
-                  <th className={styles.th} onClick={() => handleSort('totalMatches')}>
-                    {t('col_battles')} <SortIndicator col="totalMatches" />
+                  <th className={styles.th} onClick={() => handleSort('winRate')}>
+                    {t('col_winrate')} <SortIndicator col="winRate" />
                   </th>
                   <th className={styles.th} onClick={() => handleSort('wins')}>
                     {t('col_wins')} <SortIndicator col="wins" />
@@ -348,8 +348,8 @@ export default function StatsPage() {
                   <th className={styles.th} onClick={() => handleSort('losses')}>
                     {t('col_losses')} <SortIndicator col="losses" />
                   </th>
-                  <th className={styles.th} onClick={() => handleSort('winRate')}>
-                    {t('col_winrate')} <SortIndicator col="winRate" />
+                  <th className={styles.th} onClick={() => handleSort('totalMatches')}>
+                    {t('col_battles')} <SortIndicator col="totalMatches" />
                   </th>
                 </tr>
               </thead>
@@ -399,11 +399,11 @@ export default function StatsPage() {
                           <span className={styles.rankValue}>{rankValue}</span>
                         )}
                       </td>
-                      <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.avgPoints}</td>
-                      <td className={styles.td}>{part.totalMatches || <span className={styles.dash}>—</span>}</td>
+                      <td className={`${styles.td} ${styles.scoringCell}`}>{noData ? <span className={styles.dash}>—</span> : `${part.scoringRate}%`}</td>
+                      <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.winRate}</td>
                       <td className={`${styles.td} ${styles.win}`}>{noData ? <span className={styles.dash}>—</span> : part.wins}</td>
                       <td className={`${styles.td} ${styles.loss}`}>{noData ? <span className={styles.dash}>—</span> : part.losses}</td>
-                      <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.winRate}</td>
+                      <td className={styles.td}>{part.totalMatches || <span className={styles.dash}>—</span>}</td>
                     </tr>
                   );
                 })}

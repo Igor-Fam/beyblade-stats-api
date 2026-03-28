@@ -160,6 +160,11 @@
   background: #1e293b;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-left-radius: 0.75rem;
+}
+
+.th:last-child {
+  border-top-right-radius: 0.75rem;
 }
 
 .thTag,
@@ -179,9 +184,17 @@
 
 /* Explicit widths for alignment between separate Header and Body tables */
 .thPart, .tdPart { width: 100px; min-width: 100px; }
-.thTag, .tdTag { width: 60px; min-width: 60px; }
+
+/* Dinamicamente ajusta a coluna de tags baseada na mesma breakpoint (450px) onde ela é abreviada em index.css */
+.thTag, .tdTag { width: 105px; min-width: 105px; }
+
+@media (max-width: 450px) {
+  .thTag, .tdTag { width: 60px; min-width: 60px; }
+}
+
 .th, .td { width: 75px; min-width: 75px; }
 .rankCellHeader, .rankCell { width: 85px; min-width: 85px; }
+.scoringCellHeader, .scoringCell { width: 110px; min-width: 110px; }
 
 /* thPart/tdPart padding was removed for sidebarSafeZone horizontal bar instead */
 
