@@ -4,6 +4,15 @@ import { AppError } from '../errors/AppError';
 import { ColleyCalculator, ColleyBattle } from '../domain/utils/ColleyCalculator';
 import { EloCalculator } from '../domain/utils/EloCalculator';
 
+const DEFAULT_ELO = 1000;
+const DEFAULT_COLLEY = 500;
+const DEPENDENCY_PERCENTAGE_THRESHOLD = 0.7;
+const DEPENDENCY_POINTS_THRESHOLD = 80;
+const ANALYTICS_MIN_BATTLES = 10;
+const ANALYTICS_LIMIT = 6;
+const DEFAULT_SCORING_RATE = 50;
+const DEFAULT_ELO_MULTIPLIER = 1.0;
+
 export interface PartStatsDTO {
     id: number;
     name: string;
@@ -67,15 +76,15 @@ export class StatsService {
         });
 
         const ratings = new Map<number, number>();
-        const getRating = (id: number) => ratings.get(id) ?? 1000;
-        const eloMultipliers: Record<string, number> = { SPIN: 1.0, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
+        const getRating = (id: number) => ratings.get(id) ?? DEFAULT_ELO;
+        const eloMultipliers: Record<string, number> = { SPIN: DEFAULT_ELO_MULTIPLIER, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
 
         for (const battle of battles) {
             const entry0 = battle.entries[0];
             const entry1 = battle.entries[1];
             const avgRating0 = EloCalculator.calculateAverageRating(entry0.parts.map(p => getRating(p.partId)));
             const avgRating1 = EloCalculator.calculateAverageRating(entry1.parts.map(p => getRating(p.partId)));
-            const multiplier = eloMultipliers[entry0.finishType] ?? 1.0;
+            const multiplier = eloMultipliers[entry0.finishType] ?? DEFAULT_ELO_MULTIPLIER;
             const expected0 = EloCalculator.calculateExpectedScore(avgRating0, avgRating1);
             const expected1 = EloCalculator.calculateExpectedScore(avgRating1, avgRating0);
             const isWinner0 = entry0.points > 0;
@@ -109,7 +118,7 @@ export class StatsService {
 
             return {
                 winnerPartIds: (isWinner0 ? entry0 : entry1).parts.map(p => p.partId),
-                loserPartIds:  (isWinner0 ? entry1 : entry0).parts.map(p => p.partId),
+                loserPartIds: (isWinner0 ? entry1 : entry0).parts.map(p => p.partId),
                 finishWeight,
             };
         });
@@ -206,14 +215,14 @@ export class StatsService {
                 if (entry.points > 0) {
                     wins++;
                     totalGained += entry.points;
-                    
+
                     // Track points with each partner
                     entry.parts.forEach(p => {
                         if (p.partId !== part.id) {
                             if (!partnerPoints[p.partId]) {
-                                partnerPoints[p.partId] = { 
-                                    name: p.part.name, 
-                                    type: p.part.partType.name, 
+                                partnerPoints[p.partId] = {
+                                    name: p.part.name,
+                                    type: p.part.partType.name,
                                     points: 0,
                                     isInfluential: p.part.partType.isInfluential
                                 };
@@ -228,12 +237,12 @@ export class StatsService {
             });
 
             const pointsSum = totalGained + totalConceded;
-            const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
+            const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
             // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
             let isDependent = false;
-            if (totalGained >= 80) {
-                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > 0.7 && p.points >= 80);
+            if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
+                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.points >= DEPENDENCY_POINTS_THRESHOLD);
                 isDependent = dominantPartners.length > 0;
             }
 
@@ -241,8 +250,8 @@ export class StatsService {
                 id: part.id,
                 name: part.name,
                 type: part.partType.name,
-                elo: Math.round(eloRatings.get(part.id) ?? 1000),
-                bp: colleyRatings.get(part.id) ?? 500,
+                elo: Math.round(eloRatings.get(part.id) ?? DEFAULT_ELO),
+                bp: colleyRatings.get(part.id) ?? DEFAULT_COLLEY,
                 totalMatches,
                 wins,
                 losses,
@@ -334,12 +343,12 @@ export class StatsService {
             myEntry.parts.forEach((p: any) => {
                 if (p.partId !== partId) {
                     if (!partnerStats[p.partId]) {
-                        partnerStats[p.partId] = { 
-                            name: p.part.name, 
-                            type: p.part.partType.name, 
-                            gained: 0, 
-                            conceded: 0, 
-                            matches: 0 
+                        partnerStats[p.partId] = {
+                            name: p.part.name,
+                            type: p.part.partType.name,
+                            gained: 0,
+                            conceded: 0,
+                            matches: 0
                         };
                     }
                     if (!partnerPoints[p.partId]) {
@@ -378,34 +387,34 @@ export class StatsService {
         const bestPartners = Object.entries(partnerStats)
             .map(([id, data]) => {
                 const sum = data.gained + data.conceded;
-                return { 
-                    id: Number(id), 
-                    name: data.name, 
-                    type: data.type, 
+                return {
+                    id: Number(id),
+                    name: data.name,
+                    type: data.type,
                     totalMatches: data.matches,
-                    avgPoints: Number(( (data.gained - data.conceded) / data.matches).toFixed(2)),
-                    scoringRate: sum > 0 ? Number(((data.gained * 100) / sum).toFixed(2)) : 50
+                    avgPoints: Number(((data.gained - data.conceded) / data.matches).toFixed(2)),
+                    scoringRate: sum > 0 ? Number(((data.gained * 100) / sum).toFixed(2)) : DEFAULT_SCORING_RATE
                 };
             })
-            .filter(p => p.totalMatches >= 10)
+            .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
             .sort((a, b) => b.scoringRate - a.scoringRate)
-            .slice(0, 6);
+            .slice(0, ANALYTICS_LIMIT);
 
         const bestCounters = Object.entries(counterStats)
             .map(([id, data]) => {
                 const sum = data.myGained + data.myConceded;
-                return { 
-                    id: Number(id), 
-                    name: data.name, 
-                    type: data.type, 
+                return {
+                    id: Number(id),
+                    name: data.name,
+                    type: data.type,
                     totalMatches: data.matches,
-                    avgPoints: Number(( (data.myGained - data.myConceded) / data.matches).toFixed(2)),
-                    scoringRate: sum > 0 ? Number(((data.myGained * 100) / sum).toFixed(2)) : 50
+                    avgPoints: Number(((data.myGained - data.myConceded) / data.matches).toFixed(2)),
+                    scoringRate: sum > 0 ? Number(((data.myGained * 100) / sum).toFixed(2)) : DEFAULT_SCORING_RATE
                 };
             })
-            .filter(p => p.totalMatches >= 10)
+            .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
             .sort((a, b) => a.scoringRate - b.scoringRate) // lowest rate = best counter to me
-            .slice(0, 6);
+            .slice(0, ANALYTICS_LIMIT);
 
         const [eloRatings, colleyRatings] = await Promise.all([
             this.calculateBatchElo(),
@@ -413,12 +422,12 @@ export class StatsService {
         ]);
 
         const pointsSum = totalGained + totalConceded;
-        const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
+        const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
         // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
         let isDependent = false;
-        if (totalGained >= 80) {
-            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > 0.7 && p.points >= 80);
+        if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
+            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.points >= DEPENDENCY_POINTS_THRESHOLD);
             isDependent = dominantPartners.length > 0;
         }
 
@@ -426,8 +435,8 @@ export class StatsService {
             id: part.id,
             name: part.name,
             type: part.partType.name,
-            elo: Math.round(eloRatings.get(part.id) ?? 1000),
-            bp: colleyRatings.get(part.id) ?? 500,
+            elo: Math.round(eloRatings.get(part.id) ?? DEFAULT_ELO),
+            bp: colleyRatings.get(part.id) ?? DEFAULT_COLLEY,
             totalMatches,
             wins,
             losses,
@@ -441,7 +450,7 @@ export class StatsService {
             bestCounters,
             winFinishes,
             lossFinishes,
-            
+
             // Explicit dependencies: Influential partners with > 70% share of points gained
             dependencies: totalGained === 0 ? [] : Object.entries(partnerPoints)
                 .map(([id, data]) => ({
@@ -451,7 +460,7 @@ export class StatsService {
                     pointsGained: (data as any).points,
                     share: Number((((data as any).points * 100) / totalGained).toFixed(2))
                 }))
-                .filter(d => d.share > 70 && d.pointsGained >= 80 && (partnerPoints[d.id] as any).isInfluential)
+                .filter(d => d.share > (DEPENDENCY_PERCENTAGE_THRESHOLD * 100) && d.pointsGained >= DEPENDENCY_POINTS_THRESHOLD && (partnerPoints[d.id] as any).isInfluential)
         };
     }
 
@@ -468,11 +477,11 @@ export class StatsService {
 
         const colleyRatings = await this.calculateColleyRatings();
 
-        const comboGroups: Record<string, { 
-            parts: { id: number, name: string, type: string }[], 
-            wins: number, 
-            losses: number, 
-            totalElo: number 
+        const comboGroups: Record<string, {
+            parts: { id: number, name: string, type: string }[],
+            wins: number,
+            losses: number,
+            totalElo: number
         }> = {};
 
         entries.forEach(entry => {
@@ -482,7 +491,7 @@ export class StatsService {
                     parts: entry.parts.map(p => ({ id: p.partId, name: p.part.name, type: p.part.partType.name })),
                     wins: 0,
                     losses: 0,
-                    totalElo: entry.parts.reduce((acc, p) => acc + (colleyRatings.get(p.partId) ?? 500), 0)
+                    totalElo: entry.parts.reduce((acc, p) => acc + (colleyRatings.get(p.partId) ?? DEFAULT_COLLEY), 0)
                 };
             }
 
@@ -511,7 +520,7 @@ export class StatsService {
         });
 
         const colleyRatings = await this.calculateColleyRatings();
-        const avgElo = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? 500), 0) / parts.length);
+        const avgElo = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? DEFAULT_COLLEY), 0) / parts.length);
         const comboHash = partsIds.sort((a, b) => a - b).join('-');
 
         const historicalEntries = await prisma.battleEntry.findMany({
