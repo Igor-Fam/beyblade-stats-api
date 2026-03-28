@@ -87,6 +87,9 @@ const translations = {
     finish_over: 'Over Finish',
     finish_burst: 'Burst Finish',
     finish_xtreme: 'Xtreme Finish',
+    tag_dependent: 'Dependent',
+    dependency_modal_title: 'Dependency Analysis',
+    dependency_modal_desc: 'This part earned more than 70% of its total points in conjunction with the following parts (excluding low-influence parts like Ratchets):',
   },
   pt: {
     // General
@@ -172,6 +175,9 @@ const translations = {
     finish_over: 'Over Finish',
     finish_burst: 'Burst Finish',
     finish_xtreme: 'Xtreme Finish',
+    tag_dependent: 'Dependente',
+    dependency_modal_title: 'Análise de Dependência',
+    dependency_modal_desc: 'Esta peça obteve mais de 70% de seus pontos totais em conjunto com as seguintes peças (excluindo peças pouco influentes como Ratchets):',
   }
 };
 

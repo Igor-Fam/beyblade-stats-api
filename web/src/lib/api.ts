@@ -15,6 +15,15 @@ export interface PartStats {
   winRate: string;
   avgPoints: number;
   scoringRate: number;
+  isDependent: boolean;
+}
+
+export interface Dependency {
+  id: number;
+  name: string;
+  type: string;
+  pointsGained: number;
+  share: number;
 }
 
 export async function fetchLines(): Promise<Line[]> {
@@ -63,6 +72,7 @@ export interface PartDetails extends PartStats {
   bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   winFinishes: Record<string, number>;
   lossFinishes: Record<string, number>;
+  dependencies: Dependency[];
 }
 
 export async function fetchPartDetails(id: number): Promise<PartDetails> {
