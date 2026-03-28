@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { HelpCircle } from 'lucide-react';
 import { type PartStats, fetchPartsList } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -170,18 +171,21 @@ export default function StatsPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     <td className={styles.tdPart}>
-                      <span className={styles.partName}>{part.name}</span>
-                      {part.isDependent && (
-                        <button 
-                          className="dependent-tag" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/stats/parts/${part.id}?showDependencies=true`);
-                          }}
-                        >
-                          {t('tag_dependent')}
-                        </button>
-                      )}
+                      <div className={styles.partNameRow}>
+                        <span className={styles.partName}>{part.name}</span>
+                        {part.isDependent && (
+                          <button 
+                            className="dependent-tag" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/stats/parts/${part.id}?showDependencies=true`);
+                            }}
+                          >
+                            <HelpCircle size={10} style={{ marginRight: '3px' }} />
+                            {t('tag_dependent')}
+                          </button>
+                        )}
+                      </div>
                       <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
                     </td>
                     <td className={`${styles.td} ${styles.rankCell}`}>

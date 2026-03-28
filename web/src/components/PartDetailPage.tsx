@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info, HelpCircle } from 'lucide-react';
 import { fetchPartDetails, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './PartDetailPage.module.css';
@@ -91,6 +91,7 @@ export default function PartDetailPage() {
           <h1 className={styles.name}>{part.name}</h1>
           {part.isDependent && (
             <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
+              <HelpCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
               {t('tag_dependent')}
             </button>
           )}

@@ -162,6 +162,12 @@
   gap: 0.15rem;
 }
 
+.partNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .partName {
   font-weight: 600;
   font-size: 0.9rem;
