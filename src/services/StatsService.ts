@@ -16,6 +16,15 @@ export interface PartStatsDTO {
     winRate: string;
     avgPoints: number;
     scoringRate: number;
+    isDependent: boolean;
+}
+
+export interface DependencyDTO {
+    id: number;
+    name: string;
+    type: string;
+    pointsGained: number;
+    share: number;
 }
 
 export interface PartDetailsDTO extends PartStatsDTO {
@@ -25,6 +34,7 @@ export interface PartDetailsDTO extends PartStatsDTO {
     bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
     winFinishes: Record<string, number>;
     lossFinishes: Record<string, number>;
+    dependencies: DependencyDTO[];
 }
 
 export interface ComboStatsDTO {
@@ -162,7 +172,15 @@ export class StatsService {
                 partType: true,
                 battleEntries: {
                     include: {
-                        battleEntry: true
+                        battleEntry: {
+                            include: {
+                                parts: {
+                                    include: {
+                                        part: { include: { partType: true } }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -180,6 +198,7 @@ export class StatsService {
             let totalPoints = 0;
             let totalGained = 0;
             let totalConceded = 0;
+            const partnerPoints: Record<number, { name: string, type: string, points: number, isInfluential: boolean }> = {};
 
             part.battleEntries.forEach(participation => {
                 const entry = participation.battleEntry;
@@ -187,6 +206,21 @@ export class StatsService {
                 if (entry.points > 0) {
                     wins++;
                     totalGained += entry.points;
+                    
+                    // Track points with each partner
+                    entry.parts.forEach(p => {
+                        if (p.partId !== part.id) {
+                            if (!partnerPoints[p.partId]) {
+                                partnerPoints[p.partId] = { 
+                                    name: p.part.name, 
+                                    type: p.part.partType.name, 
+                                    points: 0,
+                                    isInfluential: p.part.partType.isInfluential
+                                };
+                            }
+                            partnerPoints[p.partId].points += entry.points;
+                        }
+                    });
                 } else {
                     losses++;
                     totalConceded += Math.abs(entry.points);
@@ -195,6 +229,13 @@ export class StatsService {
 
             const pointsSum = totalGained + totalConceded;
             const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
+
+            // Check dependency: > 70% of points gained with a single influential partner
+            let isDependent = false;
+            if (totalGained > 0) {
+                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > 0.7);
+                isDependent = dominantPartners.length > 0;
+            }
 
             return {
                 id: part.id,
@@ -207,7 +248,8 @@ export class StatsService {
                 losses,
                 winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
                 avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
-                scoringRate
+                scoringRate,
+                isDependent
             };
         });
 
@@ -270,6 +312,7 @@ export class StatsService {
 
         const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number }> = {};
         const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number }> = {};
+        const partnerPoints: Record<number, { name: string, type: string, points: number, isInfluential: boolean }> = {};
 
         part.battleEntries.forEach(participation => {
             const myEntry = (participation as any).battleEntry;
@@ -291,10 +334,29 @@ export class StatsService {
             myEntry.parts.forEach((p: any) => {
                 if (p.partId !== partId) {
                     if (!partnerStats[p.partId]) {
-                        partnerStats[p.partId] = { name: p.part.name, type: p.part.partType.name, gained: 0, conceded: 0, matches: 0 };
+                        partnerStats[p.partId] = { 
+                            name: p.part.name, 
+                            type: p.part.partType.name, 
+                            gained: 0, 
+                            conceded: 0, 
+                            matches: 0 
+                        };
                     }
-                    if (myEntry.points > 0) partnerStats[p.partId].gained += myEntry.points;
-                    else partnerStats[p.partId].conceded += Math.abs(myEntry.points);
+                    if (!partnerPoints[p.partId]) {
+                        partnerPoints[p.partId] = {
+                            name: p.part.name,
+                            type: p.part.partType.name,
+                            points: 0,
+                            isInfluential: p.part.partType.isInfluential
+                        };
+                    }
+
+                    if (myEntry.points > 0) {
+                        partnerStats[p.partId].gained += myEntry.points;
+                        partnerPoints[p.partId].points += myEntry.points;
+                    } else {
+                        partnerStats[p.partId].conceded += Math.abs(myEntry.points);
+                    }
                     partnerStats[p.partId].matches++;
                 }
             });
@@ -350,8 +412,15 @@ export class StatsService {
             this.calculateColleyRatings(),
         ]);
 
-        const totalPointsSum = totalGained + totalConceded;
-        const scoringRate = totalPointsSum > 0 ? Number(((totalGained * 100) / totalPointsSum).toFixed(2)) : 50;
+        const pointsSum = totalGained + totalConceded;
+        const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
+
+        // Check dependency: > 70% of points gained with a single influential partner
+        let isDependent = false;
+        if (totalGained > 0) {
+            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > 0.7);
+            isDependent = dominantPartners.length > 0;
+        }
 
         return {
             id: part.id,
@@ -365,12 +434,24 @@ export class StatsService {
             winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
             scoringRate,
+            isDependent,
             totalGained,
             totalConceded,
             bestPartners,
             bestCounters,
             winFinishes,
-            lossFinishes
+            lossFinishes,
+            
+            // Explicit dependencies: Influential partners with > 70% share of points gained
+            dependencies: totalGained === 0 ? [] : Object.entries(partnerPoints)
+                .map(([id, data]) => ({
+                    id: Number(id),
+                    name: (data as any).name,
+                    type: (data as any).type,
+                    pointsGained: (data as any).points,
+                    share: Number((((data as any).points * 100) / totalGained).toFixed(2))
+                }))
+                .filter(d => d.share > 70 && (partnerPoints[d.id] as any).isInfluential)
         };
     }
 
