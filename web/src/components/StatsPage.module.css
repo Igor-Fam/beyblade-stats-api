@@ -82,7 +82,8 @@
 /* ─── Table ───────────────────────────────────────────── */
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.875rem;
 }
 
@@ -113,7 +114,23 @@
 
 .thPart {
   cursor: default;
-  min-width: 180px;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #1e293b; /* Base color to match var(--card-bg) */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.thTag,
+.tdTag {
+  padding: 0.75rem 0.5rem !important;
+  width: 1px;
+  white-space: nowrap;
+}
+
+.tdTag {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* ─── Sorting icons ───────────────────────────────────── */
@@ -133,6 +150,7 @@
 /* ─── Rows ────────────────────────────────────────────── */
 .row {
   transition: background 0.15s;
+  background: #1e293b; /* Base row background */
 }
 
 .row:hover {
@@ -148,8 +166,7 @@
 }
 
 /* ─── Cells ───────────────────────────────────────────── */
-.td,
-.tdPart {
+.td {
   padding: 0.65rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
@@ -157,9 +174,32 @@
 }
 
 .tdPart {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  white-space: nowrap;
+  
+  /* Sticky behavior */
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: #1e293b;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.partContent {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+}
+
+/* Match row striping and hover in the sticky column */
+.row.even .tdPart {
+  background-color: #212c3f;
+}
+
+.row:hover .tdPart {
+  background-color: #26354d;
 }
 
 .partNameRow {

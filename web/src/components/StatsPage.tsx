@@ -316,6 +316,7 @@ export default function StatsPage() {
             <thead>
               <tr>
                 <th className={styles.thPart}>{t('col_part')}</th>
+                <th className={styles.thTag}></th>
                 <th
                   className={`${styles.th} ${sortKey === rankingMode ? styles.activeCol : ''}`}
                   onClick={() => handleSort(rankingMode)}
@@ -353,23 +354,27 @@ export default function StatsPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     <td className={styles.tdPart}>
-                      <div className={styles.partNameRow}>
-                        <span className={styles.partName}>{part.name}</span>
-                        {part.isDependent && (
-                          <button 
-                            className="dependent-tag" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/stats/parts/${part.id}?showDependencies=true`);
-                            }}
-                          >
-                            <HelpCircle size={10} style={{ marginRight: '3px' }} />
-                            <span className="tag-full">{t('tag_dependent')}</span>
-                            <span className="tag-short">{t('tag_dependent_short')}</span>
-                          </button>
-                        )}
+                      <div className={styles.partContent}>
+                        <div className={styles.partNameRow}>
+                          <span className={styles.partName}>{part.name}</span>
+                        </div>
+                        <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
                       </div>
-                      <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
+                    </td>
+                    <td className={styles.tdTag}>
+                      {part.isDependent && (
+                        <button 
+                          className="dependent-tag" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/stats/parts/${part.id}?showDependencies=true`);
+                          }}
+                        >
+                          <HelpCircle size={10} style={{ marginRight: '3px' }} />
+                          <span className="tag-full">{t('tag_dependent')}</span>
+                          <span className="tag-short">{t('tag_dependent_short')}</span>
+                        </button>
+                      )}
                     </td>
                     <td className={`${styles.td} ${styles.rankCell}`}>
                       {noData ? <span className={styles.dash}>—</span> : (
