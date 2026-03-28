@@ -230,10 +230,10 @@ export class StatsService {
             const pointsSum = totalGained + totalConceded;
             const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
 
-            // Check dependency: > 70% of points gained with a single influential partner
+            // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
             let isDependent = false;
-            if (totalGained > 0) {
-                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > 0.7);
+            if (totalGained >= 80) {
+                const dominantPartners = Object.values(partnerPoints).filter(p => p.isInfluential && (p.points / totalGained) > 0.7 && p.points >= 80);
                 isDependent = dominantPartners.length > 0;
             }
 
@@ -415,10 +415,10 @@ export class StatsService {
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : 50;
 
-        // Check dependency: > 70% of points gained with a single influential partner
+        // Check dependency: > 70% of points gained with a single influential partner AND at least 80 points
         let isDependent = false;
-        if (totalGained > 0) {
-            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > 0.7);
+        if (totalGained >= 80) {
+            const dominantPartners = Object.values(partnerPoints).filter(p => (p as any).isInfluential && (p.points / totalGained) > 0.7 && p.points >= 80);
             isDependent = dominantPartners.length > 0;
         }
 
@@ -451,7 +451,7 @@ export class StatsService {
                     pointsGained: (data as any).points,
                     share: Number((((data as any).points * 100) / totalGained).toFixed(2))
                 }))
-                .filter(d => d.share > 70 && (partnerPoints[d.id] as any).isInfluential)
+                .filter(d => d.share > 70 && d.pointsGained >= 80 && (partnerPoints[d.id] as any).isInfluential)
         };
     }
 
