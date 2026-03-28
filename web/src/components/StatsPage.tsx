@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Filter, X } from 'lucide-react';
 import { type PartStats, fetchPartsList } from '../lib/api';
@@ -52,6 +52,15 @@ export default function StatsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Sync horizontal scroll between separate header and body tables
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (headerRef.current) {
+      headerRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+    }
+  };
   const [filters, setFilters] = useState<Filter[]>(() => {
     try {
       const saved = localStorage.getItem('parts_filters');
@@ -312,85 +321,94 @@ export default function StatsPage() {
         <div className={styles.feedback}>{t('stats_empty')}</div>
       ) : (
         <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.thPart}>{t('col_part')}</th>
-                <th className={styles.thTag}></th>
-                <th
-                  className={`${styles.th} ${sortKey === rankingMode ? styles.activeCol : ''}`}
-                  onClick={() => handleSort(rankingMode)}
-                  title={rankDesc}
-                >
-                  {rankLabel} <SortIndicator col={rankingMode} />
-                </th>
-                <th className={styles.th} onClick={() => handleSort('avgPoints')}>
-                  {t('col_avg_pts')} <SortIndicator col="avgPoints" />
-                </th>
-                <th className={styles.th} onClick={() => handleSort('totalMatches')}>
-                  {t('col_battles')} <SortIndicator col="totalMatches" />
-                </th>
-                <th className={styles.th} onClick={() => handleSort('wins')}>
-                  {t('col_wins')} <SortIndicator col="wins" />
-                </th>
-                <th className={styles.th} onClick={() => handleSort('losses')}>
-                  {t('col_losses')} <SortIndicator col="losses" />
-                </th>
-                <th className={styles.th} onClick={() => handleSort('winRate')}>
-                  {t('col_winrate')} <SortIndicator col="winRate" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAndSorted.map((part, i) => {
-                const noData = part.totalMatches === 0;
-                const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
-                const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
-                return (
-                  <tr 
-                    key={part.id} 
-                    className={`${styles.row} ${i % 2 === 0 ? styles.even : ''}`}
-                    onClick={() => navigate(`/stats/parts/${part.id}`)}
-                    style={{ cursor: 'pointer' }}
+          {/* Separate Sticky Header Table */}
+          <div className={styles.headerWrapper} ref={headerRef}>
+            <table className={styles.tableHeader}>
+              <thead className={styles.thead}>
+                <tr className={styles.headerRow}>
+                  <th className={styles.thPart}>{t('col_part')}</th>
+                  <th className={styles.thTag}></th>
+                  <th
+                    className={`${styles.th} ${styles.rankCellHeader} ${sortKey === rankingMode ? styles.activeCol : ''}`}
+                    onClick={() => handleSort(rankingMode)}
+                    title={rankDesc}
                   >
-                    <td className={styles.tdPart}>
-                      <div className={styles.partContent}>
-                        <div className={styles.partNameRow}>
-                          <span className={styles.partName}>{part.name}</span>
+                    {rankLabel} <SortIndicator col={rankingMode} />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('avgPoints')}>
+                    {t('col_avg_pts')} <SortIndicator col="avgPoints" />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('totalMatches')}>
+                    {t('col_battles')} <SortIndicator col="totalMatches" />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('wins')}>
+                    {t('col_wins')} <SortIndicator col="wins" />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('losses')}>
+                    {t('col_losses')} <SortIndicator col="losses" />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('winRate')}>
+                    {t('col_winrate')} <SortIndicator col="winRate" />
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+
+          {/* Scrollable Body Table */}
+          <div className={styles.bodyWrapper} ref={bodyRef} onScroll={handleScroll}>
+            <table className={styles.tableBody}>
+              <tbody className={styles.tbody}>
+                {filteredAndSorted.map((part, i) => {
+                  const noData = part.totalMatches === 0;
+                  const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
+                  const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
+                  return (
+                    <tr 
+                      key={part.id} 
+                      className={`${styles.row} ${i % 2 === 0 ? styles.even : ''}`}
+                      onClick={() => navigate(`/stats/parts/${part.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td className={styles.tdPart}>
+                        <div className={styles.partContent}>
+                          <div className={styles.partNameRow}>
+                            <span className={styles.partName}>{part.name}</span>
+                          </div>
+                          <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
                         </div>
-                        <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
-                      </div>
-                    </td>
-                    <td className={styles.tdTag}>
-                      {part.isDependent && (
-                        <button 
-                          className="dependent-tag" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/stats/parts/${part.id}?showDependencies=true`);
-                          }}
-                        >
-                          <HelpCircle size={10} style={{ marginRight: '3px' }} />
-                          <span className="tag-full">{t('tag_dependent')}</span>
-                          <span className="tag-short">{t('tag_dependent_short')}</span>
-                        </button>
-                      )}
-                    </td>
-                    <td className={`${styles.td} ${styles.rankCell}`}>
-                      {noData ? <span className={styles.dash}>—</span> : (
-                        <span className={styles.rankValue}>{rankValue}</span>
-                      )}
-                    </td>
-                    <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.avgPoints}</td>
-                    <td className={styles.td}>{part.totalMatches || <span className={styles.dash}>—</span>}</td>
-                    <td className={`${styles.td} ${styles.win}`}>{noData ? <span className={styles.dash}>—</span> : part.wins}</td>
-                    <td className={`${styles.td} ${styles.loss}`}>{noData ? <span className={styles.dash}>—</span> : part.losses}</td>
-                    <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.winRate}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className={styles.tdTag}>
+                        {part.isDependent && (
+                          <button 
+                            className="dependent-tag" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/stats/parts/${part.id}?showDependencies=true`);
+                            }}
+                          >
+                            <HelpCircle size={10} style={{ marginRight: '3px' }} />
+                            <span className="tag-full">{t('tag_dependent')}</span>
+                            <span className="tag-short">{t('tag_dependent_short')}</span>
+                          </button>
+                        )}
+                      </td>
+                      <td className={`${styles.td} ${styles.rankCell}`}>
+                        {noData ? <span className={styles.dash}>—</span> : (
+                          <span className={styles.rankValue}>{rankValue}</span>
+                        )}
+                      </td>
+                      <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.avgPoints}</td>
+                      <td className={styles.td}>{part.totalMatches || <span className={styles.dash}>—</span>}</td>
+                      <td className={`${styles.td} ${styles.win}`}>{noData ? <span className={styles.dash}>—</span> : part.wins}</td>
+                      <td className={`${styles.td} ${styles.loss}`}>{noData ? <span className={styles.dash}>—</span> : part.losses}</td>
+                      <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.winRate}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

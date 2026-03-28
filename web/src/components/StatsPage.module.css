@@ -73,14 +73,32 @@
 
 /* ─── Table wrapper (horizontal scroll on mobile) ──────── */
 .tableWrapper {
-  overflow-x: auto;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-/* ─── Table ───────────────────────────────────────────── */
-.table {
+.headerWrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #1e293b;
+  overflow: hidden; /* Horizontal scroll synced via JS */
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.bodyWrapper {
+  overflow-x: auto;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.tableHeader,
+.tableBody {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -88,6 +106,7 @@
 }
 
 .th,
+.thTag,
 .thPart {
   padding: 0.75rem 1rem;
   text-align: left;
@@ -101,9 +120,11 @@
   user-select: none;
   cursor: pointer;
   transition: color 0.15s;
+  background: #1e293b;
 }
 
-.th:hover {
+.th:hover,
+.thTag:hover {
   color: var(--text-primary);
 }
 
@@ -116,8 +137,8 @@
   cursor: default;
   position: sticky;
   left: 0;
-  z-index: 10;
-  background: #1e293b; /* Base color to match var(--card-bg) */
+  z-index: 2; /* Still sticky horizontally within its wrapper */
+  background: #1e293b;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -125,13 +146,18 @@
 .thTag,
 .tdTag {
   padding: 0.75rem 0.5rem !important;
-  width: 1px;
   white-space: nowrap;
 }
 
 .tdTag {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
+
+/* Explicit widths for alignment between separate Header and Body tables */
+.thPart, .tdPart { width: 180px; min-width: 180px; }
+.thTag, .tdTag { width: 50px; min-width: 50px; }
+.th, .td { width: 90px; min-width: 90px; }
+.rankCellHeader, .rankCell { width: 100px; min-width: 100px; }
 
 /* ─── Sorting icons ───────────────────────────────────── */
 .sortIcon {
@@ -148,6 +174,10 @@
 }
 
 /* ─── Rows ────────────────────────────────────────────── */
+.row {
+  display: table-row;
+}
+
 .row {
   transition: background 0.15s;
   background: #1e293b; /* Base row background */
