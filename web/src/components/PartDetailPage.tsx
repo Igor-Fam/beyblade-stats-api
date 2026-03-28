@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target } from 'lucide-react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info } from 'lucide-react';
 import { fetchPartDetails, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './PartDetailPage.module.css';
@@ -24,9 +24,18 @@ const FINISH_LABELS: Record<string, string> = {
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const location = useLocation();
   const [part, setPart] = useState<PartDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDependencyModal, setShowDependencyModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('showDependencies') === 'true' && part) {
+      setShowDependencyModal(true);
+    }
+  }, [location.search, part]);
 
   useEffect(() => {
     if (!id) return;
@@ -80,6 +89,11 @@ export default function PartDetailPage() {
         </Link>
         <div className={styles.titleInfo}>
           <h1 className={styles.name}>{part.name}</h1>
+          {part.isDependent && (
+            <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
+              {t('tag_dependent')}
+            </button>
+          )}
           <span className={styles.typeBadge} style={{ backgroundColor: `${typeColor}22`, color: typeColor, borderColor: `${typeColor}44` }}>
             {part.type}
           </span>
@@ -199,6 +213,49 @@ export default function PartDetailPage() {
           </div>
         </section>
       </div>
+
+      {showDependencyModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowDependencyModal(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <header className={styles.modalHeader}>
+              <div className={styles.modalTitleRow}>
+                <Info size={20} className={styles.modalTitleIcon} />
+                <h2>{t('dependency_modal_title')}</h2>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setShowDependencyModal(false)}>
+                <X size={20} />
+              </button>
+            </header>
+            <div className={styles.modalBody}>
+              <p className={styles.modalDesc}>{t('dependency_modal_desc')}</p>
+              <div className={styles.dependencyList}>
+                {part.dependencies.map(dep => (
+                  <Link 
+                    key={dep.id} 
+                    to={`/stats/parts/${dep.id}`} 
+                    className={styles.dependencyItem}
+                    onClick={() => setShowDependencyModal(false)}
+                  >
+                    <div className={styles.depInfo}>
+                      <span className={styles.depName}>{dep.name}</span>
+                      <span className={styles.depType} style={{ color: TYPE_COLORS[dep.type] }}>{dep.type}</span>
+                    </div>
+                    <div className={styles.depMetrics}>
+                      <div className={styles.depPercentage}>
+                        <span className={styles.depValue}>{dep.share}%</span>
+                        <span className={styles.depLabel}>{t('col_points_gained')}</span>
+                      </div>
+                      <div className={styles.depProgress}>
+                        <div className={styles.depProgressFill} style={{ width: `${dep.share}%` }} />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

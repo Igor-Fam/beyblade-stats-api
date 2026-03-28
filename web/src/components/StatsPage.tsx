@@ -171,6 +171,17 @@ export default function StatsPage() {
                   >
                     <td className={styles.tdPart}>
                       <span className={styles.partName}>{part.name}</span>
+                      {part.isDependent && (
+                        <button 
+                          className="dependent-tag" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/stats/parts/${part.id}?showDependencies=true`);
+                          }}
+                        >
+                          {t('tag_dependent')}
+                        </button>
+                      )}
                       <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
                     </td>
                     <td className={`${styles.td} ${styles.rankCell}`}>
