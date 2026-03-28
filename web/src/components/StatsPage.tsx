@@ -323,6 +323,7 @@ export default function StatsPage() {
         <div className={styles.tableWrapper}>
           {/* Separate Sticky Header Table */}
           <div className={styles.headerWrapper} ref={headerRef}>
+            <div className={styles.sidebarSafeZone} />
             <table className={styles.tableHeader}>
               <thead className={styles.thead}>
                 <tr className={styles.headerRow}>

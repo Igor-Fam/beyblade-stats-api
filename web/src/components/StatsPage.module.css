@@ -76,24 +76,34 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  margin-top: 1rem;
 }
 
 .headerWrapper {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #1e293b;
+  background: var(--bg-color); /* Matches page background to hide scrolling rows */
   overflow: hidden; /* Horizontal scroll synced via JS */
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 0.75rem 0.75rem 0 0;
+  transition: background 0.2s;
+}
+
+.sidebarSafeZone {
+  height: 0;
+  background: var(--bg-color);
+}
+
+@media (max-width: 640px) {
+  .sidebarSafeZone {
+    height: 64px; /* Space for floating button (44px + 12px padding) area */
+  }
 }
 
 .bodyWrapper {
   overflow-x: auto;
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: none;
   border-radius: 0 0 0.75rem 0.75rem;
 }
 
@@ -103,6 +113,15 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.875rem;
+  table-layout: fixed;
+}
+
+.tableHeader {
+  background: #1e293b;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem 0.75rem 0 0;
 }
 
 .th,
@@ -137,7 +156,7 @@
   cursor: default;
   position: sticky;
   left: 0;
-  z-index: 2; /* Still sticky horizontally within its wrapper */
+  z-index: 10;
   background: #1e293b;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -153,11 +172,18 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.tdPart {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-left: 1rem;
+}
+
 /* Explicit widths for alignment between separate Header and Body tables */
-.thPart, .tdPart { width: 180px; min-width: 180px; }
-.thTag, .tdTag { width: 50px; min-width: 50px; }
-.th, .td { width: 90px; min-width: 90px; }
-.rankCellHeader, .rankCell { width: 100px; min-width: 100px; }
+.thPart, .tdPart { width: 100px; min-width: 100px; }
+.thTag, .tdTag { width: 60px; min-width: 60px; }
+.th, .td { width: 75px; min-width: 75px; }
+.rankCellHeader, .rankCell { width: 85px; min-width: 85px; }
+
+/* thPart/tdPart padding was removed for sidebarSafeZone horizontal bar instead */
 
 /* ─── Sorting icons ───────────────────────────────────── */
 .sortIcon {
@@ -214,7 +240,14 @@
   left: 0;
   z-index: 5;
   background: #1e293b;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tdTag {
+  padding: 0.65rem 0.5rem !important;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .partContent {
