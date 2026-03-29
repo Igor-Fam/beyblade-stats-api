@@ -16,14 +16,17 @@ export interface PartStats {
   avgPoints: number;
   scoringRate: number;
   isDependent: boolean;
+  dependencies?: Dependency[];
 }
 
 export interface Dependency {
   id: number;
   name: string;
   type: string;
-  pointsGained: number;
-  share: number;
+  pointsGained?: number;
+  share?: number;
+  scoringRateWith: number;
+  scoringRateWithout: number;
 }
 
 export async function fetchLines(): Promise<Line[]> {

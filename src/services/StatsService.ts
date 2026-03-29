@@ -27,14 +27,17 @@ export interface PartStatsDTO {
     avgPoints: number;
     scoringRate: number;
     isDependent: boolean;
+    dependencies?: DependencyDTO[];
 }
 
 export interface DependencyDTO {
     id: number;
     name: string;
     type: string;
-    pointsGained: number;
-    share: number;
+    pointsGained?: number;
+    share?: number;
+    scoringRateWith: number;
+    scoringRateWithout: number;
 }
 
 export interface PartDetailsDTO extends PartStatsDTO {
@@ -208,7 +211,7 @@ export class StatsService {
             let totalPoints = 0;
             let totalGained = 0;
             let totalConceded = 0;
-            const partnerStats: Record<number, { isInfluential: boolean, gained: number, conceded: number }> = {};
+            const partnerStats: Record<number, { name: string, type: string, isInfluential: boolean, gained: number, conceded: number }> = {};
 
             part.battleEntries.forEach(participation => {
                 const entry = participation.battleEntry;
@@ -218,7 +221,7 @@ export class StatsService {
                 entry.parts.forEach(p => {
                     if (p.partId !== part.id) {
                         if (!partnerStats[p.partId]) {
-                            partnerStats[p.partId] = { isInfluential: p.part.partType.isInfluential, gained: 0, conceded: 0 };
+                            partnerStats[p.partId] = { name: p.part.name, type: p.part.partType.name, isInfluential: p.part.partType.isInfluential, gained: 0, conceded: 0 };
                         }
                         if (entry.points > 0) {
                             partnerStats[p.partId].gained += entry.points;
@@ -242,22 +245,34 @@ export class StatsService {
 
             // Constata dependência de sinergia
             let isDependent = false;
+            let dependencies: DependencyDTO[] = [];
             if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
-                const dominantPartners = Object.values(partnerStats).filter(p => {
-                    if (!p.isInfluential) return false;
-                    
+                const dominantPartners = Object.entries(partnerStats).map(([partnerId, p]) => {
                     const pointShare = totalGained > 0 ? p.gained / totalGained : 0;
-                    if (pointShare < DEPENDENCY_POINT_SHARE || p.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
                     const gainedWithout = totalGained - p.gained;
                     const concededWithout = totalConceded - p.conceded;
                     const pointsSumWithout = gainedWithout + concededWithout;
                     const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
-
                     const drop = scoringRate - scoringRateWithout;
-                    return drop > DEPENDENCY_SCORING_RATE_DROP;
+
+                    const scoringRateWith = (p.gained + p.conceded) > 0 ? (p.gained * 100) / (p.gained + p.conceded) : 0;
+
+                    return { id: Number(partnerId), data: p, pointShare, drop, scoringRateWith, scoringRateWithout };
+                }).filter(p => {
+                    if (!p.data.isInfluential) return false;
+                    if (p.pointShare < DEPENDENCY_POINT_SHARE || p.data.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
+                    return p.drop > DEPENDENCY_SCORING_RATE_DROP;
                 });
+                
                 isDependent = dominantPartners.length > 0;
+                dependencies = dominantPartners.map(d => ({
+                    id: d.id,
+                    name: d.data.name,
+                    type: d.data.type,
+                    scoringRateWith: Number(d.scoringRateWith.toFixed(2)),
+                    scoringRateWithout: Number(d.scoringRateWithout.toFixed(2))
+                }));
             }
 
             return {
@@ -272,7 +287,8 @@ export class StatsService {
                 winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
                 avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
                 scoringRate,
-                isDependent
+                isDependent,
+                dependencies
             };
         });
 
@@ -471,15 +487,22 @@ export class StatsService {
 
             // Explicit dependencies: Influential partners with > 70% share of points gained
             dependencies: totalGained === 0 ? [] : Object.entries(partnerStats)
-                .map(([id, data]) => ({
-                    id: Number(id),
-                    name: data.name,
-                    type: data.type,
-                    pointsGained: data.gained,
-                    conceded: data.conceded,
-                    share: Number(((data.gained * 100) / totalGained).toFixed(2)),
-                    isInfluential: data.isInfluential
-                }))
+                .map(([id, data]) => {
+                    const sumWith = data.gained + data.conceded;
+                    const gainedWithout = totalGained - data.gained;
+                    const sumWithout = gainedWithout + (totalConceded - data.conceded);
+                    return {
+                        id: Number(id),
+                        name: data.name,
+                        type: data.type,
+                        pointsGained: data.gained,
+                        conceded: data.conceded,
+                        share: Number(((data.gained * 100) / totalGained).toFixed(2)),
+                        isInfluential: data.isInfluential,
+                        scoringRateWith: sumWith > 0 ? Number(((data.gained * 100) / sumWith).toFixed(2)) : 0,
+                        scoringRateWithout: sumWithout > 0 ? Number(((gainedWithout * 100) / sumWithout).toFixed(2)) : 0
+                    };
+                })
                 .filter(d => {
                     if (!d.isInfluential) return false;
                     

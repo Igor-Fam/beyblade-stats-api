@@ -104,6 +104,10 @@ const translations = {
     modal_help_bp_desc: 'A score that takes into account not only the part\'s performance but also the strength of the opponents it wins or loses against.',
     modal_help_scoring_title: 'Scoring Rate',
     modal_help_scoring_desc: 'The percentage of net points gained by the part. Calculated by dividing the points gained by the total sum of points gained and conceded in battles.',
+    modal_help_dependent_title: 'Dependent Part',
+    modal_help_dependent_desc: 'This part relies heavily on a specific partner to perform well. When used without its primary enabler, its scoring rate drops severely.',
+    dep_with: 'With {part}:',
+    dep_without: 'Without {part}:',
   },
   pt: {
     // General
@@ -206,6 +210,10 @@ const translations = {
     modal_help_bp_desc: 'Uma pontuação que leva em consideração não apenas o desempenho da peça, mas também a força dos oponentes contra os quais a peça ganha ou perde.',
     modal_help_scoring_title: 'Taxa de Pontuação',
     modal_help_scoring_desc: 'O percentual de pontos reais ganhos pela peça. É calculado dividindo os pontos ganhos pela soma total dos pontos ganhos e cedidos nas batalhas.',
+    modal_help_dependent_title: 'Peça Dependente',
+    modal_help_dependent_desc: 'Esta peça depende intensamente de uma parceira específica para ter um desempenho positivo. Quando usada sem sua principal facilitadora, sua taxa de pontuação cai severamente.',
+    dep_with: 'Com {part}:',
+    dep_without: 'Sem {part}:',
   }
 };
 

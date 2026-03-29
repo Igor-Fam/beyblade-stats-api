@@ -52,7 +52,7 @@ export default function StatsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [helpModal, setHelpModal] = useState<{ title: string; desc: string } | null>(null);
+  const [helpModal, setHelpModal] = useState<{ title: string; desc: string; dependencies?: import('../lib/api').Dependency[] } | null>(null);
 
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -346,6 +346,31 @@ export default function StatsPage() {
               </div>
               <div className={styles.modalBody}>
                 <p className={styles.helpDesc}>{helpModal.desc}</p>
+                {helpModal.dependencies && helpModal.dependencies.length > 0 && (
+                  <div className={styles.dependencyList}>
+                    {helpModal.dependencies.map(dep => (
+                      <div key={dep.id} className={styles.dependencyCard}>
+                        <div className={styles.depHeader}>
+                          <div className={styles.depTitleLeft}>
+                            <span className={styles.depName}>{dep.name}</span>
+                            <span className={styles.typeBadge} style={{ color: TYPE_COLORS[dep.type] ?? '#94a3b8' }}>{dep.type}</span>
+                          </div>
+                          <span className={styles.depHeaderRight}>{t('col_scoring_rate')}</span>
+                        </div>
+                        <div className={styles.depStats}>
+                          <div className={styles.depStatRow}>
+                            <span className={styles.depStatLabel}>{t('dep_with', { part: dep.name })}</span>
+                            <span className={styles.depStatValueGood}>{dep.scoringRateWith}%</span>
+                          </div>
+                          <div className={styles.depStatRow}>
+                            <span className={styles.depStatLabel}>{t('dep_without', { part: dep.name })}</span>
+                            <span className={styles.depStatValueBad}>{dep.scoringRateWithout}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -467,7 +492,11 @@ export default function StatsPage() {
                             className="dependent-tag" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/stats/parts/${part.id}?showDependencies=true`);
+                              setHelpModal({
+                                title: t('modal_help_dependent_title'),
+                                desc: t('modal_help_dependent_desc'),
+                                dependencies: part.dependencies
+                              });
                             }}
                           >
                             <HelpCircle size={10} style={{ marginRight: '3px' }} />

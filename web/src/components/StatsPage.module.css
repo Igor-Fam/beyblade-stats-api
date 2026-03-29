@@ -600,3 +600,75 @@
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.dependencyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.dependencyCard {
+  background: var(--surface-light);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.depHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.5rem;
+}
+
+.depName {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.depTitleLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.depHeaderRight {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.depStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.depStatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.depStatLabel {
+  color: var(--text-secondary);
+}
+
+.depStatValueGood {
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.depStatValueBad {
+  font-weight: 700;
+  color: #fb7185;
+}
