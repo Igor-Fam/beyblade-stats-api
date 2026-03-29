@@ -6,7 +6,7 @@ import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 
 type RankingMode = 'elo' | 'bp';
-type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'winRate' | 'wins' | 'losses' | 'totalMatches'>;
+type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'pointsGained' | 'pointsConceded' | 'winRate' | 'wins' | 'losses'>;
 type SortDir = 'asc' | 'desc';
 
 interface Filter {
@@ -28,10 +28,11 @@ const FILTER_FIELDS = [
   { id: 'type', label: 'col_type', type: 'categorical' },
   { id: 'bp', label: 'col_bp', type: 'numeric' },
   { id: 'scoringRate', label: 'col_scoring_rate', type: 'numeric' },
+  { id: 'pointsGained', label: 'col_points_gained', type: 'numeric' },
+  { id: 'pointsConceded', label: 'col_points_conceded', type: 'numeric' },
   { id: 'winRate', label: 'col_winrate', type: 'numeric' },
   { id: 'wins', label: 'col_wins', type: 'numeric' },
   { id: 'losses', label: 'col_losses', type: 'numeric' },
-  { id: 'totalMatches', label: 'col_battles', type: 'numeric' },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -200,9 +201,9 @@ export default function StatsPage() {
     : 'Batch Elo — sequential, strength-aware';
 
   const exportCsv = () => {
-    const headers = ['Name', 'Type', 'Elo', 'BP', 'Scoring Rate', 'Win Rate', 'Wins', 'Losses', 'Battles'];
+    const headers = ['Name', 'Type', 'Elo', 'BP', 'Scoring Rate', 'Points Gained', 'Points Conceded', 'Win Rate', 'Wins', 'Losses'];
     const rows = filteredAndSorted.map(p => [
-      p.name, p.type, p.elo, p.bp, p.scoringRate, p.winRate, p.wins, p.losses, p.totalMatches
+      p.name, p.type, p.elo, p.bp, p.scoringRate, p.pointsGained, p.pointsConceded, p.winRate, p.wins, p.losses
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -425,6 +426,12 @@ export default function StatsPage() {
                       </button>
                     </div>
                   </th>
+                  <th className={styles.th} onClick={() => handleSort('pointsGained')}>
+                    {t('col_points_gained')} <SortIndicator col="pointsGained" />
+                  </th>
+                  <th className={styles.th} onClick={() => handleSort('pointsConceded')}>
+                    {t('col_points_conceded')} <SortIndicator col="pointsConceded" />
+                  </th>
                   <th className={styles.th} onClick={() => handleSort('winRate')}>
                     {t('col_winrate')} <SortIndicator col="winRate" />
                   </th>
@@ -433,9 +440,6 @@ export default function StatsPage() {
                   </th>
                   <th className={styles.th} onClick={() => handleSort('losses')}>
                     {t('col_losses')} <SortIndicator col="losses" />
-                  </th>
-                  <th className={styles.th} onClick={() => handleSort('totalMatches')}>
-                    {t('col_battles')} <SortIndicator col="totalMatches" />
                   </th>
                 </tr>
               </thead>
@@ -460,10 +464,11 @@ export default function StatsPage() {
                       <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
                     </div>
                   </th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_gained')} <SortIndicator col="pointsGained" /></th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_conceded')} <SortIndicator col="pointsConceded" /></th>
                   <th className={`${styles.th} ${styles.thHidden}`}>{t('col_winrate')} <SortIndicator col="winRate" /></th>
                   <th className={`${styles.th} ${styles.thHidden}`}>{t('col_wins')} <SortIndicator col="wins" /></th>
                   <th className={`${styles.th} ${styles.thHidden}`}>{t('col_losses')} <SortIndicator col="losses" /></th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_battles')} <SortIndicator col="totalMatches" /></th>
                 </tr>
               </thead>
               <tbody className={styles.tbody}>
@@ -511,10 +516,11 @@ export default function StatsPage() {
                         )}
                       </td>
                       <td className={`${styles.td} ${styles.scoringCell}`}>{noData ? <span className={styles.dash}>—</span> : `${part.scoringRate}%`}</td>
+                      <td className={`${styles.td} ${styles.win}`}>{noData ? <span className={styles.dash}>—</span> : part.pointsGained}</td>
+                      <td className={`${styles.td} ${styles.loss}`}>{noData ? <span className={styles.dash}>—</span> : part.pointsConceded}</td>
                       <td className={styles.td}>{noData ? <span className={styles.dash}>—</span> : part.winRate}</td>
                       <td className={`${styles.td} ${styles.win}`}>{noData ? <span className={styles.dash}>—</span> : part.wins}</td>
                       <td className={`${styles.td} ${styles.loss}`}>{noData ? <span className={styles.dash}>—</span> : part.losses}</td>
-                      <td className={styles.td}>{part.totalMatches || <span className={styles.dash}>—</span>}</td>
                     </tr>
                   );
                 })}

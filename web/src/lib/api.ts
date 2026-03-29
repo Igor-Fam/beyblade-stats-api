@@ -15,6 +15,8 @@ export interface PartStats {
   winRate: string;
   avgPoints: number;
   scoringRate: number;
+  pointsGained: number;
+  pointsConceded: number;
   isDependent: boolean;
   dependencies?: Dependency[];
 }

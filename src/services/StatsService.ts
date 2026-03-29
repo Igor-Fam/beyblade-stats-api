@@ -26,6 +26,8 @@ export interface PartStatsDTO {
     winRate: string;
     avgPoints: number;
     scoringRate: number;
+    pointsGained: number;
+    pointsConceded: number;
     isDependent: boolean;
     dependencies?: DependencyDTO[];
 }
@@ -287,6 +289,8 @@ export class StatsService {
                 winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
                 avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
                 scoringRate,
+                pointsGained: totalGained,
+                pointsConceded: totalConceded,
                 isDependent,
                 dependencies
             };
@@ -477,6 +481,8 @@ export class StatsService {
             winRate: totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(2) + '%' : '0.00%',
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
             scoringRate,
+            pointsGained: totalGained,
+            pointsConceded: totalConceded,
             isDependent,
             totalGained,
             totalConceded,

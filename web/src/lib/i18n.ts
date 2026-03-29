@@ -177,7 +177,7 @@ const translations = {
     col_battles: 'Batalhas',
     col_wins: 'Vitórias',
     col_losses: 'Derrotas',
-    col_winrate: 'Taxa',
+    col_winrate: 'Taxa Vit.',
     col_scoring_rate: 'Taxa Pont.',
     col_points_gained: 'Pontos Ganhos',
     col_points_conceded: 'Pontos Cedidos',
