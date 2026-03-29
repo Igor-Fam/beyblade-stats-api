@@ -6,10 +6,9 @@ import { EloCalculator } from '../domain/utils/EloCalculator';
 
 const DEFAULT_ELO = 1000;
 const DEFAULT_COLLEY = 500;
-const DEPENDENCY_PERCENTAGE_THRESHOLD = 0.7;
 const DEPENDENCY_POINTS_THRESHOLD = 20;
-const VIABILITY_POINTS_THRESHOLD = 20;
-const VIABILITY_SCORING_RATE_MIN = 40;
+const DEPENDENCY_POINT_SHARE = 0.50;
+const DEPENDENCY_SCORING_RATE_DROP = 10;
 const ANALYTICS_MIN_BATTLES = 10;
 const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
@@ -241,21 +240,22 @@ export class StatsService {
             const pointsSum = totalGained + totalConceded;
             const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
-            // Check dependency: > 70% of points gained with a single influential partner AND at least 20 points
+            // Constata dependência de sinergia
             let isDependent = false;
             if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
                 const dominantPartners = Object.values(partnerStats).filter(p => {
                     if (!p.isInfluential) return false;
-                    const isShareDominant = (p.gained / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.gained >= DEPENDENCY_POINTS_THRESHOLD;
-                    if (!isShareDominant) return false;
+                    
+                    const pointShare = totalGained > 0 ? p.gained / totalGained : 0;
+                    if (pointShare < DEPENDENCY_POINT_SHARE || p.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
                     const gainedWithout = totalGained - p.gained;
                     const concededWithout = totalConceded - p.conceded;
                     const pointsSumWithout = gainedWithout + concededWithout;
                     const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
 
-                    const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
-                    return !isViableIndependently;
+                    const drop = scoringRate - scoringRateWithout;
+                    return drop > DEPENDENCY_SCORING_RATE_DROP;
                 });
                 isDependent = dominantPartners.length > 0;
             }
@@ -429,21 +429,22 @@ export class StatsService {
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
-        // Check dependency: > 70% of points gained with a single influential partner AND at least 20 points
+        // Constata dependência de sinergia
         let isDependent = false;
         if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
             const dominantPartners = Object.values(partnerStats).filter(p => {
                 if (!p.isInfluential) return false;
-                const isShareDominant = (p.gained / totalGained) > DEPENDENCY_PERCENTAGE_THRESHOLD && p.gained >= DEPENDENCY_POINTS_THRESHOLD;
-                if (!isShareDominant) return false;
+                
+                const pointShare = totalGained > 0 ? p.gained / totalGained : 0;
+                if (pointShare < DEPENDENCY_POINT_SHARE || p.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
                 const gainedWithout = totalGained - p.gained;
                 const concededWithout = totalConceded - p.conceded;
                 const pointsSumWithout = gainedWithout + concededWithout;
                 const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
 
-                const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
-                return !isViableIndependently;
+                const drop = scoringRate - scoringRateWithout;
+                return drop > DEPENDENCY_SCORING_RATE_DROP;
             });
             isDependent = dominantPartners.length > 0;
         }
@@ -481,16 +482,17 @@ export class StatsService {
                 }))
                 .filter(d => {
                     if (!d.isInfluential) return false;
-                    const isShareDominant = d.share > (DEPENDENCY_PERCENTAGE_THRESHOLD * 100) && d.pointsGained >= DEPENDENCY_POINTS_THRESHOLD;
-                    if (!isShareDominant) return false;
+                    
+                    const pointShare = totalGained > 0 ? d.pointsGained / totalGained : 0;
+                    if (pointShare < DEPENDENCY_POINT_SHARE || d.pointsGained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
                     const gainedWithout = totalGained - d.pointsGained;
                     const concededWithout = totalConceded - d.conceded;
                     const pointsSumWithout = gainedWithout + concededWithout;
                     const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
 
-                    const isViableIndependently = pointsSumWithout >= VIABILITY_POINTS_THRESHOLD && scoringRateWithout >= VIABILITY_SCORING_RATE_MIN;
-                    return !isViableIndependently;
+                    const drop = scoringRate - scoringRateWithout;
+                    return drop > DEPENDENCY_SCORING_RATE_DROP;
                 })
         };
     }
