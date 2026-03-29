@@ -45,7 +45,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function StatsPage() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [parts, setParts] = useState<PartStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,7 +172,7 @@ export default function StatsPage() {
     recalculateWidths();
     window.addEventListener('resize', recalculateWidths);
     return () => window.removeEventListener('resize', recalculateWidths);
-  }, [filteredAndSorted, rankingMode, sortKey]);
+  }, [filteredAndSorted, rankingMode, sortKey, lang]);
 
 
   const addFilter = () => {
