@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Filter, X } from 'lucide-react';
 import { type PartStats, fetchPartsList } from '../lib/api';
@@ -53,15 +53,22 @@ export default function StatsPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [helpModal, setHelpModal] = useState<{ title: string; desc: string } | null>(null);
+
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [colWidths, setColWidths] = useState<number[]>([]);
 
-  // Sync horizontal scroll between separate header and body tables
+  // Sync horizontal scroll
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (headerRef.current) {
       headerRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
     }
   };
+
+
+
+  // Calculate stats based on fetched data
   const [filters, setFilters] = useState<Filter[]>(() => {
     try {
       const saved = localStorage.getItem('parts_filters');
@@ -149,6 +156,23 @@ export default function StatsPage() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
   }, [parts, sortKey, sortDir, filters]);
+
+  useLayoutEffect(() => {
+    const recalculateWidths = () => {
+      if (tableRef.current) {
+        const cells = tableRef.current.querySelectorAll('tbody tr:first-child td');
+        if (cells.length > 0) {
+          const widths = Array.from(cells).map(cell => (cell as HTMLElement).getBoundingClientRect().width);
+          setColWidths(widths);
+        }
+      }
+    };
+
+    recalculateWidths();
+    window.addEventListener('resize', recalculateWidths);
+    return () => window.removeEventListener('resize', recalculateWidths);
+  }, [filteredAndSorted, rankingMode, sortKey]);
+
 
   const addFilter = () => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -340,11 +364,13 @@ export default function StatsPage() {
       ) : filteredAndSorted.length === 0 ? (
         <div className={styles.feedback}>{t('stats_empty')}</div>
       ) : (
-        <div className={styles.tableWrapper}>
-          {/* Separate Sticky Header Table */}
+        <div className={styles.tableControls}>
           <div className={styles.headerWrapper} ref={headerRef}>
             <div className={styles.sidebarSafeZone} />
             <table className={styles.tableHeader}>
+              <colgroup>
+                {colWidths.map((w, i) => <col key={`col-${i}`} style={{ width: w, minWidth: w, maxWidth: w }} />)}
+              </colgroup>
               <thead className={styles.thead}>
                 <tr className={styles.headerRow}>
                   <th className={styles.thPart}>{t('col_part')}</th>
@@ -391,9 +417,30 @@ export default function StatsPage() {
             </table>
           </div>
 
-          {/* Scrollable Body Table */}
           <div className={styles.bodyWrapper} ref={bodyRef} onScroll={handleScroll}>
-            <table className={styles.tableBody}>
+            <table className={styles.tableBody} ref={tableRef}>
+              <thead className={styles.theadHidden}>
+                <tr className={styles.headerRowHidden}>
+                  <th className={`${styles.thPart} ${styles.thHidden}`}>{t('col_part')}</th>
+                  <th className={`${styles.thTag} ${styles.thHidden}`}></th>
+                  <th className={`${styles.th} ${styles.rankCellHeader} ${styles.thHidden}`}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {rankLabel} <SortIndicator col={rankingMode} />
+                      <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
+                    </div>
+                  </th>
+                  <th className={`${styles.th} ${styles.scoringCellHeader} ${styles.thHidden}`}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
+                      <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
+                    </div>
+                  </th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_winrate')} <SortIndicator col="winRate" /></th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_wins')} <SortIndicator col="wins" /></th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_losses')} <SortIndicator col="losses" /></th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_battles')} <SortIndicator col="totalMatches" /></th>
+                </tr>
+              </thead>
               <tbody className={styles.tbody}>
                 {filteredAndSorted.map((part, i) => {
                   const noData = part.totalMatches === 0;

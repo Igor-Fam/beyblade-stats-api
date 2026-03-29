@@ -83,8 +83,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg-color); /* Matches page background to hide scrolling rows */
-  overflow: hidden; /* Horizontal scroll synced via JS */
+  background: var(--bg-color);
+  overflow: hidden; /* JavaScript handles X scroll */
   transition: background 0.2s;
 }
 
@@ -95,28 +95,35 @@
 
 @media (max-width: 640px) {
   .sidebarSafeZone {
-    height: 64px; /* Space for floating button (44px + 12px padding) area */
+    height: 64px; /* Space for floating button */
   }
 }
 
 .bodyWrapper {
   overflow-x: auto;
+  overflow-y: visible; /* Lets the page scroll vertically! */
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-top: none;
   border-radius: 0 0 0.75rem 0.75rem;
 }
 
-.tableHeader,
-.tableBody {
-  width: 100%;
+.tableHeader, .tableBody {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.875rem;
-  table-layout: fixed;
+}
+
+.tableBody {
+  table-layout: auto;
+  width: 100%;
+  min-width: max-content;
 }
 
 .tableHeader {
+  table-layout: fixed;
+  width: 100%;
+  min-width: max-content;
   background: #1e293b;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   border-left: 1px solid rgba(255, 255, 255, 0.07);
@@ -134,12 +141,30 @@
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* inner border */
   white-space: nowrap;
   user-select: none;
   cursor: pointer;
   transition: color 0.15s;
   background: #1e293b;
+}
+
+.thHidden {
+  visibility: hidden;
+  height: 0;
+  border: none !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
+  white-space: nowrap;
+}
+
+.headerRowHidden {
+  height: 0;
+}
+
+.theadHidden {
+  visibility: hidden;
 }
 
 .th:hover,
@@ -180,23 +205,13 @@
 .tdPart {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   padding-left: 1rem;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: inherit;
 }
 
-/* Explicit widths for alignment between separate Header and Body tables */
-.thPart, .tdPart { width: 100px; min-width: 100px; }
-
-/* Dinamicamente ajusta a coluna de tags baseada na mesma breakpoint (450px) onde ela é abreviada em index.css */
-.thTag, .tdTag { width: 105px; min-width: 105px; }
-
-@media (max-width: 450px) {
-  .thTag, .tdTag { width: 60px; min-width: 60px; }
-}
-
-.th, .td { width: 75px; min-width: 75px; }
-.rankCellHeader, .rankCell { width: 85px; min-width: 85px; }
-.scoringCellHeader, .scoringCell { width: 110px; min-width: 110px; }
-
-/* thPart/tdPart padding was removed for sidebarSafeZone horizontal bar instead */
+/* Static Width definitions removed to allow table-layout: auto to function fully dynamically */
 
 /* ─── Sorting icons ───────────────────────────────────── */
 .sortIcon {
