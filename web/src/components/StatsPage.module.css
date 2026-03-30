@@ -63,6 +63,16 @@
   color: #0f172a;
 }
 
+@media (max-width: 480px) {
+  .thRank, .tdRank {
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+}
+
 /* ─── Feedback states ─────────────────────────────────── */
 .feedback {
   color: var(--text-secondary);
@@ -86,17 +96,6 @@
   background: var(--bg-color);
   overflow: hidden; /* JavaScript handles X scroll */
   transition: background 0.2s;
-}
-
-.sidebarSafeZone {
-  height: 0;
-  background: var(--bg-color);
-}
-
-@media (max-width: 640px) {
-  .sidebarSafeZone {
-    height: 64px; /* Space for floating button */
-  }
 }
 
 .bodyWrapper {
@@ -178,9 +177,6 @@
 }
 
 .thRank {
-  position: sticky;
-  left: 0;
-  z-index: 10;
   background: #1e293b;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -196,9 +192,6 @@
 }
 
 .tdRank {
-  position: sticky;
-  left: 0;
-  z-index: 10;
   background-color: #1e293b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   padding: 0.75rem 0;
@@ -213,7 +206,7 @@
 .thPart {
   cursor: default;
   position: sticky;
-  left: 46px;
+  left: 0;
   z-index: 10;
   background: #1e293b;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
@@ -240,7 +233,7 @@
   color: var(--text-primary);
   white-space: nowrap;
   position: sticky;
-  left: 46px;
+  left: 0;
   z-index: 10;
   background-color: #1e293b;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);

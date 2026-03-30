@@ -586,8 +586,8 @@ export default function StatsPage() {
               <button className={styles.clearBannerBtn} onClick={clearBattleFilters}>{t('btn_clear_filters')}</button>
             </div>
           )}
+
           <div className={styles.headerWrapper} ref={headerRef}>
-            <div className={styles.sidebarSafeZone} />
             <table className={styles.tableHeader}>
               <colgroup>
                 {colWidths.map((w, i) => <col key={`col-${i}`} style={{ width: w, minWidth: w, maxWidth: w }} />)}
