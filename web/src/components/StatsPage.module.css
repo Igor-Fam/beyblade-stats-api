@@ -67,20 +67,21 @@
   .modalOverlay {
     padding: 0.25rem !important;
   }
-  
+
   .modalContent {
     border-radius: 1rem !important;
   }
-  
-  .modalHeader, .modalBody {
+
+  .modalHeader,
+  .modalBody {
     padding: 1rem 0.25rem !important;
   }
-  
+
   .filterRow {
     padding: 0.4rem !important;
     gap: 0.25rem !important;
   }
-  
+
   .filterSelect {
     flex: 1.1 !important;
     min-width: 95px !important;
@@ -93,12 +94,26 @@
     padding: 0.35rem !important;
   }
 
-  .thRank, .tdRank {
+  .thRank,
+  .tdRank {
     width: 28px !important;
     min-width: 28px !important;
     max-width: 28px !important;
     padding-left: 2px !important;
     padding-right: 2px !important;
+  }
+
+  .thPart,
+  .tdPart {
+    left: 0 !important;
+    max-width: 112px !important;
+    min-width: 92px !important;
+    width: 92px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    /* word-break: break-word !important; */
+    line-height: 1.2 !important;
+    padding: 0.5rem 0.25rem !important;
   }
 }
 
@@ -123,20 +138,23 @@
   top: 0;
   z-index: 100;
   background: var(--bg-color);
-  overflow: hidden; /* JavaScript handles X scroll */
+  overflow: hidden;
+  /* JavaScript handles X scroll */
   transition: background 0.2s;
 }
 
 .bodyWrapper {
   overflow-x: auto;
-  overflow-y: visible; /* Lets the page scroll vertically! */
+  overflow-y: visible;
+  /* Lets the page scroll vertically! */
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-top: none;
   border-radius: 0 0 0.75rem 0.75rem;
 }
 
-.tableHeader, .tableBody {
+.tableHeader,
+.tableBody {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.875rem;
@@ -169,7 +187,8 @@
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* inner border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  /* inner border */
   white-space: nowrap;
   user-select: none;
   cursor: pointer;
@@ -315,7 +334,8 @@
 
 .row {
   transition: background 0.15s;
-  background: #1e293b; /* Base row background */
+  background: #1e293b;
+  /* Base row background */
 }
 
 .row:hover {
@@ -353,11 +373,13 @@
 }
 
 /* Match row striping and hover in the sticky column */
-.row.even .tdPart, .row.even .tdRank {
+.row.even .tdPart,
+.row.even .tdRank {
   background-color: #212c3f;
 }
 
-.row:hover .tdPart, .row:hover .tdRank {
+.row:hover .tdPart,
+.row:hover .tdRank {
   background-color: #26354d;
 }
 
@@ -407,10 +429,15 @@
 
 /* ─── Responsive ───────────────────────────────────────── */
 @media (max-width: 600px) {
-  .th, .td, .thPart, .tdPart {
+
+  .th,
+  .td,
+  .thPart,
+  .tdPart {
     padding: 0.5rem 0.6rem;
     font-size: 0.8rem;
   }
+
   .modeDesc {
     display: none;
   }
@@ -587,8 +614,15 @@
 }
 
 @keyframes bannerSlide {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .clearBannerBtn {
@@ -638,8 +672,15 @@
 }
 
 @keyframes modalSlide {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modalHeader {
@@ -725,10 +766,25 @@
   transition: border-color 0.2s;
 }
 
-.filterSelect { flex: 1.5; min-width: 100px; }
-.filterOperator { flex: 0.8; min-width: 60px; }
-.filterValueSelect { flex: 1.5; min-width: 120px; }
-.filterInput { flex: 1; min-width: 70px; }
+.filterSelect {
+  flex: 1.5;
+  min-width: 100px;
+}
+
+.filterOperator {
+  flex: 0.8;
+  min-width: 60px;
+}
+
+.filterValueSelect {
+  flex: 1.5;
+  min-width: 120px;
+}
+
+.filterInput {
+  flex: 1;
+  min-width: 70px;
+}
 
 .placeholderSelect {
   color: var(--text-secondary) !important;
@@ -791,8 +847,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dependencyList {
