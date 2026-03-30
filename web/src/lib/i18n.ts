@@ -63,6 +63,7 @@ const translations = {
     stats_loading: 'Calculating ratings...',
     stats_empty: 'No battle data yet.',
     stats_ranking_mode: 'Ranking by',
+    search_placeholder: 'Search part name...',
     col_part: 'Part',
     col_type: 'Type',
     col_elo: 'Elo',
@@ -175,9 +176,10 @@ const translations = {
 
     // Stats Page
     stats_title: 'Estatísticas de Peças',
-    stats_loading: 'Calculando ratings...',
-    stats_empty: 'Sem dados de batalha ainda.',
-    stats_ranking_mode: 'Ranking por',
+    stats_loading: 'Calculando classificações...',
+    stats_empty: 'Nenhuma batalha registrada ainda.',
+    stats_ranking_mode: 'Classificado por',
+    search_placeholder: 'Buscar pelo nome da peça...',
     col_part: 'Peça',
     col_type: 'Tipo',
     col_elo: 'Elo',
