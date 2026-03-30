@@ -64,8 +64,19 @@ export async function deleteBattle(id: number): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete battle');
 }
-export async function fetchPartsList(): Promise<PartStats[]> {
-  const res = await fetch(`${API_URL}/stats/parts`);
+export interface BattleFilterCondition {
+  field: 'stadium' | 'date' | 'finishType';
+  operator: 'eq' | 'gt' | 'lt';
+  value: string | number;
+}
+
+export async function fetchPartsList(filters?: BattleFilterCondition[]): Promise<PartStats[]> {
+  const tz = new Date().getTimezoneOffset();
+  const queryParts = [];
+  if (filters?.length) queryParts.push(`filters=${encodeURIComponent(JSON.stringify(filters))}`);
+  queryParts.push(`tz=${tz}`);
+  
+  const res = await fetch(`${API_URL}/stats/parts?${queryParts.join('&')}`);
   if (!res.ok) throw new Error('Failed to fetch parts stats');
   return res.json();
 }
@@ -80,8 +91,13 @@ export interface PartDetails extends PartStats {
   dependencies: Dependency[];
 }
 
-export async function fetchPartDetails(id: number): Promise<PartDetails> {
-  const res = await fetch(`${API_URL}/stats/parts/${id}`);
+export async function fetchPartDetails(id: number, filters?: BattleFilterCondition[]): Promise<PartDetails> {
+  const tz = new Date().getTimezoneOffset();
+  const queryParts = [];
+  if (filters?.length) queryParts.push(`filters=${encodeURIComponent(JSON.stringify(filters))}`);
+  queryParts.push(`tz=${tz}`);
+
+  const res = await fetch(`${API_URL}/stats/parts/${id}?${queryParts.join('&')}`);
   if (!res.ok) throw new Error('Failed to fetch part details');
   return res.json();
 }

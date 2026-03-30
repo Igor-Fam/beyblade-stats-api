@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpCircle, Filter, X } from 'lucide-react';
-import { type PartStats, fetchPartsList } from '../lib/api';
+import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 
@@ -35,6 +35,12 @@ const FILTER_FIELDS = [
   { id: 'losses', label: 'col_losses', type: 'numeric' },
 ];
 
+const FILTER_BATTLE_FIELDS = [
+  { id: 'stadium', label: 'filter_stadium' },
+  { id: 'date', label: 'filter_date' },
+  { id: 'finishType', label: 'filter_finish_type' }
+];
+
 const TYPE_COLORS: Record<string, string> = {
   Blade: '#38bdf8',
   Ratchet: '#fb923c',
@@ -53,7 +59,18 @@ export default function StatsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isBattleFilterModalOpen, setIsBattleFilterModalOpen] = useState(false);
   const [helpModal, setHelpModal] = useState<{ title: string; desc: string; dependencies?: import('../lib/api').Dependency[] } | null>(null);
+
+  const [stadiums, setStadiums] = useState<Stadium[]>([]);
+  const [battleFilters, setBattleFilters] = useState<BattleFilterCondition[]>(() => {
+    try {
+      const saved = localStorage.getItem('battle_filters');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -84,9 +101,17 @@ export default function StatsPage() {
   }, [filters]);
 
   useEffect(() => {
-    fetchPartsList()
+    localStorage.setItem('battle_filters', JSON.stringify(battleFilters));
+    setLoading(true);
+    fetchPartsList(battleFilters)
       .then(setParts)
       .finally(() => setLoading(false));
+  }, [battleFilters]);
+
+  useEffect(() => {
+    fetchStadiums()
+      .then(setStadiums)
+      .catch(console.error);
   }, []);
 
   // When the user switches ranking mode, reset the primary sort to that mode
@@ -190,6 +215,20 @@ export default function StatsPage() {
 
   const clearFilters = () => setFilters([]);
 
+  const addBattleFilter = () => {
+    setBattleFilters([...battleFilters, { field: 'stadium', operator: 'eq', value: '' } as any]);
+  };
+
+  const removeBattleFilter = (index: number) => {
+    setBattleFilters(battleFilters.filter((_, i) => i !== index));
+  };
+
+  const updateBattleFilter = (index: number, updates: Partial<BattleFilterCondition>) => {
+    setBattleFilters(battleFilters.map((f, i) => i === index ? { ...f, ...updates } : f));
+  };
+
+  const clearBattleFilters = () => setBattleFilters([]);
+
   const SortIndicator = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <span className={styles.sortIcon}>↕</span>;
     return <span className={`${styles.sortIcon} ${styles.active}`}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
@@ -199,6 +238,8 @@ export default function StatsPage() {
   const rankDesc = rankingMode === 'bp'
     ? 'Colley — order-independent, strength-aware'
     : 'Batch Elo — sequential, strength-aware';
+
+  const battleFiltersActive = battleFilters.length > 0;
 
   const exportCsv = () => {
     const headers = ['Name', 'Type', 'Elo', 'BP', 'Scoring Rate', 'Points Gained', 'Points Conceded', 'Win Rate', 'Wins', 'Losses'];
@@ -240,14 +281,31 @@ export default function StatsPage() {
           </div>
           <span className={styles.modeDesc}>{rankDesc}</span>
           
-          <button 
-            className={`${styles.filterToggle} ${filters.length > 0 ? styles.activeFilters : ''}`}
-            onClick={() => setIsFilterModalOpen(true)}
-          >
-            <Filter size={16} />
-            {t('btn_filters')}
-            {filters.length > 0 && <span className={styles.filterBadge}>{filters.length}</span>}
-          </button>
+          <div className={styles.filterGroup}>
+            <div className={styles.filterBtnWrapper}>
+              <button 
+                className={`${styles.filterToggle} ${filters.length > 0 ? styles.activeFilters : ''}`}
+                onClick={() => setIsFilterModalOpen(true)}
+              >
+                <Filter size={16} />
+                {t('btn_filter_parts')}
+                {filters.length > 0 && <span className={styles.filterBadge}>{filters.length}</span>}
+              </button>
+              <HelpCircle size={16} className={styles.helpIcon} onClick={() => setHelpModal({ title: t('btn_filter_parts'), desc: t('modal_help_fp_desc') })} />
+            </div>
+
+            <div className={styles.filterBtnWrapper}>
+              <button 
+                className={`${styles.filterToggle} ${battleFilters.length > 0 ? styles.activeFilters : ''}`}
+                onClick={() => setIsBattleFilterModalOpen(true)}
+              >
+                <Filter size={16} />
+                {t('btn_filter_battles')}
+                {battleFilters.length > 0 && <span className={styles.filterBadge}>{battleFilters.length}</span>}
+              </button>
+              <HelpCircle size={16} className={styles.helpIcon} onClick={() => setHelpModal({ title: t('btn_filter_battles'), desc: t('modal_help_fb_desc') })} />
+            </div>
+          </div>
         </div>
 
         {isFilterModalOpen && (
@@ -333,6 +391,101 @@ export default function StatsPage() {
           </div>
         )}
 
+        {isBattleFilterModalOpen && (
+          <div className={styles.modalOverlay} onClick={() => setIsBattleFilterModalOpen(false)}>
+            <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <div className={styles.modalTitleRow}>
+                  <Filter className={styles.modalTitleIcon} size={20} />
+                  <h2>{t('modal_filter_battles_title')}</h2>
+                </div>
+                <button className={styles.closeBtn} onClick={() => setIsBattleFilterModalOpen(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                <div className={styles.filterList}>
+                  {battleFilters.map((f, i) => (
+                      <div key={i} className={styles.filterRow}>
+                        <select 
+                          value={f.field} 
+                          onChange={e => updateBattleFilter(i, { field: e.target.value as any, value: '', operator: 'eq' })}
+                          className={styles.filterSelect}
+                        >
+                          {FILTER_BATTLE_FIELDS.map(ff => (
+                            <option key={ff.id} value={ff.id}>{t(ff.label as any)}</option>
+                          ))}
+                        </select>
+
+                        {f.field === 'date' && (
+                          <select 
+                            value={f.operator} 
+                            onChange={e => updateBattleFilter(i, { operator: e.target.value as any, value: '' })}
+                            className={styles.filterOperator}
+                          >
+                            <option value="eq">{t('filter_op_eq')}</option>
+                            <option value="gt">{t('filter_op_gt')}</option>
+                            <option value="lt">{t('filter_op_lt')}</option>
+                          </select>
+                        )}
+                        {(f.field === 'stadium' || f.field === 'finishType') && (
+                          <span className={styles.filterOperator} style={{ paddingLeft: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>=</span>
+                        )}
+
+                        {f.field === 'stadium' ? (
+                          <select 
+                            value={String(f.value)} 
+                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                            className={styles.filterValueSelect}
+                          >
+                            <option value="">-- {t('filter_stadium')} --</option>
+                            {stadiums.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                        ) : f.field === 'finishType' ? (
+                          <select 
+                            value={String(f.value)} 
+                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                            className={styles.filterValueSelect}
+                          >
+                            <option value="">-- {t('filter_finish_type')} --</option>
+                            <option value="SPIN">Spin Finish</option>
+                            <option value="OVER">Over Finish</option>
+                            <option value="BURST">Burst Finish</option>
+                            <option value="XTREME">Xtreme Finish</option>
+                          </select>
+                        ) : (
+                          <input 
+                            type={f.operator === 'eq' ? 'date' : 'datetime-local'}
+                            value={String(f.value)} 
+                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                            className={styles.filterInput}
+                            style={{ flex: 1 }}
+                          />
+                        )}
+
+                        <button className={styles.removeFilterBtn} onClick={() => removeBattleFilter(i)}>&times;</button>
+                      </div>
+                  ))}
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button className={styles.addFilterBtn} onClick={addBattleFilter}>
+                    + {t('btn_add_filter')}
+                  </button>
+                  {battleFilters.length > 0 && (
+                    <button className={styles.clearAllBtn} onClick={clearBattleFilters}>
+                      {t('btn_clear_filters')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {helpModal && (
           <div className={styles.modalOverlay} onClick={() => setHelpModal(null)}>
             <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
@@ -391,6 +544,13 @@ export default function StatsPage() {
         <div className={styles.feedback}>{t('stats_empty')}</div>
       ) : (
         <div className={styles.tableControls}>
+          {battleFiltersActive && (
+            <div className={styles.globalFilterBanner}>
+              <Filter size={14} />
+              <span>{t('filter_active_full_notice')}</span>
+              <button className={styles.clearBannerBtn} onClick={clearBattleFilters}>{t('btn_clear_filters')}</button>
+            </div>
+          )}
           <div className={styles.headerWrapper} ref={headerRef}>
             <div className={styles.sidebarSafeZone} />
             <table className={styles.tableHeader}>
@@ -399,6 +559,7 @@ export default function StatsPage() {
               </colgroup>
               <thead className={styles.thead}>
                 <tr className={styles.headerRow}>
+                  <th className={styles.thRank}>#</th>
                   <th className={styles.thPart}>{t('col_part')}</th>
                   <th className={styles.thTag}></th>
                   <th
@@ -450,6 +611,7 @@ export default function StatsPage() {
             <table className={styles.tableBody} ref={tableRef}>
               <thead className={styles.theadHidden}>
                 <tr className={styles.headerRowHidden}>
+                  <th className={`${styles.thRank} ${styles.thHidden}`}>#</th>
                   <th className={`${styles.thPart} ${styles.thHidden}`}>{t('col_part')}</th>
                   <th className={`${styles.thTag} ${styles.thHidden}`}></th>
                   <th className={`${styles.th} ${styles.rankCellHeader} ${styles.thHidden}`}>
@@ -483,6 +645,9 @@ export default function StatsPage() {
                       onClick={() => navigate(`/stats/parts/${part.id}`)}
                       style={{ cursor: 'pointer' }}
                     >
+                      <td className={styles.tdRank}>
+                        {sortDir === 'desc' ? i + 1 : filteredAndSorted.length - i}
+                      </td>
                       <td className={styles.tdPart}>
                         <div className={styles.partContent}>
                           <div className={styles.partNameRow}>

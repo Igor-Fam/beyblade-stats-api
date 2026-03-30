@@ -14,6 +14,12 @@ const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
 const DEFAULT_ELO_MULTIPLIER = 1.0;
 
+export interface BattleFilterCondition {
+    field: 'stadium' | 'date' | 'finishType';
+    operator: 'eq' | 'gt' | 'lt';
+    value: string | number;
+}
+
 export interface PartStatsDTO {
     id: number;
     name: string;
@@ -72,6 +78,56 @@ interface WinRateData {
 }
 
 export class StatsService {
+
+    private buildPrismaBattleFilter(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): any {
+        if (!conditions || conditions.length === 0) return undefined;
+
+        const where: any = {};
+        let createdAtFilters: any = {};
+        let hasDateFilter = false;
+
+        for (const cond of conditions) {
+            if (cond.field === 'stadium') {
+                where.stadiumId = Number(cond.value);
+            } else if (cond.field === 'finishType') {
+                where.entries = {
+                    some: {
+                        finishType: String(cond.value)
+                    }
+                };
+            } else if (cond.field === 'date') {
+                hasDateFilter = true;
+                if (cond.operator === 'eq') {
+                    // Start of local day
+                    const start = new Date(String(cond.value));
+                    start.setUTCHours(0, 0, 0, 0);
+                    start.setUTCMinutes(start.getUTCMinutes() + timezoneOffset);
+                    
+                    // End of local day
+                    const end = new Date(String(cond.value));
+                    end.setUTCHours(23, 59, 59, 999);
+                    end.setUTCMinutes(end.getUTCMinutes() + timezoneOffset);
+                    
+                    createdAtFilters.gte = start;
+                    createdAtFilters.lte = end;
+                } else if (cond.operator === 'gt') {
+                    const date = new Date(String(cond.value));
+                    date.setUTCMinutes(date.getUTCMinutes() + timezoneOffset);
+                    createdAtFilters.gt = date;
+                } else if (cond.operator === 'lt') {
+                    const date = new Date(String(cond.value));
+                    date.setUTCMinutes(date.getUTCMinutes() + timezoneOffset);
+                    createdAtFilters.lt = date;
+                }
+            }
+        }
+
+        if (hasDateFilter) {
+            where.createdAt = createdAtFilters;
+        }
+
+        return Object.keys(where).length > 0 ? where : undefined;
+    }
 
     // Runs the sequential Batch Elo calculation across all battles.
     private async calculateBatchElo(filter?: any): Promise<Map<number, number>> {
@@ -132,7 +188,9 @@ export class StatsService {
         return ColleyCalculator.calculate(partIds, colleyBattles);
     }
 
-    async getPartWinRate(partId: number): Promise<WinRateData> {
+    async getPartWinRate(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
+        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+
         const part = await prisma.part.findUnique({
             where: { id: partId }
         });
@@ -143,7 +201,12 @@ export class StatsService {
 
         const participations = await prisma.battleEntryPart.findMany({
             where: {
-                partId: partId
+                partId: partId,
+                ...(battleWhere ? {
+                    battleEntry: {
+                        battle: battleWhere
+                    }
+                } : {})
             },
             include: {
                 battleEntry: {
@@ -181,11 +244,18 @@ export class StatsService {
         };
     }
 
-    async getPartsList(): Promise<PartStatsDTO[]> {
+    async getPartsList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
+        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+
         const parts = await prisma.part.findMany({
             include: {
                 partType: true,
                 battleEntries: {
+                    where: battleWhere ? {
+                        battleEntry: {
+                            battle: battleWhere
+                        }
+                    } : undefined,
                     include: {
                         battleEntry: {
                             include: {
@@ -202,8 +272,8 @@ export class StatsService {
         });
 
         const [eloRatings, colleyRatings] = await Promise.all([
-            this.calculateBatchElo(),
-            this.calculateColleyRatings(),
+            this.calculateBatchElo(battleWhere),
+            this.calculateColleyRatings(battleWhere),
         ]);
 
         const stats = parts.map(part => {
@@ -305,12 +375,19 @@ export class StatsService {
         });
     }
 
-    async getPartDetails(partId: number): Promise<PartDetailsDTO> {
+    async getPartDetails(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartDetailsDTO> {
+        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+
         const part = await prisma.part.findUnique({
             where: { id: partId },
             include: {
                 partType: true,
                 battleEntries: {
+                    where: battleWhere ? {
+                        battleEntry: {
+                            battle: battleWhere
+                        }
+                    } : undefined,
                     include: {
                         battleEntry: {
                             include: {
@@ -442,8 +519,8 @@ export class StatsService {
             .slice(0, ANALYTICS_LIMIT);
 
         const [eloRatings, colleyRatings] = await Promise.all([
-            this.calculateBatchElo(),
-            this.calculateColleyRatings(),
+            this.calculateBatchElo(battleWhere),
+            this.calculateColleyRatings(battleWhere),
         ]);
 
         const pointsSum = totalGained + totalConceded;
@@ -526,8 +603,12 @@ export class StatsService {
         };
     }
 
-    async getCombosList(): Promise<ComboStatsDTO[]> {
+    async getCombosList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<ComboStatsDTO[]> {
+        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
         const entries = await prisma.battleEntry.findMany({
+            where: battleWhere ? {
+                battle: battleWhere
+            } : undefined,
             include: {
                 parts: {
                     include: {
@@ -537,7 +618,7 @@ export class StatsService {
             }
         });
 
-        const colleyRatings = await this.calculateColleyRatings();
+        const colleyRatings = await this.calculateColleyRatings(battleWhere);
 
         const comboGroups: Record<string, {
             parts: { id: number, name: string, type: string }[],
@@ -575,18 +656,22 @@ export class StatsService {
         }).sort((a, b) => b.totalMatches - a.totalMatches);
     }
 
-    async analyzeCombo(partsIds: number[]): Promise<any> {
+    async analyzeCombo(partsIds: number[], conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<any> {
+        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
         const parts = await prisma.part.findMany({
             where: { id: { in: partsIds } },
             include: { partType: true }
         });
 
-        const colleyRatings = await this.calculateColleyRatings();
+        const colleyRatings = await this.calculateColleyRatings(battleWhere);
         const avgElo = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? DEFAULT_COLLEY), 0) / parts.length);
         const comboHash = partsIds.sort((a, b) => a - b).join('-');
 
         const historicalEntries = await prisma.battleEntry.findMany({
-            where: { comboHash }
+            where: { 
+                comboHash,
+                ...(battleWhere ? { battle: battleWhere } : {})
+            }
         });
 
         const totalMatches = historicalEntries.length;
