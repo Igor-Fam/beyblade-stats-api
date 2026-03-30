@@ -3,11 +3,24 @@ import { StatsService } from '../services/StatsService';
 import { AppError } from '../errors/AppError';
 
 export class StatsController {
+    
+    private parseBattleFilters = (queryFilters?: any): any[] => {
+        if (typeof queryFilters === 'string') {
+            try {
+                return JSON.parse(decodeURIComponent(queryFilters));
+            } catch (e) {
+                console.error("Invalid filters payload format");
+            }
+        }
+        return [];
+    }
 
-    async getPartsList(req: Request, res: Response): Promise<void> {
+    getPartsList = async (req: Request, res: Response): Promise<void> => {
         try {
+            const filters = this.parseBattleFilters(req.query.filters);
+            const tz = parseInt(req.query.tz as string) || 0;
             const statsService = new StatsService();
-            const parts = await statsService.getPartsList();
+            const parts = await statsService.getPartsList(filters, tz);
             res.status(200).json(parts);
         } catch (error: any) {
             console.error('Error fetching parts list:', error);
@@ -15,7 +28,7 @@ export class StatsController {
         }
     }
 
-    async getPartWinRate(req: Request, res: Response): Promise<void> {
+    getPartWinRate = async (req: Request, res: Response): Promise<void> => {
         try {
             const partId = parseInt(req.params.id as string);
 
@@ -23,8 +36,10 @@ export class StatsController {
                 throw new AppError('Invalid part ID format', 400);
             }
 
+            const filters = this.parseBattleFilters(req.query.filters);
+            const tz = parseInt(req.query.tz as string) || 0;
             const statsService = new StatsService();
-            const stats = await statsService.getPartWinRate(partId);
+            const stats = await statsService.getPartWinRate(partId, filters, tz);
 
             res.status(200).json(stats);
         } catch (error: any) {
@@ -38,7 +53,7 @@ export class StatsController {
         }
     }
 
-    async getPartDetails(req: Request, res: Response): Promise<void> {
+    getPartDetails = async (req: Request, res: Response): Promise<void> => {
         try {
             const partId = parseInt(req.params.id as string);
 
@@ -46,8 +61,10 @@ export class StatsController {
                 throw new AppError('Invalid part ID format', 400);
             }
 
+            const filters = this.parseBattleFilters(req.query.filters);
+            const tz = parseInt(req.query.tz as string) || 0;
             const statsService = new StatsService();
-            const details = await statsService.getPartDetails(partId);
+            const details = await statsService.getPartDetails(partId, filters, tz);
 
             res.status(200).json(details);
         } catch (error: any) {
