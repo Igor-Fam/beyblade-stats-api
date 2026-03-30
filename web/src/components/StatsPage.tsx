@@ -285,24 +285,29 @@ export default function StatsPage() {
         <h1>{t('stats_title')}</h1>
 
         <div className={styles.controls}>
-          <span className={styles.modeLabel}>{t('stats_ranking_mode')}</span>
-          <div className={styles.toggle}>
-            <button
-              id="toggle-elo"
-              className={`${styles.toggleBtn} ${rankingMode === 'elo' ? styles.active : ''}`}
-              onClick={() => handleModeToggle('elo')}
-            >
-              {t('col_elo')}
-            </button>
-            <button
-              id="toggle-bp"
-              className={`${styles.toggleBtn} ${rankingMode === 'bp' ? styles.active : ''}`}
-              onClick={() => handleModeToggle('bp')}
-            >
-              {t('col_bp')}
+          <div className={styles.rankingModeRow}>
+            <span className={styles.modeLabel}>{t('stats_ranking_mode')}</span>
+            <div className={styles.toggle}>
+              <button
+                id="toggle-elo"
+                className={`${styles.toggleBtn} ${rankingMode === 'elo' ? styles.active : ''}`}
+                onClick={() => handleModeToggle('elo')}
+              >
+                {t('col_elo')}
+              </button>
+              <button
+                id="toggle-bp"
+                className={`${styles.toggleBtn} ${rankingMode === 'bp' ? styles.active : ''}`}
+                onClick={() => handleModeToggle('bp')}
+              >
+                {t('col_bp')}
+              </button>
+            </div>
+            <span className={styles.modeDesc}>{rankDesc}</span>
+            <button className={styles.exportBtn} onClick={exportCsv} title="Export CSV">
+              <Download size={16} />
             </button>
           </div>
-          <span className={styles.modeDesc}>{rankDesc}</span>
           
           <div className={styles.filterGroup}>
             <div className={styles.filterBtnWrapper}>
@@ -328,12 +333,16 @@ export default function StatsPage() {
               </button>
               <HelpCircle size={16} className={styles.helpIcon} onClick={() => setHelpModal({ title: t('btn_filter_battles'), desc: t('modal_help_fb_desc') })} />
             </div>
-            
-            <button className={styles.exportBtn} onClick={exportCsv} title="Export CSV">
-              <Download size={16} />
-            </button>
           </div>
         </div>
+
+        {battleFiltersActive && (
+          <div className={styles.globalFilterBanner}>
+            <Filter size={14} />
+            <span>{t('filter_active_full_notice')}</span>
+            <button className={styles.clearBannerBtn} onClick={clearBattleFilters}>{t('btn_clear_filters')}</button>
+          </div>
+        )}
 
         {isFilterModalOpen && (
           <div className={styles.modalOverlay} onClick={() => setIsFilterModalOpen(false)}>
@@ -587,13 +596,6 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {battleFiltersActive && (
-            <div className={styles.globalFilterBanner}>
-              <Filter size={14} />
-              <span>{t('filter_active_full_notice')}</span>
-              <button className={styles.clearBannerBtn} onClick={clearBattleFilters}>{t('btn_clear_filters')}</button>
-            </div>
-          )}
 
           <div className={styles.headerWrapper} ref={headerRef}>
             <table className={styles.tableHeader}>

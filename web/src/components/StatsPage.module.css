@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 /* ─── Header ─────────────────────────────────────────── */
@@ -15,10 +15,14 @@
   margin-bottom: 0;
 }
 
+.rankingModeRow {
+  display: contents;
+}
+
 .controls {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
@@ -92,6 +96,45 @@
     flex: 2 !important;
     font-size: 0.8rem !important;
     padding: 0.35rem !important;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem !important;
+  }
+
+  .rankingModeRow {
+    display: flex !important;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filterGroup {
+    display: flex !important;
+    width: 100%;
+    gap: 0.5rem !important;
+    margin-left: 0 !important;
+  }
+
+  .filterBtnWrapper {
+    flex: 1 !important;
+    display: flex;
+  }
+
+  .filterToggle {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.6rem 0.5rem !important;
+  }
+
+  .modeLabel {
+    display: none !important;
+  }
+
+  .modeDesc {
+    display: none !important;
   }
 
   .thRank,
