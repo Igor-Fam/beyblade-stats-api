@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info, HelpCircle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info, HelpCircle, Filter } from 'lucide-react';
 import { fetchPartDetails, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './PartDetailPage.module.css';
@@ -29,6 +29,7 @@ export default function PartDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDependencyModal, setShowDependencyModal] = useState(false);
+  const [hasBattleFilters, setHasBattleFilters] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -40,7 +41,17 @@ export default function PartDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchPartDetails(Number(id))
+
+    let battleFilters = [];
+    try {
+      const saved = localStorage.getItem('battle_filters');
+      if (saved) {
+        battleFilters = JSON.parse(saved);
+        setHasBattleFilters(battleFilters.length > 0);
+      }
+    } catch (e) { console.error(e); }
+
+    fetchPartDetails(Number(id), battleFilters)
       .then(setPart)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
@@ -100,6 +111,12 @@ export default function PartDetailPage() {
             {part.type}
           </span>
         </div>
+        {hasBattleFilters && (
+          <div className={styles.filterNotice}>
+            <Filter size={14} />
+            <span>{t('filter_active_notice')}</span>
+          </div>
+        )}
       </header>
 
       <section className={styles.statsGrid}>
