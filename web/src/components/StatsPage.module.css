@@ -413,8 +413,37 @@
 
 .filterGroup {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   margin-left: auto;
+  align-items: center;
+}
+
+.exportBtn {
+  background: var(--surface-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exportBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-bx);
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .filterGroup {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
 }
 
 .filterBtnWrapper {
@@ -445,6 +474,62 @@
   border-color: var(--accent-bx);
   color: var(--accent-bx);
   background: rgba(56, 189, 248, 0.05);
+}
+
+.searchRow {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.8rem;
+  padding: 0 1rem;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.searchWrapper:focus-within {
+  border-color: var(--accent-bx);
+  background: rgba(56, 189, 248, 0.03);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.05);
+}
+
+.searchIcon {
+  color: var(--accent-bx);
+  opacity: 0.7;
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.95rem;
+  width: 100%;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.clearSearch {
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+.clearSearch:hover {
+  opacity: 1;
+  color: var(--accent-bx);
 }
 
 .filterBadge {

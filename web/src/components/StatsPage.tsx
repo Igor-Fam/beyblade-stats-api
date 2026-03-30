@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HelpCircle, Filter, X } from 'lucide-react';
+import { Filter, HelpCircle, X, Search, Download } from 'lucide-react';
 import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -60,6 +60,7 @@ export default function StatsPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isBattleFilterModalOpen, setIsBattleFilterModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [helpModal, setHelpModal] = useState<{ title: string; desc: string; dependencies?: import('../lib/api').Dependency[] } | null>(null);
 
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
@@ -168,7 +169,7 @@ export default function StatsPage() {
     });
 
     // Apply sorting
-    return result.sort((a, b) => {
+    const sorted = result.sort((a, b) => {
       // Parts with no battles always sink to the bottom
       if (a.totalMatches === 0 && b.totalMatches === 0) return 0;
       if (a.totalMatches === 0) return 1;
@@ -178,10 +179,25 @@ export default function StatsPage() {
       const bv = b[sortKey];
       const cmp = typeof av === 'string'
         ? av.localeCompare(bv as string)
-        : (av as number) - (bv as number);
-      return sortDir === 'asc' ? cmp : -cmp;
+        : (bv as number) - (av as number);
+      return sortDir === 'desc' ? cmp : -cmp;
     });
-  }, [parts, sortKey, sortDir, filters]);
+
+    // Step 2: Assign stable Rank based on SORTED result (before search)
+    const rankedResults = sorted.map((item, index) => ({
+      ...item,
+      displayRank: sortDir === 'desc' ? index + 1 : sorted.length - index
+    }));
+
+    // Step 3: Apply Search Term (Substring match)
+    if (!searchTerm.trim()) return rankedResults;
+    
+    const term = searchTerm.toLowerCase();
+    return rankedResults.filter(p => 
+      p.name.toLowerCase().includes(term) || 
+      p.type.toLowerCase().includes(term)
+    );
+  }, [parts, filters, sortKey, sortDir, searchTerm]);
 
   useLayoutEffect(() => {
     const recalculateWidths = () => {
@@ -305,6 +321,10 @@ export default function StatsPage() {
               </button>
               <HelpCircle size={16} className={styles.helpIcon} onClick={() => setHelpModal({ title: t('btn_filter_battles'), desc: t('modal_help_fb_desc') })} />
             </div>
+            
+            <button className={styles.exportBtn} onClick={exportCsv} title="Export CSV">
+              <Download size={16} />
+            </button>
           </div>
         </div>
 
@@ -530,12 +550,7 @@ export default function StatsPage() {
           </div>
         )}
 
-        {/* DEV-ONLY: remove before release */}
-        {filteredAndSorted.length > 0 && (
-          <button onClick={exportCsv} style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', fontSize: '0.75rem', background: '#334155', border: '1px dashed #475569', color: '#94a3b8', borderRadius: '0.4rem', cursor: 'pointer' }}>
-            ⬇ Export CSV (dev)
-          </button>
-        )}
+
       </div>
 
       {loading ? (
@@ -544,6 +559,26 @@ export default function StatsPage() {
         <div className={styles.feedback}>{t('stats_empty')}</div>
       ) : (
         <div className={styles.tableControls}>
+          <div className={styles.searchRow}>
+            <div className={styles.searchWrapper}>
+              <Search size={16} className={styles.searchIcon} />
+              <input 
+                type="text" 
+                className={styles.searchInput}
+                placeholder={t('search_placeholder')}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <X 
+                  size={14} 
+                  className={styles.clearSearch} 
+                  onClick={() => setSearchTerm('')} 
+                />
+              )}
+            </div>
+          </div>
+
           {battleFiltersActive && (
             <div className={styles.globalFilterBanner}>
               <Filter size={14} />
@@ -646,7 +681,7 @@ export default function StatsPage() {
                       style={{ cursor: 'pointer' }}
                     >
                       <td className={styles.tdRank}>
-                        {sortDir === 'desc' ? i + 1 : filteredAndSorted.length - i}
+                        {part.displayRank}
                       </td>
                       <td className={styles.tdPart}>
                         <div className={styles.partContent}>
