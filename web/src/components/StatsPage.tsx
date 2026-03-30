@@ -36,9 +36,9 @@ const FILTER_FIELDS = [
 ];
 
 const FILTER_BATTLE_FIELDS = [
-  { id: 'stadium', label: 'filter_stadium' },
-  { id: 'date', label: 'filter_date' },
-  { id: 'finishType', label: 'filter_finish_type' }
+  { id: 'stadium', label: 'filter_stadium', select_placeholder: 'select_placeholder' },
+  { id: 'date', label: 'filter_date', select_placeholder: 'select_placeholder' },
+  { id: 'finishType', label: 'filter_finish_type', select_placeholder: 'select_placeholder' }
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -61,6 +61,7 @@ export default function StatsPage() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isBattleFilterModalOpen, setIsBattleFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
   const [helpModal, setHelpModal] = useState<{ title: string; desc: string; dependencies?: import('../lib/api').Dependency[] } | null>(null);
 
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
@@ -113,6 +114,12 @@ export default function StatsPage() {
     fetchStadiums()
       .then(setStadiums)
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // When the user switches ranking mode, reset the primary sort to that mode
@@ -364,7 +371,9 @@ export default function StatsPage() {
                             className={styles.filterOperator}
                           >
                             {OPERATORS.map(op => (
-                              <option key={op.id} value={op.id}>{t(op.label as any)}</option>
+                              <option key={op.id} value={op.id}>
+                                {isMobileView ? op.symbol : t(op.label as any)}
+                              </option>
                             ))}
                           </select>
                         )}
@@ -373,9 +382,9 @@ export default function StatsPage() {
                           <select 
                             value={String(f.value)} 
                             onChange={e => updateFilter(f.id, { value: e.target.value })}
-                            className={styles.filterValueSelect}
+                            className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
                           >
-                            <option value="">-- {t('col_type')} --</option>
+                            <option value="">{t('select_placeholder')}</option>
                             {availableTypes.map(type => (
                               <option key={type} value={type}>{type}</option>
                             ))}
@@ -444,22 +453,20 @@ export default function StatsPage() {
                             onChange={e => updateBattleFilter(i, { operator: e.target.value as any, value: '' })}
                             className={styles.filterOperator}
                           >
-                            <option value="eq">{t('filter_op_eq')}</option>
-                            <option value="gt">{t('filter_op_gt')}</option>
-                            <option value="lt">{t('filter_op_lt')}</option>
+                            <option value="eq">{isMobileView ? '=' : t('filter_op_eq')}</option>
+                            <option value="gt">{isMobileView ? '>' : t('filter_op_gt')}</option>
+                            <option value="lt">{isMobileView ? '<' : t('filter_op_lt')}</option>
                           </select>
                         )}
-                        {(f.field === 'stadium' || f.field === 'finishType') && (
-                          <span className={styles.filterOperator} style={{ paddingLeft: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>=</span>
-                        )}
+
 
                         {f.field === 'stadium' ? (
                           <select 
                             value={String(f.value)} 
                             onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={styles.filterValueSelect}
+                            className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
                           >
-                            <option value="">-- {t('filter_stadium')} --</option>
+                            <option value="">{t('select_placeholder')}</option>
                             {stadiums.map(s => (
                               <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
@@ -468,9 +475,9 @@ export default function StatsPage() {
                           <select 
                             value={String(f.value)} 
                             onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={styles.filterValueSelect}
+                            className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
                           >
-                            <option value="">-- {t('filter_finish_type')} --</option>
+                            <option value="">{t('select_placeholder')}</option>
                             <option value="SPIN">Spin Finish</option>
                             <option value="OVER">Over Finish</option>
                             <option value="BURST">Burst Finish</option>
@@ -481,8 +488,9 @@ export default function StatsPage() {
                             type={f.operator === 'eq' ? 'date' : 'datetime-local'}
                             value={String(f.value)} 
                             onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={styles.filterInput}
+                            className={`${styles.filterInput} ${!f.value ? styles.placeholderSelect : ''}`}
                             style={{ flex: 1 }}
+                            placeholder={t('select_placeholder')}
                           />
                         )}
 

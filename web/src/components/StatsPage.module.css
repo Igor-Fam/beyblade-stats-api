@@ -64,6 +64,35 @@
 }
 
 @media (max-width: 480px) {
+  .modalOverlay {
+    padding: 0.25rem !important;
+  }
+  
+  .modalContent {
+    border-radius: 1rem !important;
+  }
+  
+  .modalHeader, .modalBody {
+    padding: 1rem 0.25rem !important;
+  }
+  
+  .filterRow {
+    padding: 0.4rem !important;
+    gap: 0.25rem !important;
+  }
+  
+  .filterSelect {
+    flex: 1.1 !important;
+    min-width: 95px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .filterValueSelect {
+    flex: 2 !important;
+    font-size: 0.8rem !important;
+    padding: 0.35rem !important;
+  }
+
   .thRank, .tdRank {
     width: 28px !important;
     min-width: 28px !important;
@@ -700,6 +729,11 @@
 .filterOperator { flex: 0.8; min-width: 60px; }
 .filterValueSelect { flex: 1.5; min-width: 120px; }
 .filterInput { flex: 1; min-width: 70px; }
+
+.placeholderSelect {
+  color: var(--text-secondary) !important;
+  opacity: 0.5;
+}
 
 .removeFilterBtn {
   background: rgba(239, 68, 68, 0.1);
