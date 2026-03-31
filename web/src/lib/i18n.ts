@@ -119,6 +119,8 @@ const translations = {
     modal_help_dependent_desc: 'This part relies heavily on a specific partner to perform well. When used without its primary enabler, its scoring rate drops severely.',
     dep_with: 'With {part}:',
     dep_without: 'Without {part}:',
+    part_lock_chip: 'Regular Lock Chip',
+    part_metal_lock_chip: 'Metal Lock Chip',
   },
   pt: {
     // General
@@ -236,6 +238,8 @@ const translations = {
     modal_help_dependent_desc: 'Esta peça depende intensamente de uma parceira específica para ter um desempenho positivo. Quando usada sem sua principal facilitadora, sua taxa de pontuação cai severamente.',
     dep_with: 'Com {part}:',
     dep_without: 'Sem {part}:',
+    part_lock_chip: 'Lock Chip Comum',
+    part_metal_lock_chip: 'Lock Chip de Metal',
   }
 };
 

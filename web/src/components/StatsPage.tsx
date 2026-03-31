@@ -696,7 +696,7 @@ export default function StatsPage() {
                       <td className={styles.tdPart}>
                         <div className={styles.partContent}>
                           <div className={styles.partNameRow}>
-                            <span className={styles.partName}>{part.name}</span>
+                            <span className={styles.partName}>{t(part.name as any)}</span>
                           </div>
                           <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
                         </div>

@@ -99,7 +99,7 @@ export default function PartDetailPage() {
           <ArrowLeft size={20} /> {t('back_to_stats')}
         </Link>
         <div className={styles.titleInfo}>
-          <h1 className={styles.name}>{part.name}</h1>
+          <h1 className={styles.name}>{t(part.name as any)}</h1>
           {part.isDependent && (
             <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
               <HelpCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
@@ -199,7 +199,7 @@ export default function PartDetailPage() {
             {part.bestPartners.length > 0 ? part.bestPartners.map(p => (
               <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.partItem}>
                 <div className={styles.partInfo}>
-                  <span className={styles.partItemName}>{p.name}</span>
+                  <span className={styles.partItemName}>{t(p.name as any)}</span>
                   <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
                 </div>
                 <div className={styles.partMetrics}>
@@ -220,7 +220,7 @@ export default function PartDetailPage() {
             {part.bestCounters.length > 0 ? part.bestCounters.map(p => (
               <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.partItem}>
                 <div className={styles.partInfo}>
-                  <span className={styles.partItemName}>{p.name}</span>
+                  <span className={styles.partItemName}>{t(p.name as any)}</span>
                   <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
                 </div>
                 <div className={styles.partMetrics}>
@@ -256,7 +256,7 @@ export default function PartDetailPage() {
                     onClick={() => setShowDependencyModal(false)}
                   >
                     <div className={styles.depInfo}>
-                      <span className={styles.depName}>{dep.name}</span>
+                      <span className={styles.depName}>{t(dep.name as any)}</span>
                       <span className={styles.depType} style={{ color: TYPE_COLORS[dep.type] }}>{dep.type}</span>
                     </div>
                     <div className={styles.depMetrics}>
