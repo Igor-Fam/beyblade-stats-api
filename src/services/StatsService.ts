@@ -566,8 +566,16 @@ export class StatsService {
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number, isInfluential: boolean }> = {};
-        const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number }> = {};
+        const eloMultipliers: Record<string, number> = { SPIN: 1.0, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
+        const [eloRatings, colleyRatings] = await Promise.all([
+            this.calculateBatchElo(battleWhere),
+            this.calculateColleyRatings(battleWhere),
+        ]);
+
+        const getRating = (id: number) => eloRatings.get(id) ?? DEFAULT_ELO;
+
+        const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number, totalPoE: number, isInfluential: boolean }> = {};
+        const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number, totalPoE: number }> = {};
 
         parts.forEach(part => {
             totalMatches += part.battleEntries.length;
@@ -587,33 +595,43 @@ export class StatsService {
                     lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
                 }
 
-                // Synergies: Same combo
-                myEntry.parts.forEach((p: any) => {
-                    const pEffId = getEffectiveId(p.partId);
-                    if (pEffId !== partId) {
-                        if (!partnerStats[pEffId]) {
-                            partnerStats[pEffId] = {
-                                name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name,
-                                type: p.part.partType.name,
-                                gained: 0,
-                                conceded: 0,
-                                matches: 0,
-                                isInfluential: p.part.partType.isInfluential
-                            };
-                        }
-
-                        if (myEntry.points > 0) {
-                            partnerStats[pEffId].gained += myEntry.points;
-                        } else {
-                            partnerStats[pEffId].conceded += Math.abs(myEntry.points);
-                        }
-                        partnerStats[pEffId].matches++;
-                    }
-                });
-
-                // Counters: Opponent combo
+                // Strength-Adjusted Analytics (PoE)
                 const opponentEntry = battle.entries.find((e: any) => e.id !== myEntry.id);
                 if (opponentEntry) {
+                    const myComboElo = EloCalculator.calculateAverageRating(myEntry.parts.map((p: any) => getRating(getEffectiveId(p.partId))));
+                    const opponentComboElo = EloCalculator.calculateAverageRating(opponentEntry.parts.map((p: any) => getRating(getEffectiveId(p.partId))));
+                    const expectedScore = EloCalculator.calculateExpectedScore(myComboElo, opponentComboElo);
+                    const actualScore = isWin ? 1 : 0;
+                    const multiplier = eloMultipliers[myEntry.finishType] ?? 1.0;
+                    
+                    // PoE normalized by multiplier to keep it in [-1, 1] range conceptually before averaging
+                    const poe = (actualScore - expectedScore) * multiplier;
+
+                    // Synergies: Same combo
+                    myEntry.parts.forEach((p: any) => {
+                        const pEffId = getEffectiveId(p.partId);
+                        if (pEffId !== partId) {
+                            if (!partnerStats[pEffId]) {
+                                partnerStats[pEffId] = {
+                                    name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name,
+                                    type: p.part.partType.name,
+                                    gained: 0,
+                                    conceded: 0,
+                                    matches: 0,
+                                    totalPoE: 0,
+                                    isInfluential: p.part.partType.isInfluential
+                                } as any;
+                            }
+
+                            if (isWin) partnerStats[pEffId].gained += myEntry.points;
+                            else partnerStats[pEffId].conceded += Math.abs(myEntry.points);
+                            
+                            partnerStats[pEffId].matches++;
+                            (partnerStats[pEffId] as any).totalPoE += poe;
+                        }
+                    });
+
+                    // Counters: Opponent combo
                     opponentEntry.parts.forEach((p: any) => {
                         const pEffId = getEffectiveId(p.partId);
                         if (!counterStats[pEffId]) {
@@ -622,27 +640,38 @@ export class StatsService {
                                 type: p.part.partType.name, 
                                 myGained: 0, 
                                 myConceded: 0, 
-                                matches: 0 
-                            };
+                                matches: 0,
+                                totalPoE: 0
+                            } as any;
                         }
-                        if (myEntry.points > 0) counterStats[pEffId].myGained += myEntry.points;
+                        if (isWin) counterStats[pEffId].myGained += myEntry.points;
                         else counterStats[pEffId].myConceded += Math.abs(myEntry.points);
+                        
                         counterStats[pEffId].matches++;
+                        (counterStats[pEffId] as any).totalPoE += poe;
                     });
                 }
             });
         });
 
         const bestPartners = Object.entries(partnerStats)
-            .map(([id, data]) => {
+            .map(([id, data]: [string, any]) => {
                 const sum = data.gained + data.conceded;
+                const rawRate = sum > 0 ? (data.gained / sum) : 0.5;
+                const avgPoE = data.totalPoE / data.matches;
+                
+                // Normalization: PoE is roughly within [-2.5, 2.5] due to multipliers. 
+                // We map it to [-1, 1] then to [0, 1] for the efficiency score.
+                const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
+                const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
+
                 return {
                     id: Number(id),
                     name: data.name,
                     type: data.type,
                     totalMatches: data.matches,
                     avgPoints: Number(((data.gained - data.conceded) / data.matches).toFixed(2)),
-                    scoringRate: sum > 0 ? Number(((data.gained * 100) / sum).toFixed(2)) : DEFAULT_SCORING_RATE
+                    scoringRate: Number((efficiency * 100).toFixed(2))
                 };
             })
             .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
@@ -650,25 +679,29 @@ export class StatsService {
             .slice(0, ANALYTICS_LIMIT);
 
         const bestCounters = Object.entries(counterStats)
-            .map(([id, data]) => {
+            .map(([id, data]: [string, any]) => {
                 const sum = data.myGained + data.myConceded;
+                const rawRate = sum > 0 ? (data.myGained / sum) : 0.5;
+                const avgPoE = data.totalPoE / data.matches;
+                
+                const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
+                const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
+
                 return {
                     id: Number(id),
                     name: data.name,
                     type: data.type,
                     totalMatches: data.matches,
                     avgPoints: Number(((data.myGained - data.myConceded) / data.matches).toFixed(2)),
-                    scoringRate: sum > 0 ? Number(((data.myGained * 100) / sum).toFixed(2)) : DEFAULT_SCORING_RATE
+                    scoringRate: Number((efficiency * 100).toFixed(2))
                 };
             })
             .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
             .sort((a, b) => a.scoringRate - b.scoringRate) // lowest rate = best counter to me
             .slice(0, ANALYTICS_LIMIT);
 
-        const [eloRatings, colleyRatings] = await Promise.all([
-            this.calculateBatchElo(battleWhere),
-            this.calculateColleyRatings(battleWhere),
-        ]);
+// Ratings already calculated at the beginning of the function
+
 
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;

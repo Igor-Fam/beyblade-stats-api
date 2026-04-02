@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Sword, BarChart3, Activity, Target, X, Info, HelpCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Sword, Activity, Target, X, Info, HelpCircle, Filter } from 'lucide-react';
 import { fetchPartDetails, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './PartDetailPage.module.css';
@@ -76,12 +76,12 @@ export default function PartDetailPage() {
                   <span className={styles.finishCount}>{count}</span>
                 </div>
                 <div className={styles.progressBar}>
-                  <div 
-                    className={styles.progressFill} 
-                    style={{ 
-                        width: `${percentage}%`, 
-                        backgroundColor: type === 'XTREME' ? '#f43f5e' : type === 'BURST' ? '#fb923c' : type === 'OVER' ? '#fbbf24' : '#38bdf8' 
-                    }} 
+                  <div
+                    className={styles.progressFill}
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: type === 'XTREME' ? '#f43f5e' : type === 'BURST' ? '#fb923c' : type === 'OVER' ? '#fbbf24' : '#38bdf8'
+                    }}
                   />
                 </div>
               </div>
@@ -123,22 +123,8 @@ export default function PartDetailPage() {
         <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ color: '#38bdf8' }}><Activity size={24} /></div>
           <div className={styles.statContent}>
-            <span className={styles.statLabel}>BP (Colley)</span>
+            <span className={styles.statLabel}>Battle Power</span>
             <span className={styles.statValue}>{part.bp}</span>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: '#a78bfa' }}><TrendingUp size={24} /></div>
-          <div className={styles.statContent}>
-            <span className={styles.statLabel}>Elo</span>
-            <span className={styles.statValue}>{part.elo}</span>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: '#facc15' }}><BarChart3 size={24} /></div>
-          <div className={styles.statContent}>
-            <span className={styles.statLabel}>{t('col_avg_pts')}</span>
-            <span className={styles.statValue}>{part.avgPoints}</span>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -150,39 +136,43 @@ export default function PartDetailPage() {
         </div>
       </section>
 
-      <div className={styles.performanceOverview}>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_winrate')}</span>
-          <span className={styles.perfValue} style={{ color: Number(part.winRate.replace('%', '')) > 50 ? '#4ade80' : '#f87171' }}>
-            {part.winRate}
-          </span>
+
+      <div className={styles.performanceStatsGrid}>
+        <div className={styles.performanceOverview}>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_winrate')}</span>
+            <span className={styles.perfValue} style={{ color: Number(part.winRate.replace('%', '')) > 50 ? '#4ade80' : '#f87171' }}>
+              {part.winRate}
+            </span>
+          </div>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_wins')}</span>
+            <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.wins}</span>
+          </div>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_losses')}</span>
+            <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
+          </div>
         </div>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_wins')}</span>
-          <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.wins}</span>
-        </div>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_losses')}</span>
-          <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
+
+        <div className={styles.performanceOverview}>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_scoring_rate')}</span>
+            <span className={styles.perfValue} style={{ color: part.scoringRate > 50 ? '#4ade80' : '#f87171' }}>
+              {part.scoringRate}%
+            </span>
+          </div>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_points_gained')}</span>
+            <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.totalGained}</span>
+          </div>
+          <div className={styles.performanceItem}>
+            <span className={styles.perfLabel}>{t('col_points_conceded')}</span>
+            <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.totalConceded}</span>
+          </div>
         </div>
       </div>
 
-      <div className={styles.performanceOverview} style={{ marginTop: '-1.5rem' }}>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_scoring_rate')}</span>
-          <span className={styles.perfValue} style={{ color: part.scoringRate > 50 ? '#4ade80' : '#f87171' }}>
-            {part.scoringRate}%
-          </span>
-        </div>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_points_gained')}</span>
-          <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.totalGained}</span>
-        </div>
-        <div className={styles.performanceItem}>
-          <span className={styles.perfLabel}>{t('col_points_conceded')}</span>
-          <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.totalConceded}</span>
-        </div>
-      </div>
 
       <section className={styles.finishContainer}>
         {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'))}
@@ -249,9 +239,9 @@ export default function PartDetailPage() {
               <p className={styles.modalDesc}>{t('dependency_modal_desc')}</p>
               <div className={styles.dependencyList}>
                 {part.dependencies.map(dep => (
-                  <Link 
-                    key={dep.id} 
-                    to={`/stats/parts/${dep.id}`} 
+                  <Link
+                    key={dep.id}
+                    to={`/stats/parts/${dep.id}`}
                     className={styles.dependencyItem}
                     onClick={() => setShowDependencyModal(false)}
                   >

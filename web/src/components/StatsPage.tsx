@@ -26,6 +26,7 @@ const OPERATORS = [
 
 const FILTER_FIELDS = [
   { id: 'type', label: 'col_type', type: 'categorical' },
+  { id: 'totalMatches', label: 'col_battles', type: 'numeric' },
   { id: 'bp', label: 'col_bp', type: 'numeric' },
   { id: 'scoringRate', label: 'col_scoring_rate', type: 'numeric' },
   { id: 'pointsGained', label: 'col_points_gained', type: 'numeric' },
