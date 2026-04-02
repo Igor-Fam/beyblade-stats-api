@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Swords, BarChart3 } from 'lucide-react';
+import { Menu, X, Home, Swords, BarChart3, History } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import { fetchDatabaseHealth } from '../lib/api';
 import styles from './Sidebar.module.css';
@@ -21,6 +21,7 @@ export default function Sidebar() {
     { path: '/', label: t('hub'), icon: <Home size={20} /> },
     { path: '/logger', label: t('logger_title'), icon: <Swords size={20} /> },
     { path: '/stats', label: t('hub_stats_title'), icon: <BarChart3 size={20} /> },
+    { path: '/battles', label: t('battle_history_title'), icon: <History size={20} /> },
   ];
 
   return (

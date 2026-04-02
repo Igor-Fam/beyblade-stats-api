@@ -5,6 +5,7 @@ import BattleLogger from './components/BattleLogger';
 import Sidebar from './components/Sidebar';
 import StatsPage from './components/StatsPage';
 import PartDetailPage from './components/PartDetailPage';
+import BattleHistoryPage from './components/BattleHistoryPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -26,6 +27,7 @@ function App() {
             <Route path="/logger" element={<BattleLogger />} />
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/stats/parts/:id" element={<PartDetailPage />} />
+            <Route path="/battles" element={<BattleHistoryPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
