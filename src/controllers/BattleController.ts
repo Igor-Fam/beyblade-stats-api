@@ -1,8 +1,46 @@
 import { Request, Response } from 'express';
 import { BattleService, CreateBattleDTO } from '../services/BattleService';
 import { AppError } from '../errors/AppError';
+import { prisma } from '../database';
 
 export class BattleController {
+
+    async listBattles(req: Request, res: Response): Promise<void> {
+        try {
+            const page = Math.max(1, parseInt(req.query.page as string) || 1);
+            const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+            const skip = (page - 1) * limit;
+
+            const [total, battles] = await Promise.all([
+                prisma.battle.count(),
+                prisma.battle.findMany({
+                    skip,
+                    take: limit,
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        stadium: true,
+                        entries: {
+                            include: {
+                                line: true,
+                                parts: {
+                                    include: {
+                                        part: {
+                                            include: { partType: true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+            ]);
+
+            res.json({ total, page, limit, battles });
+        } catch (error: any) {
+            console.error('Error listing battles:', error);
+            res.status(500).json({ error: 'Internal server error.' });
+        }
+    }
 
     async registerBattle(req: Request, res: Response): Promise<void> {
         try {
@@ -45,4 +83,4 @@ export class BattleController {
             }
         }
     }
-}
+}

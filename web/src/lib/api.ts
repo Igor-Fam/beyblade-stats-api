@@ -101,3 +101,37 @@ export async function fetchPartDetails(id: number, filters?: BattleFilterConditi
   if (!res.ok) throw new Error('Failed to fetch part details');
   return res.json();
 }
+
+export interface BattleEntryPart {
+  partId: number;
+  part: { name: string; partType: { name: string } };
+}
+
+export interface BattleEntry {
+  id: number;
+  points: number;
+  finishType: string;
+  line: { name: string };
+  parts: BattleEntryPart[];
+}
+
+export interface BattleHistoryItem {
+  id: number;
+  createdAt: string;
+  stadium: { name: string };
+  entries: BattleEntry[];
+}
+
+export interface BattleHistoryResponse {
+  total: number;
+  page: number;
+  limit: number;
+  battles: BattleHistoryItem[];
+}
+
+export async function fetchBattleHistory(page = 1, limit = 50): Promise<BattleHistoryResponse> {
+  const res = await fetch(`${API_URL}/battles?page=${page}&limit=${limit}`);
+  if (!res.ok) throw new Error('Failed to fetch battle history');
+  return res.json();
+}
+
