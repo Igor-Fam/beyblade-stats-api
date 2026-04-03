@@ -100,7 +100,7 @@ export default function BattleHistoryPage() {
   };
 
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
-  const colWidths = ['auto', 'auto', '150px', '160px', '140px', '80px'];
+  const colWidths = ['22%', '22%', '14%', '18%', '16%', '8%'];
 
   return (
     <div className={`view ${styles.page}`}>
@@ -128,8 +128,8 @@ export default function BattleHistoryPage() {
                     <th className={styles.th}>{t('col_loser_fixed')}</th>
                     <th className={`${styles.th} ${styles.thType}`}>{t('filter_finish_type')}</th>
                     <th className={styles.th}>{t('filter_stadium')}</th>
-                    <th className={styles.th}>{t('filter_date')}</th>
-                    <th className={styles.thRemove}></th>
+                    <th className={`${styles.th} ${styles.thDate}`}>{t('filter_date')}</th>
+                    <th className={`${styles.th} ${styles.thRemove}`}></th>
                   </tr>
                 </thead>
               </table>
@@ -146,7 +146,7 @@ export default function BattleHistoryPage() {
                     <th className={`${styles.th} ${styles.thHidden}`}>{t('col_loser_fixed')}</th>
                     <th className={`${styles.th} ${styles.thType} ${styles.thHidden}`}>{t('filter_finish_type')}</th>
                     <th className={`${styles.th} ${styles.thHidden}`}>{t('filter_stadium')}</th>
-                    <th className={`${styles.th} ${styles.thHidden}`}>{t('filter_date')}</th>
+                    <th className={`${styles.th} ${styles.thDate} ${styles.thHidden}`}>{t('filter_date')}</th>
                     <th className={`${styles.thRemove} ${styles.thHidden}`}></th>
                   </tr>
                 </thead>

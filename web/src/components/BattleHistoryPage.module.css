@@ -112,7 +112,7 @@
 }
 
 .thWinner  { color: var(--success) !important; font-weight: 800; }
-.thRemove  { text-align: center; }
+.thType, .thDate, .thRemove { text-align: center !important; }
 
 /* Hidden header for body sync */
 .theadHidden {
@@ -156,10 +156,18 @@
   font-weight: 700;
   color: var(--success);
   background: rgba(74, 222, 128, 0.03);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tdLoser {
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tdType {
@@ -181,10 +189,14 @@
 .tdArena {
   font-size: 0.85rem;
   color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tdDate {
   white-space: nowrap;
+  text-align: center;
 }
 
 .dateMain {
