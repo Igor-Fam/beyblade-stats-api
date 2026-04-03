@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import StatsPage from './components/StatsPage';
 import PartDetailPage from './components/PartDetailPage';
 import BattleHistoryPage from './components/BattleHistoryPage';
+import BattleDetailPage from './components/BattleDetailPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -28,6 +29,7 @@ function App() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/stats/parts/:id" element={<PartDetailPage />} />
             <Route path="/battles" element={<BattleHistoryPage />} />
+            <Route path="/battles/:id" element={<BattleDetailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
