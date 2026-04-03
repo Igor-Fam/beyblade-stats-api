@@ -83,4 +83,45 @@ export class BattleController {
             }
         }
     }
-}
+
+    async getBattle(req: Request, res: Response): Promise<void> {
+        try {
+            const battleId = parseInt(req.params.id as string);
+
+            if (isNaN(battleId)) {
+                res.status(400).json({ error: "Invalid battle ID." });
+                return;
+            }
+
+            const battle = await prisma.battle.findUnique({
+                where: { id: battleId },
+                include: {
+                    stadium: true,
+                    entries: {
+                        include: {
+                            line: true,
+                            parts: {
+                                include: {
+                                    part: {
+                                        include: { partType: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!battle) {
+                res.status(404).json({ error: "Battle not found." });
+                return;
+            }
+
+            res.json(battle);
+        } catch (error: any) {
+            console.error('Error fetching battle details:', error);
+            res.status(500).json({ error: 'Internal server error.' });
+        }
+    }
+}
+
