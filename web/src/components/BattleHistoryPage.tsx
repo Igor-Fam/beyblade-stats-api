@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchBattleHistory, deleteBattle, type BattleHistoryItem, type BattleEntry } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
@@ -20,6 +22,7 @@ const FINISH_LABELS: Record<string, string> = {
 
 export default function BattleHistoryPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [data, setData] = useState<{ total: number; battles: BattleHistoryItem[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
@@ -151,7 +154,7 @@ export default function BattleHistoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.battles.map((battle, idx) => {
+                  {data.battles.map((battle: BattleHistoryItem, idx: number) => {
                     const [e1, e2] = battle.entries;
                     const winner = e1.points > 0 ? e1 : e2;
                     const loser = e1.points > 0 ? e2 : e1;
@@ -161,7 +164,12 @@ export default function BattleHistoryPage() {
                     const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
                     return (
-                      <tr key={battle.id} className={`${styles.row} ${idx % 2 === 0 ? styles.even : ''}`}>
+                      <tr 
+                        key={battle.id} 
+                        className={`${styles.row} ${idx % 2 === 0 ? styles.even : ''} ${styles.clickableRow}`}
+                        onClick={() => navigate(`/battles/${battle.id}`)}
+                      >
+
                         <td className={`${styles.td} ${styles.tdWinner}`}>
                           {getComboName(winner)}
                         </td>
@@ -186,7 +194,10 @@ export default function BattleHistoryPage() {
                           <button 
                             className={styles['trash-btn-box']} 
                             disabled={deleting === battle.id}
-                            onClick={() => handleDelete(battle.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(battle.id);
+                            }}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -201,11 +212,11 @@ export default function BattleHistoryPage() {
 
           {totalPages > 1 && (
             <div className={styles.pagination}>
-              <button className={styles.pageBtn} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+              <button className={styles.pageBtn} onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={page === 1}>
                 <ChevronLeft size={20} />
               </button>
               <span className={styles.pageInfo}>{page} / {totalPages}</span>
-              <button className={styles.pageBtn} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+              <button className={styles.pageBtn} onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                 <ChevronRight size={20} />
               </button>
             </div>

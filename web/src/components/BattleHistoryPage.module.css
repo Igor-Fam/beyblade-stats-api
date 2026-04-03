@@ -134,7 +134,16 @@
 }
 
 .row:hover {
-  background: rgba(56, 189, 248, 0.06);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clickableRow:hover {
+  background: rgba(56, 189, 248, 0.08) !important;
 }
 
 .row.even {
