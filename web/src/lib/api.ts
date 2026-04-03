@@ -111,7 +111,7 @@ export interface BattleEntry {
   id: number;
   points: number;
   finishType: string;
-  line: { name: string };
+  line: { name: string; metadata?: { slots: string[] } };
   parts: BattleEntryPart[];
 }
 
