@@ -1,0 +1,56 @@
+/* ─── PartLinkCard ─── */
+.partItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.partItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.partInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.partName {
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.partType {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chevron {
+  color: #475569;
+  transition: color 0.2s;
+}
+
+.partItem:hover .chevron {
+  color: #94a3b8;
+}
+
+@media (max-width: 900px) {
+  .partItem {
+    padding: 0.5rem 0.75rem;
+  }
+  .partName {
+    font-size: 0.85rem;
+  }
+  .partType {
+    font-size: 0.65rem;
+  }
+}
