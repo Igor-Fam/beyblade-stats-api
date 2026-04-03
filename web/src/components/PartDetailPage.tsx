@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Sword, Activity, Target, X, Info, HelpCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Target, Sword, X, Info, HelpCircle, Filter } from 'lucide-react';
 import { fetchPartDetails, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
+import { StatCard, StatsGrid } from './ui/StatCard';
+import { TYPE_COLORS } from './ui/PartLinkCard';
+import layout from './ui/DetailPageLayout.module.css';
 import styles from './PartDetailPage.module.css';
-
-const TYPE_COLORS: Record<string, string> = {
-  Blade: '#38bdf8',
-  Ratchet: '#fb923c',
-  Bit: '#4ade80',
-  'Lock Chip': '#a78bfa',
-  'Metal Blade': '#facc15',
-  'Assist Blade': '#f472b6',
-};
 
 const FINISH_LABELS: Record<string, string> = {
   SPIN: 'finish_spin',
@@ -42,7 +36,7 @@ export default function PartDetailPage() {
     if (!id) return;
     setLoading(true);
 
-    let battleFilters = [];
+    let battleFilters: any[] = [];
     try {
       const saved = localStorage.getItem('battle_filters');
       if (saved) {
@@ -57,8 +51,8 @@ export default function PartDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="view"><div className={styles.loading}>{t('stats_loading')}</div></div>;
-  if (error || !part) return <div className="view"><div className={styles.error}>{error || 'Part not found'}</div></div>;
+  if (loading) return <div className="view"><div className={layout.loading}>{t('stats_loading')}</div></div>;
+  if (error || !part) return <div className="view"><div className={layout.error}>{error || 'Part not found'}</div></div>;
 
   const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
 
@@ -93,13 +87,13 @@ export default function PartDetailPage() {
   };
 
   return (
-    <div className={`view ${styles.page}`}>
-      <header className={styles.header}>
-        <Link to="/stats" className={styles.backLink}>
+    <div className={`view ${layout.page}`}>
+      <header className={layout.header}>
+        <Link to="/stats" className={layout.backLink}>
           <ArrowLeft size={20} /> {t('back_to_stats')}
         </Link>
         <div className={styles.titleInfo}>
-          <h1 className={styles.name}>{t(part.name as any)}</h1>
+          <h1 className={layout.title}>{t(part.name as any)}</h1>
           {part.isDependent && (
             <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
               <HelpCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
@@ -119,23 +113,14 @@ export default function PartDetailPage() {
         )}
       </header>
 
-      <section className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: '#38bdf8' }}><Activity size={24} /></div>
-          <div className={styles.statContent}>
-            <span className={styles.statLabel}>Battle Power</span>
-            <span className={styles.statValue}>{part.bp}</span>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: '#94a3b8' }}><Users size={24} /></div>
-          <div className={styles.statContent}>
-            <span className={styles.statLabel}>{t('col_battles')}</span>
-            <span className={styles.statValue}>{part.totalMatches}</span>
-          </div>
-        </div>
-      </section>
-
+      <StatsGrid>
+        <StatCard icon={<Activity size={24} />} iconColor="#38bdf8" label="Battle Power">
+          {part.bp}
+        </StatCard>
+        <StatCard icon={<Users size={24} />} iconColor="#94a3b8" label={t('col_battles')}>
+          {part.totalMatches}
+        </StatCard>
+      </StatsGrid>
 
       <div className={styles.performanceStatsGrid}>
         <div className={styles.performanceOverview}>
@@ -172,7 +157,6 @@ export default function PartDetailPage() {
           </div>
         </div>
       </div>
-
 
       <section className={styles.finishContainer}>
         {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'))}
