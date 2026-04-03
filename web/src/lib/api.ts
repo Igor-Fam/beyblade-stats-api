@@ -135,3 +135,10 @@ export async function fetchBattleHistory(page = 1, limit = 50): Promise<BattleHi
   return res.json();
 }
 
+export async function fetchBattleDetails(id: number): Promise<BattleHistoryItem> {
+  const res = await fetch(`${API_URL}/battles/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch battle details');
+  return res.json();
+}
+
+

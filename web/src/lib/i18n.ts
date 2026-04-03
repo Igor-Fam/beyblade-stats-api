@@ -127,6 +127,13 @@ const translations = {
     dep_without: 'Without {part}:',
     part_lock_chip: 'Regular Lock Chip',
     part_metal_lock_chip: 'Metal Lock Chip',
+    back_to_history: 'Back to History',
+    battle_details_title: 'Battle Details',
+    winner_label: 'Winner',
+    loser_label: 'Loser',
+    score_label: 'Score',
+    stadium_label: 'Stadium',
+    date_label: 'Date',
   },
   pt: {
     // General
@@ -252,6 +259,13 @@ const translations = {
     dep_without: 'Sem {part}:',
     part_lock_chip: 'Lock Chip Comum',
     part_metal_lock_chip: 'Lock Chip de Metal',
+    back_to_history: 'Voltar para o Histórico',
+    battle_details_title: 'Detalhes da Batalha',
+    winner_label: 'Vencedor',
+    loser_label: 'Perdedor',
+    score_label: 'Placar',
+    stadium_label: 'Arena',
+    date_label: 'Data',
   }
 };
 
