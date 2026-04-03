@@ -44,31 +44,41 @@ export default function BattleDetailPage() {
   const dateStr = date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
-  const renderCombo = (entry: BattleEntry, isWinner: boolean) => (
-    <div className={`${styles.comboColumn} ${isWinner ? styles.winnerColumn : styles.loserColumn}`}>
-      <div className={styles.comboHeader}>
-        <span className={`${styles.roleLabel} ${isWinner ? styles.winnerLabel : styles.loserLabel}`}>
-          {isWinner ? t('winner_label') : t('loser_label')}
-        </span>
-        {isWinner ? (
-          <div className={styles.outcomeInfo}>
-            {t(FINISH_LABELS[finish] as any)} +{entry.points}
-          </div>
-        ) : (
-          <div className={styles.outcomeInfoSpacer} />
-        )}
-      </div>
+  const renderCombo = (entry: BattleEntry, isWinner: boolean) => {
+    const slots = entry.line.metadata?.slots ?? [];
+    const sortedParts = [...entry.parts].sort((a, b) => {
+      const aIdx = slots.indexOf(a.part.partType.name);
+      const bIdx = slots.indexOf(b.part.partType.name);
+      return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+    });
 
-      {entry.parts.map((ep, idx) => (
-        <PartLinkCard
-          key={idx}
-          partId={ep.partId}
-          name={ep.part.name}
-          typeName={ep.part.partType.name}
-        />
-      ))}
-    </div>
-  );
+    return (
+      <div className={`${styles.comboColumn} ${isWinner ? styles.winnerColumn : styles.loserColumn}`}>
+        <div className={styles.comboHeader}>
+          <span className={`${styles.roleLabel} ${isWinner ? styles.winnerLabel : styles.loserLabel}`}>
+            {isWinner ? t('winner_label') : t('loser_label')}
+          </span>
+          {isWinner ? (
+            <div className={styles.outcomeInfo}>
+              {t(FINISH_LABELS[finish] as any)} +{entry.points}
+            </div>
+          ) : (
+            <div className={styles.outcomeInfoSpacer} />
+          )}
+        </div>
+
+        {sortedParts.map((ep, idx) => (
+          <PartLinkCard
+            key={idx}
+            partId={ep.partId}
+            name={ep.part.name}
+            typeName={ep.part.partType.name}
+          />
+        ))}
+      </div>
+    );
+  };
+
 
   return (
     <div className={`view ${layout.page}`}>
