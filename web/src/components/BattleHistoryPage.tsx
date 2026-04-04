@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -26,19 +26,12 @@ export default function BattleHistoryPage() {
   const [data, setData] = useState<{ total: number; battles: BattleHistoryItem[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 50;
 
-  // Refs for scroll syncing
-  const headerRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (headerRef.current) {
-      headerRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
+  // removed scroll refs for card layout
 
   const loadHistory = async () => {
     setLoading(true);
@@ -56,15 +49,16 @@ export default function BattleHistoryPage() {
     loadHistory();
   }, [page]);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm(t('confirm_delete_battle'))) return;
+  const confirmDeleteAction = async () => {
+    if (confirmDelete === null) return;
+    const id = confirmDelete;
     setDeleting(id);
     try {
       await deleteBattle(id);
       loadHistory();
+      setConfirmDelete(null);
     } catch (e: any) {
       alert(e.message);
-    } finally {
       setDeleting(null);
     }
   };
@@ -91,7 +85,7 @@ export default function BattleHistoryPage() {
         const val = p?.abbreviation || p?.name || '';
         res = res.replace(`{${s}}`, val);
       });
-      return res.trim().replace(/\s+/g, ' ');
+      return res.trim().replace(/\s+/g, ' ').replace(/-/g, '\u2011');
     }
 
     const lps = slotList.map((s: string) => {
@@ -99,11 +93,11 @@ export default function BattleHistoryPage() {
       return p?.abbreviation || p?.name || '';
     }).filter(Boolean);
     
-    return lps.length > 0 ? lps.join(' ') : (line as any).name;
+    return lps.length > 0 ? lps.join(' ').replace(/-/g, '\u2011') : (line as any).name;
   };
 
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
-  const colWidths = ['22%', '22%', '14%', '18%', '16%', '8%'];
+  // removed colWidths for table
 
   return (
     <div className={`view ${styles.page}`}>
@@ -119,95 +113,75 @@ export default function BattleHistoryPage() {
 
       {data && (!loading || page > 1) && (
         <>
-          <div className={styles.tableWrapper}>
-            <div className={styles.headerWrapper} ref={headerRef}>
-              <table className={styles.tableHeader}>
-                <colgroup>
-                  {colWidths.map((w, i) => <col key={i} style={{ width: w }} />)}
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th className={`${styles.th} ${styles.thWinner}`}>{t('col_winner_fixed')}</th>
-                    <th className={styles.th}>{t('col_loser_fixed')}</th>
-                    <th className={`${styles.th} ${styles.thType}`}>{t('filter_finish_type')}</th>
-                    <th className={styles.th}>{t('filter_stadium')}</th>
-                    <th className={`${styles.th} ${styles.thDate}`}>{t('filter_date')}</th>
-                    <th className={`${styles.th} ${styles.thRemove}`}></th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
+          <div className={styles.listContainer}>
+            {data.battles.map((battle: BattleHistoryItem) => {
+              const [e1, e2] = battle.entries;
+              const winner = e1.points > 0 ? e1 : e2;
+              const finish = winner.finishType;
+              const date = new Date(battle.createdAt);
+              const dateStr = date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: '2-digit' });
+              const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
-            <div className={styles.bodyWrapper} ref={bodyRef} onScroll={handleScroll}>
-              <table className={styles.tableBody}>
-                <colgroup>
-                  {colWidths.map((w, i) => <col key={i} style={{ width: w }} />)}
-                </colgroup>
-                <thead className={styles.theadHidden}>
-                  <tr className={styles.headerRowHidden}>
-                    <th className={`${styles.th} ${styles.thWinner} ${styles.thHidden}`}>{t('col_winner_fixed')}</th>
-                    <th className={`${styles.th} ${styles.thHidden}`}>{t('col_loser_fixed')}</th>
-                    <th className={`${styles.th} ${styles.thType} ${styles.thHidden}`}>{t('filter_finish_type')}</th>
-                    <th className={`${styles.th} ${styles.thHidden}`}>{t('filter_stadium')}</th>
-                    <th className={`${styles.th} ${styles.thDate} ${styles.thHidden}`}>{t('filter_date')}</th>
-                    <th className={`${styles.thRemove} ${styles.thHidden}`}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.battles.map((battle: BattleHistoryItem, idx: number) => {
-                    const [e1, e2] = battle.entries;
-                    const winner = e1.points > 0 ? e1 : e2;
-                    const loser = e1.points > 0 ? e2 : e1;
-                    const finish = winner.finishType;
-                    const date = new Date(battle.createdAt);
-                    const dateStr = date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: '2-digit' });
-                    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+              return (
+                <div 
+                  key={battle.id}
+                  className={styles.card}
+                  onClick={() => navigate(`/battles/${battle.id}`)}
+                >
+                  <div className={styles.cardHeader}>
+                    <span className={styles.cardStadium}>{battle.stadium.name}</span>
+                    <span className={styles.cardDate}>{dateStr} {timeStr}</span>
+                  </div>
 
-                    return (
-                      <tr 
-                        key={battle.id} 
-                        className={`${styles.row} ${idx % 2 === 0 ? styles.even : ''} ${styles.clickableRow}`}
-                        onClick={() => navigate(`/battles/${battle.id}`)}
-                      >
+                  <div className={styles.cardBody}>
+                    <div className={styles.battlePill}>
+                      <div className={`${styles.comboSide} ${e1.points > 0 ? styles.winnerSide : styles.loserSide}`}>
+                        <strong className={styles.comboName}>{getComboName(e1)}</strong>
+                        {e1.points > 0 && (
+                          <div className={styles.winDetail}>
+                            <span className={styles.finishBadge} style={{ 
+                              color: FINISH_COLORS[finish], 
+                              borderColor: `${FINISH_COLORS[finish]}44`, 
+                              background: `${FINISH_COLORS[finish]}12` 
+                            }}>
+                              {FINISH_LABELS[finish] ?? finish}
+                            </span>
+                            <span className={styles.winPoints}>+{e1.points}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className={styles.sideDivider} />
+                      <div className={`${styles.comboSide} ${e2.points > 0 ? styles.winnerSide : styles.loserSide}`}>
+                        <strong className={styles.comboName}>{getComboName(e2)}</strong>
+                        {e2.points > 0 && (
+                          <div className={styles.winDetail}>
+                            <span className={styles.finishBadge} style={{ 
+                              color: FINISH_COLORS[finish], 
+                              borderColor: `${FINISH_COLORS[finish]}44`, 
+                              background: `${FINISH_COLORS[finish]}12` 
+                            }}>
+                              {FINISH_LABELS[finish] ?? finish}
+                            </span>
+                            <span className={styles.winPoints}>+{e2.points}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                        <td className={`${styles.td} ${styles.tdWinner}`}>
-                          {getComboName(winner)}
-                        </td>
-                        <td className={`${styles.td} ${styles.tdLoser}`}>
-                          {getComboName(loser)}
-                        </td>
-                        <td className={`${styles.td} ${styles.tdType}`}>
-                          <span className={styles.finishBadge} style={{ 
-                            color: FINISH_COLORS[finish], 
-                            borderColor: `${FINISH_COLORS[finish]}44`, 
-                            background: `${FINISH_COLORS[finish]}12` 
-                          }}>
-                            {FINISH_LABELS[finish] ?? finish}
-                          </span>
-                        </td>
-                        <td className={`${styles.td} ${styles.tdArena}`}>{battle.stadium.name}</td>
-                        <td className={`${styles.td} ${styles.tdDate}`}>
-                          <span className={styles.dateMain}>{dateStr}</span>
-                          <span className={styles.dateTime}>{timeStr}</span>
-                        </td>
-                        <td className={`${styles.td} ${styles.tdRemove}`}>
-                          <button 
-                            className={styles['trash-btn-box']} 
-                            disabled={deleting === battle.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(battle.id);
-                            }}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    <button 
+                      className={styles.trashBtn} 
+                      disabled={deleting === battle.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDelete(battle.id);
+                      }}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -222,6 +196,30 @@ export default function BattleHistoryPage() {
             </div>
           )}
         </>
+      )}
+
+      {confirmDelete !== null && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>{t('remove')}</h3>
+            <p>{t('confirm_delete_battle')}</p>
+            <div className={styles.modalActions}>
+              <button 
+                className={`${styles.btn} ${styles.btnCancel}`} 
+                onClick={() => setConfirmDelete(null)}
+              >
+                {t('cancel')}
+              </button>
+              <button 
+                className={`${styles.btn} ${styles.btnDanger}`} 
+                onClick={confirmDeleteAction}
+                disabled={deleting === confirmDelete}
+              >
+                {deleting === confirmDelete ? '...' : t('remove')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
