@@ -10,6 +10,7 @@ const DEPENDENCY_POINTS_THRESHOLD = 20;
 const DEPENDENCY_POINT_SHARE = 0.50;
 const DEPENDENCY_SCORING_RATE_DROP = 10;
 const ANALYTICS_MIN_BATTLES = 10;
+const INACCURATE_BATTLES_THRESHOLD = 15;
 const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
 const DEFAULT_ELO_MULTIPLIER = 1.0;
@@ -39,6 +40,7 @@ export interface PartStatsDTO {
     pointsGained: number;
     pointsConceded: number;
     isDependent: boolean;
+    isInaccurate: boolean;
     dependencies?: DependencyDTO[];
 }
 
@@ -434,6 +436,7 @@ export class StatsService {
                 pointsGained: stats.totalGained,
                 pointsConceded: stats.totalConceded,
                 isDependent,
+                isInaccurate: stats.totalMatches < INACCURATE_BATTLES_THRESHOLD,
                 dependencies
             };
         });
@@ -741,6 +744,7 @@ export class StatsService {
             pointsGained: totalGained,
             pointsConceded: totalConceded,
             isDependent,
+            isInaccurate: totalMatches < INACCURATE_BATTLES_THRESHOLD,
             totalGained,
             totalConceded,
             bestPartners,
