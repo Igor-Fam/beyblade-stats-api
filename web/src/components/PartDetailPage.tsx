@@ -16,6 +16,13 @@ const FINISH_LABELS: Record<string, string> = {
   XTREME: 'finish_xtreme',
 };
 
+const FINISH_WEIGHTS: Record<string, number> = {
+  SPIN: 1,
+  OVER: 2,
+  BURST: 2,
+  XTREME: 3,
+};
+
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
@@ -25,6 +32,8 @@ export default function PartDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [rank, setRank] = useState<number | null>(null);
   const [showDependencyModal, setShowDependencyModal] = useState(false);
+  const [winFinishMode, setWinFinishMode] = useState<'matches'|'points'>('matches');
+  const [lossFinishMode, setLossFinishMode] = useState<'matches'|'points'>('matches');
   const [hasBattleFilters, setHasBattleFilters] = useState(false);
 
   useEffect(() => {
@@ -68,18 +77,46 @@ export default function PartDetailPage() {
 
   const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
 
-  const renderFinishStats = (finishes: Record<string, number>, total: number, title: string) => {
+  const renderFinishStats = (finishes: Record<string, number>, rawTotal: number, title: string, mode: 'matches'|'points', setMode: (m: 'matches'|'points') => void) => {
+    // Re-calcula o total usando weights se o modo for points
+    const total = Object.entries(finishes).reduce((sum, [t, count]) => sum + (mode === 'points' ? count * (FINISH_WEIGHTS[t] || 1) : count), 0);
+
     return (
       <div className={styles.finishSection}>
-        <h3 className={styles.finishTitle}>{title}</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+          <h3 className={styles.finishTitle} style={{ margin: 0 }}>{title}</h3>
+          
+          <div className={styles.rankingModeRow} style={{ margin: 0, padding: 0, background: 'transparent', border: 'none' }}>
+            <div className={styles.toggle} style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.4rem', overflow: 'hidden' }}>
+              <button
+                className={mode === 'matches' ? styles.toggleBtnActive : styles.toggleBtn}
+                onClick={() => setMode('matches')}
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: mode === 'matches' ? 'rgba(56, 189, 248, 0.2)' : 'transparent', color: mode === 'matches' ? '#38bdf8' : '#94a3b8' }}
+              >
+                {t('col_battles') ?? 'Partidas'}
+              </button>
+              <button
+                className={mode === 'points' ? styles.toggleBtnActive : styles.toggleBtn}
+                onClick={() => setMode('points')}
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: mode === 'points' ? 'rgba(56, 189, 248, 0.2)' : 'transparent', color: mode === 'points' ? '#38bdf8' : '#94a3b8' }}
+              >
+                {t('col_points_gained') ?? 'Pontos'}
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <div className={styles.finishList}>
           {Object.entries(finishes).map(([type, count]) => {
-            const percentage = total > 0 ? (count / total) * 100 : 0;
+            const val = mode === 'points' ? count * (FINISH_WEIGHTS[type] || 1) : count;
+            const percentage = total > 0 ? (val / total) * 100 : 0;
             return (
               <div key={type} className={styles.finishItem}>
                 <div className={styles.finishLabelInfo}>
                   <span className={styles.finishTypeLabel}>{t(FINISH_LABELS[type] as any)}</span>
-                  <span className={styles.finishCount}>{count}</span>
+                  <span className={styles.finishCount}>
+                    {val}
+                  </span>
                 </div>
                 <div className={styles.progressBar}>
                   <div
@@ -177,8 +214,8 @@ export default function PartDetailPage() {
       </div>
 
       <section className={styles.finishContainer}>
-        {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'))}
-        {renderFinishStats(part.lossFinishes, part.losses, t('loss_finishes'))}
+        {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'), winFinishMode, setWinFinishMode)}
+        {renderFinishStats(part.lossFinishes, part.losses, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
       </section>
 
       <div className={styles.analyticalGrid}>
