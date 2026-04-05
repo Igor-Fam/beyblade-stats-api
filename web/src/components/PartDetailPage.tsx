@@ -31,9 +31,9 @@ export default function PartDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rank, setRank] = useState<number | null>(null);
-  const [helpModal, setHelpModal] = useState<{title: string, desc: string, dependencies?: any[]} | null>(null);
-  const [winFinishMode, setWinFinishMode] = useState<'matches'|'points'>('matches');
-  const [lossFinishMode, setLossFinishMode] = useState<'matches'|'points'>('matches');
+  const [helpModal, setHelpModal] = useState<{ title: string, desc: string, dependencies?: any[] } | null>(null);
+  const [winFinishMode, setWinFinishMode] = useState<'matches' | 'points'>('matches');
+  const [lossFinishMode, setLossFinishMode] = useState<'matches' | 'points'>('matches');
   const [hasBattleFilters, setHasBattleFilters] = useState(false);
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function PartDetailPage() {
 
   const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
 
-  const renderFinishStats = (finishes: Record<string, number>, rawTotal: number, title: string, mode: 'matches'|'points', setMode: (m: 'matches'|'points') => void) => {
+  const renderFinishStats = (finishes: Record<string, number>, title: string, mode: 'matches' | 'points', setMode: (m: 'matches' | 'points') => void) => {
     // Re-calcula o total usando weights se o modo for points
     const total = Object.entries(finishes).reduce((sum, [t, count]) => sum + (mode === 'points' ? count * (FINISH_WEIGHTS[t] || 1) : count), 0);
 
@@ -89,7 +89,7 @@ export default function PartDetailPage() {
       <div className={styles.finishSection}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
           <h3 className={styles.finishTitle} style={{ margin: 0 }}>{title}</h3>
-          
+
           <div className={styles.rankingModeRow} style={{ margin: 0, padding: 0, background: 'transparent', border: 'none' }}>
             <div className={styles.toggle} style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.4rem', overflow: 'hidden' }}>
               <button
@@ -109,7 +109,7 @@ export default function PartDetailPage() {
             </div>
           </div>
         </div>
-        
+
         <div className={styles.finishList}>
           {Object.entries(finishes).map(([type, count]) => {
             const val = mode === 'points' ? count * (FINISH_WEIGHTS[type] || 1) : count;
@@ -151,8 +151,8 @@ export default function PartDetailPage() {
             {part.type}
           </span>
           {part.isDependent && (
-            <button 
-              className={`${styles.tag} dependent-tag`} 
+            <button
+              className={`${styles.tag} dependent-tag`}
               onClick={() => setHelpModal({
                 title: t('modal_help_dependent_title'),
                 desc: t('modal_help_dependent_desc'),
@@ -164,8 +164,8 @@ export default function PartDetailPage() {
             </button>
           )}
           {part.isInaccurate && (
-            <button 
-              className={`${styles.tag} inaccurate-tag`} 
+            <button
+              className={`${styles.tag} inaccurate-tag`}
               onClick={() => setHelpModal({
                 title: t('modal_help_inaccurate_title'),
                 desc: t('modal_help_inaccurate_desc')
@@ -187,8 +187,8 @@ export default function PartDetailPage() {
       <StatsGrid>
         <StatCard icon={<Activity size={24} />} iconColor="#38bdf8" label="Battle Power">
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-            <span>{part.bp}</span>
-            {rank !== null && (
+            <span>{part.isInaccurate ? <span className={styles.dash}>—</span> : part.bp}</span>
+            {rank !== null && !part.isInaccurate && (
               <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 600 }}>
                 #{rank}
               </span>
@@ -237,8 +237,8 @@ export default function PartDetailPage() {
       </div>
 
       <section className={styles.finishContainer}>
-        {renderFinishStats(part.winFinishes, part.wins, t('win_finishes'), winFinishMode, setWinFinishMode)}
-        {renderFinishStats(part.lossFinishes, part.losses, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
+        {renderFinishStats(part.winFinishes, t('win_finishes'), winFinishMode, setWinFinishMode)}
+        {renderFinishStats(part.lossFinishes, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
       </section>
 
       <div className={styles.analyticalGrid}>
@@ -318,7 +318,7 @@ export default function PartDetailPage() {
       </div>
 
       {helpModal && (
-        <HelpModal 
+        <HelpModal
           title={helpModal.title}
           desc={helpModal.desc}
           dependencies={helpModal.dependencies}
