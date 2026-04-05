@@ -155,14 +155,14 @@ export default function StatsPage() {
       result = result.filter((p: PartStats) => {
         const fieldInfo = FILTER_FIELDS.find(ff => ff.id === f.field);
         const rawValue = p[f.field as keyof PartStats];
-        
+
         if (fieldInfo?.type === 'categorical') {
           return String(rawValue) === String(f.value);
         }
 
         // Numeric comparison
-        const pValue = f.field === 'winRate' 
-          ? parseFloat(String(rawValue)) 
+        const pValue = f.field === 'winRate'
+          ? parseFloat(String(rawValue))
           : Number(rawValue);
         const fValue = Number(f.value);
 
@@ -179,10 +179,13 @@ export default function StatsPage() {
 
     // Apply sorting
     const sorted = result.sort((a, b) => {
-      // Parts with no battles always sink to the bottom
-      if (a.totalMatches === 0 && b.totalMatches === 0) return 0;
-      if (a.totalMatches === 0) return 1;
-      if (b.totalMatches === 0) return -1;
+      // 1. Consolidated (totalMatches > 0 && !isInaccurate)
+      // 2. Inaccurate (totalMatches > 0 && isInaccurate)
+      // 3. No battles (totalMatches == 0)
+      const aStatus = a.totalMatches === 0 ? 3 : (a.isInaccurate ? 2 : 1);
+      const bStatus = b.totalMatches === 0 ? 3 : (b.isInaccurate ? 2 : 1);
+
+      if (aStatus !== bStatus) return aStatus - bStatus;
 
       const av = a[sortKey];
       const bv = b[sortKey];
@@ -200,10 +203,10 @@ export default function StatsPage() {
 
     // Step 3: Apply Search Term (Substring match)
     if (!searchTerm.trim()) return rankedResults;
-    
+
     const term = searchTerm.toLowerCase();
-    return rankedResults.filter(p => 
-      p.name.toLowerCase().includes(term) || 
+    return rankedResults.filter(p =>
+      p.name.toLowerCase().includes(term) ||
       p.type.toLowerCase().includes(term)
     );
   }, [parts, filters, sortKey, sortDir, searchTerm]);
@@ -310,10 +313,10 @@ export default function StatsPage() {
               <Download size={16} />
             </button>
           </div>
-          
+
           <div className={styles.filterGroup}>
             <div className={styles.filterBtnWrapper}>
-              <button 
+              <button
                 className={`${styles.filterToggle} ${filters.length > 0 ? styles.activeFilters : ''}`}
                 onClick={() => setIsFilterModalOpen(true)}
               >
@@ -325,7 +328,7 @@ export default function StatsPage() {
             </div>
 
             <div className={styles.filterBtnWrapper}>
-              <button 
+              <button
                 className={`${styles.filterToggle} ${battleFilters.length > 0 ? styles.activeFilters : ''}`}
                 onClick={() => setIsBattleFilterModalOpen(true)}
               >
@@ -365,8 +368,8 @@ export default function StatsPage() {
                     const fieldInfo = FILTER_FIELDS.find(ff => ff.id === f.field);
                     return (
                       <div key={f.id} className={styles.filterRow}>
-                        <select 
-                          value={f.field} 
+                        <select
+                          value={f.field}
                           onChange={e => updateFilter(f.id, { field: e.target.value, value: '', operator: 'eq' })}
                           className={styles.filterSelect}
                         >
@@ -376,8 +379,8 @@ export default function StatsPage() {
                         </select>
 
                         {fieldInfo?.type === 'numeric' && (
-                          <select 
-                            value={f.operator} 
+                          <select
+                            value={f.operator}
                             onChange={e => updateFilter(f.id, { operator: e.target.value })}
                             className={styles.filterOperator}
                           >
@@ -390,8 +393,8 @@ export default function StatsPage() {
                         )}
 
                         {fieldInfo?.type === 'categorical' ? (
-                          <select 
-                            value={String(f.value)} 
+                          <select
+                            value={String(f.value)}
                             onChange={e => updateFilter(f.id, { value: e.target.value })}
                             className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
                           >
@@ -401,9 +404,9 @@ export default function StatsPage() {
                             ))}
                           </select>
                         ) : (
-                          <input 
-                            type="number" 
-                            value={f.value} 
+                          <input
+                            type="number"
+                            value={f.value}
                             onChange={e => updateFilter(f.id, { value: e.target.value })}
                             placeholder="0"
                             className={styles.filterInput}
@@ -447,66 +450,66 @@ export default function StatsPage() {
               <div className={styles.modalBody}>
                 <div className={styles.filterList}>
                   {battleFilters.map((f, i) => (
-                      <div key={i} className={styles.filterRow}>
-                        <select 
-                          value={f.field} 
-                          onChange={e => updateBattleFilter(i, { field: e.target.value as any, value: '', operator: 'eq' })}
-                          className={styles.filterSelect}
+                    <div key={i} className={styles.filterRow}>
+                      <select
+                        value={f.field}
+                        onChange={e => updateBattleFilter(i, { field: e.target.value as any, value: '', operator: 'eq' })}
+                        className={styles.filterSelect}
+                      >
+                        {FILTER_BATTLE_FIELDS.map(ff => (
+                          <option key={ff.id} value={ff.id}>{t(ff.label as any)}</option>
+                        ))}
+                      </select>
+
+                      {f.field === 'date' && (
+                        <select
+                          value={f.operator}
+                          onChange={e => updateBattleFilter(i, { operator: e.target.value as any, value: '' })}
+                          className={styles.filterOperator}
                         >
-                          {FILTER_BATTLE_FIELDS.map(ff => (
-                            <option key={ff.id} value={ff.id}>{t(ff.label as any)}</option>
+                          <option value="eq">{isMobileView ? '=' : t('filter_op_eq')}</option>
+                          <option value="gt">{isMobileView ? '>' : t('filter_op_gt')}</option>
+                          <option value="lt">{isMobileView ? '<' : t('filter_op_lt')}</option>
+                        </select>
+                      )}
+
+
+                      {f.field === 'stadium' ? (
+                        <select
+                          value={String(f.value)}
+                          onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                          className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
+                        >
+                          <option value="">{t('select_placeholder')}</option>
+                          {stadiums.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
                         </select>
+                      ) : f.field === 'finishType' ? (
+                        <select
+                          value={String(f.value)}
+                          onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                          className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
+                        >
+                          <option value="">{t('select_placeholder')}</option>
+                          <option value="SPIN">Spin Finish</option>
+                          <option value="OVER">Over Finish</option>
+                          <option value="BURST">Burst Finish</option>
+                          <option value="XTREME">Xtreme Finish</option>
+                        </select>
+                      ) : (
+                        <input
+                          type={f.operator === 'eq' ? 'date' : 'datetime-local'}
+                          value={String(f.value)}
+                          onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                          className={`${styles.filterInput} ${!f.value ? styles.placeholderSelect : ''}`}
+                          style={{ flex: 1 }}
+                          placeholder={t('select_placeholder')}
+                        />
+                      )}
 
-                        {f.field === 'date' && (
-                          <select 
-                            value={f.operator} 
-                            onChange={e => updateBattleFilter(i, { operator: e.target.value as any, value: '' })}
-                            className={styles.filterOperator}
-                          >
-                            <option value="eq">{isMobileView ? '=' : t('filter_op_eq')}</option>
-                            <option value="gt">{isMobileView ? '>' : t('filter_op_gt')}</option>
-                            <option value="lt">{isMobileView ? '<' : t('filter_op_lt')}</option>
-                          </select>
-                        )}
-
-
-                        {f.field === 'stadium' ? (
-                          <select 
-                            value={String(f.value)} 
-                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
-                          >
-                            <option value="">{t('select_placeholder')}</option>
-                            {stadiums.map(s => (
-                              <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                          </select>
-                        ) : f.field === 'finishType' ? (
-                          <select 
-                            value={String(f.value)} 
-                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
-                          >
-                            <option value="">{t('select_placeholder')}</option>
-                            <option value="SPIN">Spin Finish</option>
-                            <option value="OVER">Over Finish</option>
-                            <option value="BURST">Burst Finish</option>
-                            <option value="XTREME">Xtreme Finish</option>
-                          </select>
-                        ) : (
-                          <input 
-                            type={f.operator === 'eq' ? 'date' : 'datetime-local'}
-                            value={String(f.value)} 
-                            onChange={e => updateBattleFilter(i, { value: e.target.value })}
-                            className={`${styles.filterInput} ${!f.value ? styles.placeholderSelect : ''}`}
-                            style={{ flex: 1 }}
-                            placeholder={t('select_placeholder')}
-                          />
-                        )}
-
-                        <button className={styles.removeFilterBtn} onClick={() => removeBattleFilter(i)}>&times;</button>
-                      </div>
+                      <button className={styles.removeFilterBtn} onClick={() => removeBattleFilter(i)}>&times;</button>
+                    </div>
                   ))}
                 </div>
 
@@ -526,7 +529,7 @@ export default function StatsPage() {
         )}
 
         {helpModal && (
-          <HelpModal 
+          <HelpModal
             title={helpModal.title}
             desc={helpModal.desc}
             dependencies={helpModal.dependencies}
@@ -546,18 +549,18 @@ export default function StatsPage() {
           <div className={styles.searchRow}>
             <div className={styles.searchWrapper}>
               <Search size={16} className={styles.searchIcon} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className={styles.searchInput}
                 placeholder={t('search_placeholder')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
-                <X 
-                  size={14} 
-                  className={styles.clearSearch} 
-                  onClick={() => setSearchTerm('')} 
+                <X
+                  size={14}
+                  className={styles.clearSearch}
+                  onClick={() => setSearchTerm('')}
                 />
               )}
             </div>
@@ -580,8 +583,8 @@ export default function StatsPage() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {rankLabel} <SortIndicator col={rankingMode} />
-                      <button 
-                        className={styles.helpIconBtn} 
+                      <button
+                        className={styles.helpIconBtn}
                         onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_bp_title'), desc: t('modal_help_bp_desc') }); }}
                       >
                         <HelpCircle size={14} />
@@ -591,8 +594,8 @@ export default function StatsPage() {
                   <th className={`${styles.th} ${styles.scoringCellHeader}`} onClick={() => handleSort('scoringRate')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
-                      <button 
-                        className={styles.helpIconBtn} 
+                      <button
+                        className={styles.helpIconBtn}
                         onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_scoring_title'), desc: t('modal_help_scoring_desc') }); }}
                       >
                         <HelpCircle size={14} />
@@ -651,8 +654,8 @@ export default function StatsPage() {
                   const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
                   const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
                   return (
-                    <tr 
-                      key={part.id} 
+                    <tr
+                      key={part.id}
                       className={`${styles.row} ${i % 2 === 0 ? styles.even : ''}`}
                       onClick={() => navigate(`/stats/parts/${part.id}`)}
                       style={{ cursor: 'pointer' }}
@@ -670,8 +673,8 @@ export default function StatsPage() {
                       </td>
                       <td className={styles.tdTag}>
                         {part.isDependent && (
-                          <button 
-                            className="dependent-tag" 
+                          <button
+                            className="dependent-tag"
                             onClick={(e) => {
                               e.stopPropagation();
                               setHelpModal({
@@ -687,8 +690,8 @@ export default function StatsPage() {
                           </button>
                         )}
                         {part.isInaccurate && (
-                          <button 
-                            className="inaccurate-tag" 
+                          <button
+                            className="inaccurate-tag"
                             onClick={(e) => {
                               e.stopPropagation();
                               setHelpModal({
@@ -704,7 +707,7 @@ export default function StatsPage() {
                         )}
                       </td>
                       <td className={`${styles.td} ${styles.rankCell}`}>
-                        {noData ? <span className={styles.dash}>—</span> : (
+                        {(noData || part.isInaccurate) ? <span className={styles.dash}>—</span> : (
                           <span className={styles.rankValue}>{rankValue}</span>
                         )}
                       </td>
