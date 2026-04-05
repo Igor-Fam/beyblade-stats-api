@@ -18,6 +18,7 @@ export interface PartStats {
   pointsGained: number;
   pointsConceded: number;
   isDependent: boolean;
+  isInaccurate?: boolean;
   dependencies?: Dependency[];
 }
 
