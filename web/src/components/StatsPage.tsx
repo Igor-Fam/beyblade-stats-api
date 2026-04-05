@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, HelpCircle, X, Search, Download } from 'lucide-react';
+import { Filter, HelpCircle, X, Search, Download, AlertTriangle } from 'lucide-react';
 import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -684,6 +684,22 @@ export default function StatsPage() {
                             <HelpCircle size={10} style={{ marginRight: '3px' }} />
                             <span className="tag-full">{t('tag_dependent')}</span>
                             <span className="tag-short">{t('tag_dependent_short')}</span>
+                          </button>
+                        )}
+                        {part.isInaccurate && (
+                          <button 
+                            className="inaccurate-tag" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHelpModal({
+                                title: t('modal_help_inaccurate_title'),
+                                desc: t('modal_help_inaccurate_desc')
+                              });
+                            }}
+                          >
+                            <AlertTriangle size={10} style={{ marginRight: '3px' }} />
+                            <span className="tag-full">{t('tag_inaccurate')}</span>
+                            <span className="tag-short">{t('tag_inaccurate_short')}</span>
                           </button>
                         )}
                       </td>

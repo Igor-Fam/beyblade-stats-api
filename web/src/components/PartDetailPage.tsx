@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle } from 'lucide-react';
 import { fetchPartDetails, fetchPartsList, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
@@ -31,7 +31,7 @@ export default function PartDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rank, setRank] = useState<number | null>(null);
-  const [showDependencyModal, setShowDependencyModal] = useState(false);
+  const [helpModal, setHelpModal] = useState<{title: string, desc: string, dependencies?: any[]} | null>(null);
   const [winFinishMode, setWinFinishMode] = useState<'matches'|'points'>('matches');
   const [lossFinishMode, setLossFinishMode] = useState<'matches'|'points'>('matches');
   const [hasBattleFilters, setHasBattleFilters] = useState(false);
@@ -39,9 +39,13 @@ export default function PartDetailPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('showDependencies') === 'true' && part) {
-      setShowDependencyModal(true);
+      setHelpModal({
+        title: t('modal_help_dependent_title'),
+        desc: t('modal_help_dependent_desc'),
+        dependencies: part.dependencies
+      });
     }
-  }, [location.search, part]);
+  }, [location.search, part, t]);
 
   useEffect(() => {
     if (!id) return;
@@ -147,9 +151,28 @@ export default function PartDetailPage() {
             {part.type}
           </span>
           {part.isDependent && (
-            <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
+            <button 
+              className={`${styles.tag} dependent-tag`} 
+              onClick={() => setHelpModal({
+                title: t('modal_help_dependent_title'),
+                desc: t('modal_help_dependent_desc'),
+                dependencies: part.dependencies
+              })}
+            >
               <HelpCircle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
               {t('tag_dependent')}
+            </button>
+          )}
+          {part.isInaccurate && (
+            <button 
+              className={`${styles.tag} inaccurate-tag`} 
+              onClick={() => setHelpModal({
+                title: t('modal_help_inaccurate_title'),
+                desc: t('modal_help_inaccurate_desc')
+              })}
+            >
+              <AlertTriangle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+              {t('tag_inaccurate')}
             </button>
           )}
         </div>
@@ -294,12 +317,12 @@ export default function PartDetailPage() {
         </section>
       </div>
 
-      {showDependencyModal && (
+      {helpModal && (
         <HelpModal 
-          title={t('modal_help_dependent_title')}
-          desc={t('modal_help_dependent_desc')}
-          dependencies={part.dependencies}
-          onClose={() => setShowDependencyModal(false)}
+          title={helpModal.title}
+          desc={helpModal.desc}
+          dependencies={helpModal.dependencies}
+          onClose={() => setHelpModal(null)}
         />
       )}
     </div>
