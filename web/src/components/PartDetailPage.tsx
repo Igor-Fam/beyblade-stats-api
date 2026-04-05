@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, X, Info, HelpCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter } from 'lucide-react';
 import { fetchPartDetails, fetchPartsList, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { TYPE_COLORS } from './ui/PartLinkCard';
 import layout from './ui/DetailPageLayout.module.css';
 import styles from './PartDetailPage.module.css';
+import { HelpModal } from './ui/HelpModal';
 
 const FINISH_LABELS: Record<string, string> = {
   SPIN: 'finish_spin',
@@ -257,46 +258,12 @@ export default function PartDetailPage() {
       </div>
 
       {showDependencyModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowDependencyModal(false)}>
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <header className={styles.modalHeader}>
-              <div className={styles.modalTitleRow}>
-                <Info size={20} className={styles.modalTitleIcon} />
-                <h2>{t('dependency_modal_title')}</h2>
-              </div>
-              <button className={styles.closeBtn} onClick={() => setShowDependencyModal(false)}>
-                <X size={20} />
-              </button>
-            </header>
-            <div className={styles.modalBody}>
-              <p className={styles.modalDesc}>{t('dependency_modal_desc')}</p>
-              <div className={styles.dependencyList}>
-                {part.dependencies.map(dep => (
-                  <Link
-                    key={dep.id}
-                    to={`/stats/parts/${dep.id}`}
-                    className={styles.dependencyItem}
-                    onClick={() => setShowDependencyModal(false)}
-                  >
-                    <div className={styles.depInfo}>
-                      <span className={styles.depName}>{t(dep.name as any)}</span>
-                      <span className={styles.depType} style={{ color: TYPE_COLORS[dep.type] }}>{dep.type}</span>
-                    </div>
-                    <div className={styles.depMetrics}>
-                      <div className={styles.depPercentage}>
-                        <span className={styles.depValue}>{dep.share}%</span>
-                        <span className={styles.depLabel}>{t('col_points_gained')}</span>
-                      </div>
-                      <div className={styles.depProgress}>
-                        <div className={styles.depProgressFill} style={{ width: `${dep.share}%` }} />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <HelpModal 
+          title={t('modal_help_dependent_title')}
+          desc={t('modal_help_dependent_desc')}
+          dependencies={part.dependencies}
+          onClose={() => setShowDependencyModal(false)}
+        />
       )}
     </div>
   );

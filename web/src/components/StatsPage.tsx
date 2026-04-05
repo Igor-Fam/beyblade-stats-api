@@ -4,6 +4,7 @@ import { Filter, HelpCircle, X, Search, Download } from 'lucide-react';
 import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
+import { HelpModal } from './ui/HelpModal';
 
 type RankingMode = 'elo' | 'bp';
 type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'pointsGained' | 'pointsConceded' | 'winRate' | 'wins' | 'losses'>;
@@ -525,47 +526,12 @@ export default function StatsPage() {
         )}
 
         {helpModal && (
-          <div className={styles.modalOverlay} onClick={() => setHelpModal(null)}>
-            <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <div className={styles.modalTitleRow}>
-                  <HelpCircle className={styles.modalTitleIcon} size={20} />
-                  <h2>{helpModal.title}</h2>
-                </div>
-                <button className={styles.closeBtn} onClick={() => setHelpModal(null)}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div className={styles.modalBody}>
-                <p className={styles.helpDesc}>{helpModal.desc}</p>
-                {helpModal.dependencies && helpModal.dependencies.length > 0 && (
-                  <div className={styles.dependencyList}>
-                    {helpModal.dependencies.map(dep => (
-                      <div key={dep.id} className={styles.dependencyCard}>
-                        <div className={styles.depHeader}>
-                          <div className={styles.depTitleLeft}>
-                            <span className={styles.depName}>{dep.name}</span>
-                            <span className={styles.typeBadge} style={{ color: TYPE_COLORS[dep.type] ?? '#94a3b8' }}>{dep.type}</span>
-                          </div>
-                          <span className={styles.depHeaderRight}>{t('col_scoring_rate')}</span>
-                        </div>
-                        <div className={styles.depStats}>
-                          <div className={styles.depStatRow}>
-                            <span className={styles.depStatLabel}>{t('dep_with', { part: dep.name })}</span>
-                            <span className={styles.depStatValueGood}>{dep.scoringRateWith}%</span>
-                          </div>
-                          <div className={styles.depStatRow}>
-                            <span className={styles.depStatLabel}>{t('dep_without', { part: dep.name })}</span>
-                            <span className={styles.depStatValueBad}>{dep.scoringRateWithout}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <HelpModal 
+            title={helpModal.title}
+            desc={helpModal.desc}
+            dependencies={helpModal.dependencies}
+            onClose={() => setHelpModal(null)}
+          />
         )}
 
 
