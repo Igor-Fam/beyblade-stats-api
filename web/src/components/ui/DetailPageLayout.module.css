@@ -48,6 +48,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
