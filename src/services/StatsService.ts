@@ -120,12 +120,12 @@ export class StatsService {
                     const start = new Date(String(cond.value));
                     start.setUTCHours(0, 0, 0, 0);
                     start.setUTCMinutes(start.getUTCMinutes() + timezoneOffset);
-                    
+
                     // End of local day
                     const end = new Date(String(cond.value));
                     end.setUTCHours(23, 59, 59, 999);
                     end.setUTCMinutes(end.getUTCMinutes() + timezoneOffset);
-                    
+
                     createdAtFilters.gte = start;
                     createdAtFilters.lte = end;
                 } else if (cond.operator === 'gt') {
@@ -196,7 +196,7 @@ export class StatsService {
 
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
         const parts = await prisma.part.findMany({ select: { id: true, partType: true, metadata: true } });
-        
+
         // Final list of IDs must include the virtual ones and exclude the original Lock Chip IDs
         const partIdsSet = new Set<number>();
         parts.forEach(p => {
@@ -332,7 +332,7 @@ export class StatsService {
 
         parts.forEach(part => {
             const effectiveId = getEffectiveId(part.id);
-            
+
             if (!aggregatedStats.has(effectiveId)) {
                 const isVirtual = effectiveId < 0;
                 aggregatedStats.set(effectiveId, {
@@ -361,12 +361,12 @@ export class StatsService {
                     const partnerEffId = getEffectiveId(p.partId);
                     if (partnerEffId !== effectiveId) {
                         if (!stats.partnerStats[partnerEffId]) {
-                            stats.partnerStats[partnerEffId] = { 
-                                name: partnerEffId < 0 ? (partnerEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name, 
-                                type: p.part.partType.name, 
-                                isInfluential: p.part.partType.isInfluential, 
-                                gained: 0, 
-                                conceded: 0 
+                            stats.partnerStats[partnerEffId] = {
+                                name: partnerEffId < 0 ? (partnerEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name,
+                                type: p.part.partType.name,
+                                isInfluential: p.part.partType.isInfluential,
+                                gained: 0,
+                                conceded: 0
                             };
                         }
                         if (entry.points > 0) {
@@ -393,7 +393,7 @@ export class StatsService {
 
             let isDependent = false;
             let dependencies: DependencyDTO[] = [];
-            
+
             if (stats.totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
                 const dominantPartners = Object.entries(stats.partnerStats).map(([partnerId, p]: [string, any]) => {
                     const pointShare = stats.totalGained > 0 ? p.gained / stats.totalGained : 0;
@@ -410,7 +410,7 @@ export class StatsService {
                     if (p.pointShare < DEPENDENCY_POINT_SHARE || p.data.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
                     return p.drop > DEPENDENCY_SCORING_RATE_DROP;
                 });
-                
+
                 isDependent = dominantPartners.length > 0;
                 dependencies = dominantPartners.map(d => ({
                     id: d.id,
@@ -436,7 +436,7 @@ export class StatsService {
                 pointsGained: stats.totalGained,
                 pointsConceded: stats.totalConceded,
                 isDependent,
-                isInaccurate: stats.totalMatches < INACCURATE_BATTLES_THRESHOLD,
+                isInaccurate: stats.totalMatches > 0 && stats.totalMatches < INACCURATE_BATTLES_THRESHOLD,
                 dependencies
             };
         });
@@ -463,9 +463,9 @@ export class StatsService {
         if (isVirtual) {
             const metalFilter = partId === VIRTUAL_ID_METAL_LOCK_CHIP;
             virtualName = partId === VIRTUAL_ID_METAL_LOCK_CHIP ? VIRTUAL_NAME_METAL_LOCK_CHIP : VIRTUAL_NAME_LOCK_CHIP;
-            
+
             parts = await prisma.part.findMany({
-                where: { 
+                where: {
                     partType: { name: virtualType }
                 },
                 include: {
@@ -509,7 +509,7 @@ export class StatsService {
                 const metadata = p.metadata as any;
                 return (metadata?.isMetal === true) === metalFilter;
             });
-            
+
             if (parts.length === 0) {
                 throw new AppError('Category not found or has no parts.', 404);
             }
@@ -606,7 +606,7 @@ export class StatsService {
                     const expectedScore = EloCalculator.calculateExpectedScore(myComboElo, opponentComboElo);
                     const actualScore = isWin ? 1 : 0;
                     const multiplier = eloMultipliers[myEntry.finishType] ?? 1.0;
-                    
+
                     // PoE normalized by multiplier to keep it in [-1, 1] range conceptually before averaging
                     const poe = (actualScore - expectedScore) * multiplier;
 
@@ -628,7 +628,7 @@ export class StatsService {
 
                             if (isWin) partnerStats[pEffId].gained += myEntry.points;
                             else partnerStats[pEffId].conceded += Math.abs(myEntry.points);
-                            
+
                             partnerStats[pEffId].matches++;
                             (partnerStats[pEffId] as any).totalPoE += poe;
                         }
@@ -638,18 +638,18 @@ export class StatsService {
                     opponentEntry.parts.forEach((p: any) => {
                         const pEffId = getEffectiveId(p.partId);
                         if (!counterStats[pEffId]) {
-                            counterStats[pEffId] = { 
-                                name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name, 
-                                type: p.part.partType.name, 
-                                myGained: 0, 
-                                myConceded: 0, 
+                            counterStats[pEffId] = {
+                                name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name,
+                                type: p.part.partType.name,
+                                myGained: 0,
+                                myConceded: 0,
                                 matches: 0,
                                 totalPoE: 0
                             } as any;
                         }
                         if (isWin) counterStats[pEffId].myGained += myEntry.points;
                         else counterStats[pEffId].myConceded += Math.abs(myEntry.points);
-                        
+
                         counterStats[pEffId].matches++;
                         (counterStats[pEffId] as any).totalPoE += poe;
                     });
@@ -662,7 +662,7 @@ export class StatsService {
                 const sum = data.gained + data.conceded;
                 const rawRate = sum > 0 ? (data.gained / sum) : 0.5;
                 const avgPoE = data.totalPoE / data.matches;
-                
+
                 // Normalization: PoE is roughly within [-2.5, 2.5] due to multipliers. 
                 // We map it to [-1, 1] then to [0, 1] for the efficiency score.
                 const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
@@ -686,7 +686,7 @@ export class StatsService {
                 const sum = data.myGained + data.myConceded;
                 const rawRate = sum > 0 ? (data.myGained / sum) : 0.5;
                 const avgPoE = data.totalPoE / data.matches;
-                
+
                 const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
                 const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
 
@@ -703,7 +703,7 @@ export class StatsService {
             .sort((a, b) => a.scoringRate - b.scoringRate) // lowest rate = best counter to me
             .slice(0, ANALYTICS_LIMIT);
 
-// Ratings already calculated at the beginning of the function
+        // Ratings already calculated at the beginning of the function
 
 
         const pointsSum = totalGained + totalConceded;
@@ -714,7 +714,7 @@ export class StatsService {
         if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
             const dominantPartners = Object.values(partnerStats).filter(p => {
                 if (!p.isInfluential) return false;
-                
+
                 const pointShare = totalGained > 0 ? p.gained / totalGained : 0;
                 if (pointShare < DEPENDENCY_POINT_SHARE || p.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
@@ -744,7 +744,7 @@ export class StatsService {
             pointsGained: totalGained,
             pointsConceded: totalConceded,
             isDependent,
-            isInaccurate: totalMatches < INACCURATE_BATTLES_THRESHOLD,
+            isInaccurate: totalMatches > 0 && totalMatches < INACCURATE_BATTLES_THRESHOLD,
             totalGained,
             totalConceded,
             bestPartners,
@@ -772,7 +772,7 @@ export class StatsService {
                 })
                 .filter(d => {
                     if (!d.isInfluential) return false;
-                    
+
                     const pointShare = totalGained > 0 ? d.pointsGained / totalGained : 0;
                     if (pointShare < DEPENDENCY_POINT_SHARE || d.pointsGained < DEPENDENCY_POINTS_THRESHOLD) return false;
 
@@ -852,7 +852,7 @@ export class StatsService {
         const comboHash = partsIds.sort((a, b) => a - b).join('-');
 
         const historicalEntries = await prisma.battleEntry.findMany({
-            where: { 
+            where: {
                 comboHash,
                 ...(battleWhere ? { battle: battleWhere } : {})
             }
