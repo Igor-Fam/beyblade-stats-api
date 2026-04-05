@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Users, Activity, Target, Sword, X, Info, HelpCircle, Filter } from 'lucide-react';
-import { fetchPartDetails, type PartDetails } from '../lib/api';
+import { fetchPartDetails, fetchPartsList, type PartDetails } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { TYPE_COLORS } from './ui/PartLinkCard';
@@ -22,6 +22,7 @@ export default function PartDetailPage() {
   const [part, setPart] = useState<PartDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
   const [showDependencyModal, setShowDependencyModal] = useState(false);
   const [hasBattleFilters, setHasBattleFilters] = useState(false);
 
@@ -45,8 +46,18 @@ export default function PartDetailPage() {
       }
     } catch (e) { console.error(e); }
 
-    fetchPartDetails(Number(id), battleFilters)
-      .then(setPart)
+    Promise.all([
+      fetchPartDetails(Number(id), battleFilters),
+      fetchPartsList(battleFilters)
+    ])
+      .then(([partData, partsList]) => {
+        setPart(partData);
+        // Considerando que a listagem já vem ordenada por BP do backend:
+        const rIndex = partsList.findIndex(p => p.id === Number(id));
+        if (rIndex !== -1 && partData.totalMatches > 0) {
+          setRank(rIndex + 1);
+        }
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
@@ -94,16 +105,15 @@ export default function PartDetailPage() {
         </Link>
         <div className={styles.titleInfo}>
           <h1 className={layout.title}>{t(part.name as any)}</h1>
-          {part.isDependent && (
-            <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
-              <HelpCircle size={10} style={{ marginRight: '3px', verticalAlign: 'middle' }} />
-              <span className="tag-full">{t('tag_dependent')}</span>
-              <span className="tag-short">{t('tag_dependent_short')}</span>
-            </button>
-          )}
           <span className={styles.typeBadge} style={{ backgroundColor: `${typeColor}22`, color: typeColor, borderColor: `${typeColor}44` }}>
             {part.type}
           </span>
+          {part.isDependent && (
+            <button className={`${styles.tag} dependent-tag`} onClick={() => setShowDependencyModal(true)}>
+              <HelpCircle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+              {t('tag_dependent')}
+            </button>
+          )}
         </div>
         {hasBattleFilters && (
           <div className={styles.filterNotice}>
@@ -115,7 +125,14 @@ export default function PartDetailPage() {
 
       <StatsGrid>
         <StatCard icon={<Activity size={24} />} iconColor="#38bdf8" label="Battle Power">
-          {part.bp}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+            <span>{part.bp}</span>
+            {rank !== null && (
+              <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                #{rank}
+              </span>
+            )}
+          </div>
         </StatCard>
         <StatCard icon={<Users size={24} />} iconColor="#94a3b8" label={t('col_battles')}>
           {part.totalMatches}
@@ -190,7 +207,7 @@ export default function PartDetailPage() {
                       <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
                         {p.scoringRate}%
                       </span>
-                      <span className={styles.metricBattles}>{p.totalMatches} battles</span>
+                      <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
                     </td>
                   </tr>
                 )) : (
@@ -227,7 +244,7 @@ export default function PartDetailPage() {
                       <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
                         {p.scoringRate}%
                       </span>
-                      <span className={styles.metricBattles}>{p.totalMatches} battles</span>
+                      <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
                     </td>
                   </tr>
                 )) : (
