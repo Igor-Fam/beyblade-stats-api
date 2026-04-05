@@ -66,10 +66,17 @@ export default function PartDetailPage() {
     ])
       .then(([partData, partsList]) => {
         setPart(partData);
-        // Considerando que a listagem já vem ordenada por BP do backend:
-        const rIndex = partsList.findIndex(p => p.id === Number(id));
-        if (rIndex !== -1 && partData.totalMatches > 0) {
+        
+        // Calcular rank ignorando peças imprecisas ou sem partidas
+        const consolidatedParts = partsList
+          .filter(p => !p.isInaccurate && p.totalMatches > 0)
+          .sort((a, b) => b.bp - a.bp); // Garantir ordenação por BP
+
+        const rIndex = consolidatedParts.findIndex(p => p.id === Number(id));
+        if (rIndex !== -1 && !partData.isInaccurate && partData.totalMatches > 0) {
           setRank(rIndex + 1);
+        } else {
+          setRank(null);
         }
       })
       .catch(err => setError(err.message))
