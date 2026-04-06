@@ -223,7 +223,7 @@
 .th,
 .thTag,
 .thPart {
-  padding: 0.75rem 1rem;
+  padding: 0.45rem 1rem;
   text-align: left;
   font-size: 0.75rem;
   font-weight: 700;
@@ -271,7 +271,7 @@
   background: #1e293b;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.75rem 0;
+  padding: 0.45rem 0;
   width: 46px;
   min-width: 46px;
   max-width: 46px;
@@ -285,7 +285,7 @@
 .tdRank {
   background-color: #1e293b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  padding: 0.75rem 0;
+  padding: 0.4rem 0;
   width: 46px;
   min-width: 46px;
   max-width: 46px;
@@ -320,7 +320,7 @@
 
 .tdPart {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  padding: 0.65rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   color: var(--text-primary);
   white-space: nowrap;
   position: sticky;
@@ -395,7 +395,7 @@
 
 /* ─── Cells ───────────────────────────────────────────── */
 .td {
-  padding: 0.65rem 1rem;
+  padding: 0.4rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
   white-space: nowrap;
@@ -404,7 +404,7 @@
 
 
 .tdTag {
-  padding: 0.65rem 0.5rem !important;
+  padding: 0.4rem 0.5rem !important;
   white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
