@@ -66,7 +66,7 @@ export default function PartDetailPage() {
     ])
       .then(([partData, partsList]) => {
         setPart(partData);
-        
+
         // Calcular rank ignorando peças imprecisas ou sem partidas
         const consolidatedParts = partsList
           .filter(p => !p.isInaccurate && p.totalMatches > 0)
@@ -104,14 +104,14 @@ export default function PartDetailPage() {
                 onClick={() => setMode('matches')}
                 style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: mode === 'matches' ? 'rgba(56, 189, 248, 0.2)' : 'transparent', color: mode === 'matches' ? '#38bdf8' : '#94a3b8' }}
               >
-                {t('col_battles') ?? 'Partidas'}
+                {t('col_battles')}
               </button>
               <button
                 className={mode === 'points' ? styles.toggleBtnActive : styles.toggleBtn}
                 onClick={() => setMode('points')}
                 style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, border: 'none', cursor: 'pointer', background: mode === 'points' ? 'rgba(56, 189, 248, 0.2)' : 'transparent', color: mode === 'points' ? '#38bdf8' : '#94a3b8' }}
               >
-                {t('col_points_gained') ?? 'Pontos'}
+                {t('points')}
               </button>
             </div>
           </div>
