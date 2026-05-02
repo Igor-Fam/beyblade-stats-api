@@ -2,9 +2,7 @@ import { BattleEntryPart, Part } from '../../prisma/generated/client';
 import { prisma } from '../database';
 import { AppError } from '../errors/AppError';
 import { ColleyCalculator, ColleyBattle } from '../domain/utils/ColleyCalculator';
-import { EloCalculator } from '../domain/utils/EloCalculator';
 
-const DEFAULT_ELO = 1000;
 const DEFAULT_COLLEY = 500;
 const DEPENDENCY_POINTS_THRESHOLD = 20;
 const DEPENDENCY_POINT_SHARE = 0.50;
@@ -13,7 +11,6 @@ const ANALYTICS_MIN_BATTLES = 10;
 const INACCURATE_BATTLES_THRESHOLD = 15;
 const ANALYTICS_LIMIT = 6;
 const DEFAULT_SCORING_RATE = 50;
-const DEFAULT_ELO_MULTIPLIER = 1.0;
 const VIRTUAL_ID_LOCK_CHIP = -100;
 const VIRTUAL_ID_METAL_LOCK_CHIP = -101;
 const VIRTUAL_NAME_LOCK_CHIP = 'part_lock_chip';
@@ -29,7 +26,6 @@ export interface PartStatsDTO {
     id: number;
     name: string;
     type: string;
-    elo: number;  // Batch Elo (sequential, strength-aware)
     bp: number;   // Battle Power — Colley Rating (0–1000, order-independent)
     totalMatches: number;
     wins: number;
@@ -71,7 +67,7 @@ export interface ComboStatsDTO {
     wins: number;
     losses: number;
     winRate: string;
-    avgElo: number;
+    avgBp: number;
 }
 
 interface WinRateData {
@@ -145,39 +141,6 @@ export class StatsService {
         }
 
         return Object.keys(where).length > 0 ? where : undefined;
-    }
-
-    // Runs the sequential Batch Elo calculation across all battles.
-    private async calculateBatchElo(filter?: any): Promise<Map<number, number>> {
-        const [battles, effectiveIdMap] = await Promise.all([
-            prisma.battle.findMany({
-                where: filter,
-                orderBy: { createdAt: 'asc' },
-                include: { entries: { include: { parts: true } } }
-            }),
-            this.getEffectivePartIdMap()
-        ]);
-
-        const ratings = new Map<number, number>();
-        const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
-        const getRating = (id: number) => ratings.get(id) ?? DEFAULT_ELO;
-        const eloMultipliers: Record<string, number> = { SPIN: DEFAULT_ELO_MULTIPLIER, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
-
-        for (const battle of battles) {
-            const entry0 = battle.entries[0];
-            const entry1 = battle.entries[1];
-            const avgRating0 = EloCalculator.calculateAverageRating(entry0.parts.map(p => getRating(getEffectiveId(p.partId))));
-            const avgRating1 = EloCalculator.calculateAverageRating(entry1.parts.map(p => getRating(getEffectiveId(p.partId))));
-            const multiplier = eloMultipliers[entry0.finishType] ?? DEFAULT_ELO_MULTIPLIER;
-            const expected0 = EloCalculator.calculateExpectedScore(avgRating0, avgRating1);
-            const expected1 = EloCalculator.calculateExpectedScore(avgRating1, avgRating0);
-            const isWinner0 = entry0.points > 0;
-            const change0 = EloCalculator.calculateRatingChange(isWinner0 ? 1 : 0, expected0, multiplier);
-            const change1 = EloCalculator.calculateRatingChange(!isWinner0 ? 1 : 0, expected1, multiplier);
-            entry0.parts.forEach(p => ratings.set(getEffectiveId(p.partId), getRating(getEffectiveId(p.partId)) + change0));
-            entry1.parts.forEach(p => ratings.set(getEffectiveId(p.partId), getRating(getEffectiveId(p.partId)) + change1));
-        }
-        return ratings;
     }
 
     // Fetches all battles, converts to ColleyBattle format, and delegates to ColleyCalculator.
@@ -323,10 +286,7 @@ export class StatsService {
 
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
 
-        const [eloRatings, colleyRatings] = await Promise.all([
-            this.calculateBatchElo(battleWhere),
-            this.calculateColleyRatings(battleWhere),
-        ]);
+        const colleyRatings = await this.calculateColleyRatings(battleWhere);
 
         const aggregatedStats = new Map<number, any>();
 
@@ -425,7 +385,6 @@ export class StatsService {
                 id: stats.id,
                 name: stats.name,
                 type: stats.type,
-                elo: Math.round(eloRatings.get(stats.id) ?? DEFAULT_ELO),
                 bp: colleyRatings.get(stats.id) ?? DEFAULT_COLLEY,
                 totalMatches: stats.totalMatches,
                 wins: stats.wins,
@@ -570,10 +529,7 @@ export class StatsService {
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
         const eloMultipliers: Record<string, number> = { SPIN: 1.0, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
-        const [eloRatings, colleyRatings] = await Promise.all([
-            this.calculateBatchElo(battleWhere),
-            this.calculateColleyRatings(battleWhere),
-        ]);
+        const colleyRatings = await this.calculateColleyRatings(battleWhere);
 
         const getRating = (id: number) => eloRatings.get(id) ?? DEFAULT_ELO;
 
@@ -601,14 +557,9 @@ export class StatsService {
                 // Strength-Adjusted Analytics (PoE)
                 const opponentEntry = battle.entries.find((e: any) => e.id !== myEntry.id);
                 if (opponentEntry) {
-                    const myComboElo = EloCalculator.calculateAverageRating(myEntry.parts.map((p: any) => getRating(getEffectiveId(p.partId))));
-                    const opponentComboElo = EloCalculator.calculateAverageRating(opponentEntry.parts.map((p: any) => getRating(getEffectiveId(p.partId))));
-                    const expectedScore = EloCalculator.calculateExpectedScore(myComboElo, opponentComboElo);
-                    const actualScore = isWin ? 1 : 0;
-                    const multiplier = eloMultipliers[myEntry.finishType] ?? 1.0;
-
-                    // PoE normalized by multiplier to keep it in [-1, 1] range conceptually before averaging
-                    const poe = (actualScore - expectedScore) * multiplier;
+                    // Simplified PoE using just BP (Colley)
+                    const multiplier = myEntry.finishType === 'XTREME' ? 2.5 : myEntry.finishType === 'OVER' || myEntry.finishType === 'BURST' ? 1.8 : 1.0;
+                    const poe = isWin ? 1 * multiplier : -1 * multiplier;
 
                     // Synergies: Same combo
                     myEntry.parts.forEach((p: any) => {
@@ -733,7 +684,6 @@ export class StatsService {
             id: partId,
             name: isVirtual ? virtualName : firstPart.name,
             type: isVirtual ? virtualType : firstPart.partType.name,
-            elo: Math.round(eloRatings.get(partId) ?? DEFAULT_ELO),
             bp: colleyRatings.get(partId) ?? DEFAULT_COLLEY,
             totalMatches,
             wins,
@@ -808,7 +758,7 @@ export class StatsService {
             parts: { id: number, name: string, type: string }[],
             wins: number,
             losses: number,
-            totalElo: number
+            totalBp: number
         }> = {};
 
         entries.forEach(entry => {
@@ -818,7 +768,7 @@ export class StatsService {
                     parts: entry.parts.map(p => ({ id: p.partId, name: p.part.name, type: p.part.partType.name })),
                     wins: 0,
                     losses: 0,
-                    totalElo: entry.parts.reduce((acc, p) => acc + (colleyRatings.get(p.partId) ?? DEFAULT_COLLEY), 0)
+                    totalBp: entry.parts.reduce((acc, p) => acc + (colleyRatings.get(p.partId) ?? DEFAULT_COLLEY), 0)
                 };
             }
 
@@ -835,7 +785,7 @@ export class StatsService {
                 wins: data.wins,
                 losses: data.losses,
                 winRate: total > 0 ? ((data.wins / total) * 100).toFixed(2) + '%' : '0.00%',
-                avgElo: Math.round(data.totalElo / data.parts.length)
+                avgBp: Math.round(data.totalBp / data.parts.length)
             };
         }).sort((a, b) => b.totalMatches - a.totalMatches);
     }
@@ -848,7 +798,7 @@ export class StatsService {
         });
 
         const colleyRatings = await this.calculateColleyRatings(battleWhere);
-        const avgElo = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? DEFAULT_COLLEY), 0) / parts.length);
+        const avgBp = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? DEFAULT_COLLEY), 0) / parts.length);
         const comboHash = partsIds.sort((a, b) => a - b).join('-');
 
         const historicalEntries = await prisma.battleEntry.findMany({
@@ -864,7 +814,7 @@ export class StatsService {
         return {
             comboHash,
             parts: parts.map(p => ({ id: p.id, name: p.name, type: p.partType.name })),
-            avgElo,
+            avgBp,
             historicalPerformance: {
                 totalMatches,
                 wins,
