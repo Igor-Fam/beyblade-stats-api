@@ -22,7 +22,8 @@ describe('StandardComboValidator', () => {
             metadata: metadata,
             partType: {
                 id: 1,
-                name: typeSlug
+                name: typeSlug,
+                isInfluential: true
             }
         };
     };
