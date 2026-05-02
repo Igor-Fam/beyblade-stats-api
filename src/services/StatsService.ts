@@ -528,10 +528,7 @@ export class StatsService {
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const eloMultipliers: Record<string, number> = { SPIN: 1.0, OVER: 1.8, BURST: 1.8, XTREME: 2.5 };
         const colleyRatings = await this.calculateColleyRatings(battleWhere);
-
-        const getRating = (id: number) => eloRatings.get(id) ?? DEFAULT_ELO;
 
         const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number, totalPoE: number, isInfluential: boolean }> = {};
         const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number, totalPoE: number }> = {};

@@ -28,10 +28,13 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         // Colley with 1 battle (SPIN, weight=1.0): Part 1 wins.
         //   C = [[3,-1],[-1,3]], b = [1.5, 0.5]
         //   r[0] = 0.625 → 625 | r[1] = 0.375 → 375
-        (prisma.part.findMany as jest.Mock).mockResolvedValue([
-            { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
-            { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
-        ]);
+        (prisma.part.findMany as jest.Mock).mockImplementation(async (args: any) => {
+            if (args?.where?.partType?.name === 'LOCK_CHIP') return [];
+            return [
+                { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
+                { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
+            ];
+        });
 
         (prisma.battle.findMany as jest.Mock).mockResolvedValue([
             {
@@ -57,10 +60,13 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         // Colley with 2 battles: Part 1 wins both (SPIN weight=1.0, XTREME weight=2.5).
         //   C = [[4,-2],[-2,4]], b = [2.75, -0.75]
         //   r[0] ≈ 0.7917 → 792 | r[1] ≈ 0.2083 → 208
-        (prisma.part.findMany as jest.Mock).mockResolvedValue([
-            { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
-            { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
-        ]);
+        (prisma.part.findMany as jest.Mock).mockImplementation(async (args: any) => {
+            if (args?.where?.partType?.name === 'LOCK_CHIP') return [];
+            return [
+                { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
+                { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
+            ];
+        });
 
         (prisma.battle.findMany as jest.Mock).mockResolvedValue([
             {

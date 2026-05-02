@@ -6,8 +6,7 @@ import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 import { HelpModal } from './ui/HelpModal';
 
-type RankingMode = 'bp';
-type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'pointsGained' | 'pointsConceded' | 'winRate' | 'wins' | 'losses'>;
+type SortKey = keyof Pick<PartStats, 'bp' | 'scoringRate' | 'pointsGained' | 'pointsConceded' | 'winRate' | 'wins' | 'losses'>;
 type SortDir = 'asc' | 'desc';
 
 interface Filter {
@@ -57,7 +56,6 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const [parts, setParts] = useState<PartStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rankingMode, setRankingMode] = useState<RankingMode>('bp');
   const [sortKey, setSortKey] = useState<SortKey>('bp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -124,12 +122,7 @@ export default function StatsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // When the user switches ranking mode, reset the primary sort to that mode
-  const handleModeToggle = (mode: RankingMode) => {
-    setRankingMode(mode);
-    setSortKey(mode);
-    setSortDir('desc');
-  };
+
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -262,10 +255,8 @@ export default function StatsPage() {
     return <span className={`${styles.sortIcon} ${styles.active}`}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
-  const rankLabel = rankingMode === 'bp' ? t('col_bp') : t('col_elo');
-  const rankDesc = rankingMode === 'bp'
-    ? 'Colley — order-independent, strength-aware'
-    : 'Batch Elo — sequential, strength-aware';
+  const rankLabel = t('col_bp');
+  const rankDesc = 'Colley — order-independent, strength-aware';
 
   const battleFiltersActive = battleFilters.length > 0;
 
@@ -291,23 +282,6 @@ export default function StatsPage() {
 
         <div className={styles.controls}>
           <div className={styles.rankingModeRow}>
-            <span className={styles.modeLabel}>{t('stats_ranking_mode')}</span>
-            <div className={styles.toggle}>
-              <button
-                id="toggle-elo"
-                className={`${styles.toggleBtn} ${rankingMode === 'elo' ? styles.active : ''}`}
-                onClick={() => handleModeToggle('elo')}
-              >
-                {t('col_elo')}
-              </button>
-              <button
-                id="toggle-bp"
-                className={`${styles.toggleBtn} ${rankingMode === 'bp' ? styles.active : ''}`}
-                onClick={() => handleModeToggle('bp')}
-              >
-                {t('col_bp')}
-              </button>
-            </div>
             <span className={styles.modeDesc}>{rankDesc}</span>
             <button className={styles.exportBtn} onClick={exportCsv} title="Export CSV">
               <Download size={16} />
