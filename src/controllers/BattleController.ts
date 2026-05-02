@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { BattleService, CreateBattleDTO } from '../services/BattleService';
 import { AppError } from '../errors/AppError';
 import { prisma } from '../database';
+import { AppCache } from '../utils/cache';
 
 export class BattleController {
 
@@ -47,6 +48,7 @@ export class BattleController {
             const input: CreateBattleDTO = req.body as CreateBattleDTO;
             const battleService = new BattleService();
             const newBattle = await battleService.registerBattle(input);
+            AppCache.clear();
 
             res.status(201).json(newBattle);
         } catch (error: any) {
@@ -71,6 +73,7 @@ export class BattleController {
 
             const battleService = new BattleService();
             const newBattle = await battleService.deleteBattle(battleId);
+            AppCache.clear();
 
             return res.status(200).json(newBattle);
         } catch (error: any) {

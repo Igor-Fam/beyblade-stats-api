@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { StatsService } from '../services/StatsService';
 import { AppError } from '../errors/AppError';
+import { AppCache } from '../utils/cache';
 
 export class StatsController {
     
@@ -17,10 +18,22 @@ export class StatsController {
 
     getPartsList = async (req: Request, res: Response): Promise<void> => {
         try {
+            const filtersStr = req.query.filters as string || '';
+            const tz = req.query.tz as string || '0';
+            const cacheKey = `partsList_${filtersStr}_${tz}`;
+
+            const cached = AppCache.get(cacheKey);
+            if (cached) {
+                res.status(200).json(cached);
+                return;
+            }
+
             const filters = this.parseBattleFilters(req.query.filters);
-            const tz = parseInt(req.query.tz as string) || 0;
+            const tzParsed = parseInt(tz) || 0;
             const statsService = new StatsService();
-            const parts = await statsService.getPartsList(filters, tz);
+            const parts = await statsService.getPartsList(filters, tzParsed);
+            
+            AppCache.set(cacheKey, parts);
             res.status(200).json(parts);
         } catch (error: any) {
             console.error('Error fetching parts list:', error);
@@ -36,11 +49,22 @@ export class StatsController {
                 throw new AppError('Invalid part ID format', 400);
             }
 
-            const filters = this.parseBattleFilters(req.query.filters);
-            const tz = parseInt(req.query.tz as string) || 0;
-            const statsService = new StatsService();
-            const stats = await statsService.getPartWinRate(partId, filters, tz);
+            const filtersStr = req.query.filters as string || '';
+            const tz = req.query.tz as string || '0';
+            const cacheKey = `partWinRate_${partId}_${filtersStr}_${tz}`;
 
+            const cached = AppCache.get(cacheKey);
+            if (cached) {
+                res.status(200).json(cached);
+                return;
+            }
+
+            const filters = this.parseBattleFilters(req.query.filters);
+            const tzParsed = parseInt(tz) || 0;
+            const statsService = new StatsService();
+            const stats = await statsService.getPartWinRate(partId, filters, tzParsed);
+
+            AppCache.set(cacheKey, stats);
             res.status(200).json(stats);
         } catch (error: any) {
             console.error('Error fetching generic stats:', error);
@@ -61,11 +85,22 @@ export class StatsController {
                 throw new AppError('Invalid part ID format', 400);
             }
 
-            const filters = this.parseBattleFilters(req.query.filters);
-            const tz = parseInt(req.query.tz as string) || 0;
-            const statsService = new StatsService();
-            const details = await statsService.getPartDetails(partId, filters, tz);
+            const filtersStr = req.query.filters as string || '';
+            const tz = req.query.tz as string || '0';
+            const cacheKey = `partDetails_${partId}_${filtersStr}_${tz}`;
 
+            const cached = AppCache.get(cacheKey);
+            if (cached) {
+                res.status(200).json(cached);
+                return;
+            }
+
+            const filters = this.parseBattleFilters(req.query.filters);
+            const tzParsed = parseInt(tz) || 0;
+            const statsService = new StatsService();
+            const details = await statsService.getPartDetails(partId, filters, tzParsed);
+
+            AppCache.set(cacheKey, details);
             res.status(200).json(details);
         } catch (error: any) {
             console.error('Error fetching part details:', error);
