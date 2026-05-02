@@ -51,6 +51,8 @@ model Part {
   line          Line?             @relation(fields: [lineId], references: [id])
   metadata      Json?
   
+  @@index([partTypeId])
+  @@index([lineId])
   @@map("parts")
 }
 
@@ -61,6 +63,7 @@ model Battle {
   stadium   Stadium?      @relation(fields: [stadiumId], references: [id])
   entries   BattleEntry[]
 
+  @@index([stadiumId])
   @@map("battles")
 }
 
@@ -75,6 +78,9 @@ model BattleEntry {
   line       Line              @relation(fields: [lineId], references: [id])
   parts      BattleEntryPart[]
 
+  @@index([battleId])
+  @@index([lineId])
+  @@index([comboHash])
   @@map("battle_entries")
 }
 
@@ -85,5 +91,6 @@ model BattleEntryPart {
   part          Part        @relation(fields: [partId], references: [id], onDelete: Cascade)
 
   @@id([battleEntryId, partId])
+  @@index([partId])
   @@map("battle_entry_parts")
 }
