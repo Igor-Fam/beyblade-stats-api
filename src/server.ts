@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { router } from './routes';
+import { prisma } from './database';
 
 import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
 import { StandardComboValidator } from './domain/validators/strategies/StandardComboValidator';
@@ -25,13 +26,22 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-    const dbUrl = process.env.DATABASE_URL || '';
-    const isProd = dbUrl.includes('supabase.com') || dbUrl.includes('aws-1-sa-east-1');
-    res.json({ 
-        status: 'online', 
-        env: isProd ? 'production' : 'sandbox' 
-    });
+app.get('/api/health', async (req: Request, res: Response) => {
+    try {
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isProd = dbUrl.includes('supabase.com') || dbUrl.includes('aws-1-sa-east-1');
+        
+        // PING DB to keep it warm (avoids 5s cold start)
+        await prisma.$queryRaw`SELECT 1`;
+
+        res.json({ 
+            status: 'online', 
+            db: 'connected',
+            env: isProd ? 'production' : 'sandbox' 
+        });
+    } catch (e) {
+        res.status(500).json({ status: 'error', message: 'DB connection failed' });
+    }
 });
 
 // Delegate '/api' requisitions to router's index.ts file

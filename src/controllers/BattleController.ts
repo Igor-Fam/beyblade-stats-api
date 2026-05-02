@@ -3,6 +3,7 @@ import { BattleService, CreateBattleDTO } from '../services/BattleService';
 import { AppError } from '../errors/AppError';
 import { prisma } from '../database';
 import { AppCache } from '../utils/cache';
+import { StatsService } from '../services/StatsService';
 
 export class BattleController {
 
@@ -49,6 +50,10 @@ export class BattleController {
             const battleService = new BattleService();
             const newBattle = await battleService.registerBattle(input);
             AppCache.clear();
+            
+            // Pre-warm the main stats list in the background
+            const statsService = new StatsService();
+            statsService.getPartsList().catch(e => console.error('Cache pre-warm failed:', e));
 
             res.status(201).json(newBattle);
         } catch (error: any) {
@@ -74,6 +79,10 @@ export class BattleController {
             const battleService = new BattleService();
             const newBattle = await battleService.deleteBattle(battleId);
             AppCache.clear();
+            
+            // Pre-warm the main stats list in the background
+            const statsService = new StatsService();
+            statsService.getPartsList().catch(e => console.error('Cache pre-warm failed:', e));
 
             return res.status(200).json(newBattle);
         } catch (error: any) {
