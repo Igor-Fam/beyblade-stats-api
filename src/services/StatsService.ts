@@ -143,44 +143,51 @@ export class StatsService {
         return Object.keys(where).length > 0 ? where : undefined;
     }
 
-    // Fetches all battles, converts to ColleyBattle format, and delegates to ColleyCalculator.
+    private calculateColleyRatingsFromBattles(battles: any[], effectiveIdMap: Map<number, number>, partIds: number[]): Map<number, number> {
+        const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
+
+        const colleyBattles: ColleyBattle[] = battles.map(battle => {
+            const entry0 = battle.entries[0];
+            const entry1 = battle.entries[1];
+            if (!entry0 || !entry1) return null; // Defensive check
+            const isWinner0 = entry0.points > 0;
+            const finishWeight = ColleyCalculator.getFinishWeight(entry0.finishType);
+
+            return {
+                winnerPartIds: (isWinner0 ? entry0 : entry1).parts.map((p: any) => getEffectiveId(p.partId)),
+                loserPartIds: (isWinner0 ? entry1 : entry0).parts.map((p: any) => getEffectiveId(p.partId)),
+                finishWeight,
+            };
+        }).filter(b => b !== null) as ColleyBattle[];
+
+        return ColleyCalculator.calculate(partIds, colleyBattles);
+    }
+
     private async calculateColleyRatings(filter?: any): Promise<Map<number, number>> {
         const [battles, effectiveIdMap] = await Promise.all([
             prisma.battle.findMany({
                 where: filter,
-                include: {
+                select: {
                     entries: {
-                        include: { parts: true }
+                        select: {
+                            points: true,
+                            finishType: true,
+                            parts: { select: { partId: true } }
+                        }
                     }
                 }
             }),
             this.getEffectivePartIdMap(),
         ]);
-
+        
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
-        const parts = await prisma.part.findMany({ select: { id: true, partType: true, metadata: true } });
+        const parts = await prisma.part.findMany({ select: { id: true } });
 
-        // Final list of IDs must include the virtual ones and exclude the original Lock Chip IDs
         const partIdsSet = new Set<number>();
-        parts.forEach(p => {
-            partIdsSet.add(getEffectiveId(p.id));
-        });
+        parts.forEach(p => partIdsSet.add(getEffectiveId(p.id)));
         const partIds = Array.from(partIdsSet);
 
-        const colleyBattles: ColleyBattle[] = battles.map(battle => {
-            const entry0 = battle.entries[0];
-            const entry1 = battle.entries[1];
-            const isWinner0 = entry0.points > 0;
-            const finishWeight = ColleyCalculator.getFinishWeight(entry0.finishType);
-
-            return {
-                winnerPartIds: (isWinner0 ? entry0 : entry1).parts.map(p => getEffectiveId(p.partId)),
-                loserPartIds: (isWinner0 ? entry1 : entry0).parts.map(p => getEffectiveId(p.partId)),
-                finishWeight,
-            };
-        });
-
-        return ColleyCalculator.calculate(partIds, colleyBattles);
+        return this.calculateColleyRatingsFromBattles(battles, effectiveIdMap, partIds);
     }
 
     async getPartWinRate(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
@@ -257,42 +264,43 @@ export class StatsService {
     async getPartsList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
         const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
 
-        const [parts, effectiveIdMap] = await Promise.all([
+        const [allParts, effectiveIdMap, battles] = await Promise.all([
             prisma.part.findMany({
-                include: {
-                    partType: true,
-                    battleEntries: {
-                        where: battleWhere ? {
-                            battleEntry: {
-                                battle: battleWhere
-                            }
-                        } : undefined,
-                        include: {
-                            battleEntry: {
-                                include: {
-                                    parts: {
-                                        include: {
-                                            part: { include: { partType: true } }
-                                        }
-                                    }
-                                }
-                            }
+                include: { partType: true }
+            }),
+            this.getEffectivePartIdMap(),
+            prisma.battle.findMany({
+                where: battleWhere,
+                select: {
+                    entries: {
+                        select: {
+                            points: true,
+                            finishType: true,
+                            parts: { select: { partId: true } }
                         }
                     }
                 }
-            }),
-            this.getEffectivePartIdMap()
+            })
         ]);
 
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
+        
+        // Build parts map for quick lookup
+        const partsMap = new Map<number, any>();
+        const partIdsSet = new Set<number>();
+        allParts.forEach(p => {
+            const effId = getEffectiveId(p.id);
+            partsMap.set(p.id, p);
+            partIdsSet.add(effId);
+        });
 
-        const colleyRatings = await this.calculateColleyRatings(battleWhere);
+        const partIds = Array.from(partIdsSet);
+        const colleyRatings = this.calculateColleyRatingsFromBattles(battles, effectiveIdMap, partIds);
 
         const aggregatedStats = new Map<number, any>();
 
-        parts.forEach(part => {
+        allParts.forEach(part => {
             const effectiveId = getEffectiveId(part.id);
-
             if (!aggregatedStats.has(effectiveId)) {
                 const isVirtual = effectiveId < 0;
                 aggregatedStats.set(effectiveId, {
@@ -308,42 +316,53 @@ export class StatsService {
                     partnerStats: {} as Record<number, any>
                 });
             }
+        });
 
-            const stats = aggregatedStats.get(effectiveId);
-            stats.totalMatches += part.battleEntries.length;
+        battles.forEach(battle => {
+            const entry0 = battle.entries[0];
+            const entry1 = battle.entries[1];
+            if (!entry0 || !entry1) return;
 
-            part.battleEntries.forEach(participation => {
-                const entry = participation.battleEntry;
-                stats.totalPoints += entry.points;
+            [entry0, entry1].forEach(entry => {
+                entry.parts.forEach((ep: any) => {
+                    const effectiveId = getEffectiveId(ep.partId);
+                    const stats = aggregatedStats.get(effectiveId);
+                    if (!stats) return;
 
-                // Track matches with partners
-                entry.parts.forEach(p => {
-                    const partnerEffId = getEffectiveId(p.partId);
-                    if (partnerEffId !== effectiveId) {
-                        if (!stats.partnerStats[partnerEffId]) {
-                            stats.partnerStats[partnerEffId] = {
-                                name: partnerEffId < 0 ? (partnerEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : p.part.name,
-                                type: p.part.partType.name,
-                                isInfluential: p.part.partType.isInfluential,
-                                gained: 0,
-                                conceded: 0
-                            };
-                        }
-                        if (entry.points > 0) {
-                            stats.partnerStats[partnerEffId].gained += entry.points;
-                        } else {
-                            stats.partnerStats[partnerEffId].conceded += Math.abs(entry.points);
-                        }
+                    stats.totalMatches++;
+                    stats.totalPoints += entry.points;
+
+                    if (entry.points > 0) {
+                        stats.wins++;
+                        stats.totalGained += entry.points;
+                    } else {
+                        stats.losses++;
+                        stats.totalConceded += Math.abs(entry.points);
                     }
-                });
 
-                if (entry.points > 0) {
-                    stats.wins++;
-                    stats.totalGained += entry.points;
-                } else {
-                    stats.losses++;
-                    stats.totalConceded += Math.abs(entry.points);
-                }
+                    // Track partners
+                    entry.parts.forEach((partnerEp: any) => {
+                        const partnerEffId = getEffectiveId(partnerEp.partId);
+                        if (partnerEffId !== effectiveId) {
+                            if (!stats.partnerStats[partnerEffId]) {
+                                const isVP = partnerEffId < 0;
+                                const pData = isVP ? null : partsMap.get(partnerEp.partId);
+                                stats.partnerStats[partnerEffId] = {
+                                    name: isVP ? (partnerEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : (pData?.name || 'Unknown'),
+                                    type: isVP ? 'LOCK_CHIP' : (pData?.partType?.name || 'Unknown'),
+                                    isInfluential: isVP ? false : (pData?.partType?.isInfluential || false),
+                                    gained: 0,
+                                    conceded: 0
+                                };
+                            }
+                            if (entry.points > 0) {
+                                stats.partnerStats[partnerEffId].gained += entry.points;
+                            } else {
+                                stats.partnerStats[partnerEffId].conceded += Math.abs(entry.points);
+                            }
+                        }
+                    });
+                });
             });
         });
 
