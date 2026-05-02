@@ -262,8 +262,10 @@ export class StatsService {
     }
 
     async getPartsList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
+        const tStart = Date.now();
         const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
 
+        console.log(`[Perf] StatsService: Fetching DB data...`);
         const [allParts, effectiveIdMap, battles] = await Promise.all([
             prisma.part.findMany({
                 include: { partType: true }
@@ -282,6 +284,8 @@ export class StatsService {
                 }
             })
         ]);
+        const tDb = Date.now();
+        console.log(`[Perf] StatsService: DB Fetch completed in ${tDb - tStart}ms. Retrieved ${battles.length} battles and ${allParts.length} parts.`);
 
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
         
@@ -295,8 +299,12 @@ export class StatsService {
         });
 
         const partIds = Array.from(partIdsSet);
+        
+        console.log(`[Perf] StatsService: Starting Colley ratings calculation...`);
         const colleyRatings = this.calculateColleyRatingsFromBattles(battles, effectiveIdMap, partIds);
+        console.log(`[Perf] StatsService: Colley ratings calculation completed in ${Date.now() - tDb}ms.`);
 
+        const tAggStart = Date.now();
         const aggregatedStats = new Map<number, any>();
 
         allParts.forEach(part => {
@@ -418,6 +426,9 @@ export class StatsService {
                 dependencies
             };
         });
+
+        const tAggEnd = Date.now();
+        console.log(`[Perf] StatsService: Aggregations mapped in ${tAggEnd - tAggStart}ms.`);
 
         // Default sort: BP (Colley) desc; parts with no battles always go to the bottom.
         return statsArray.sort((a, b) => {

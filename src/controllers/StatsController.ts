@@ -28,12 +28,18 @@ export class StatsController {
                 return;
             }
 
+            const tStart = Date.now();
+            console.log(`[Perf] Starting getPartsList request...`);
+            
             const filters = this.parseBattleFilters(req.query.filters);
             const tzParsed = parseInt(tz) || 0;
             const statsService = new StatsService();
             const parts = await statsService.getPartsList(filters, tzParsed);
             
             AppCache.set(cacheKey, parts);
+            const tEnd = Date.now();
+            console.log(`[Perf] getPartsList Total Time: ${tEnd - tStart}ms`);
+            
             res.status(200).json(parts);
         } catch (error: any) {
             console.error('Error fetching parts list:', error);
