@@ -6,3 +6,4 @@ build/
 *.log
 /src/generated/prisma
 prisma/generated/
+coverage/
