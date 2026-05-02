@@ -7,7 +7,6 @@ export interface PartStats {
   id: number;
   name: string;
   type: string;
-  elo: number;
   bp: number;
   totalMatches: number;
   wins: number;

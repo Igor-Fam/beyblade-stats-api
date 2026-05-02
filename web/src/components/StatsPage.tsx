@@ -6,7 +6,7 @@ import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 import { HelpModal } from './ui/HelpModal';
 
-type RankingMode = 'elo' | 'bp';
+type RankingMode = 'bp';
 type SortKey = keyof Pick<PartStats, 'elo' | 'bp' | 'scoringRate' | 'pointsGained' | 'pointsConceded' | 'winRate' | 'wins' | 'losses'>;
 type SortDir = 'asc' | 'desc';
 
@@ -225,7 +225,7 @@ export default function StatsPage() {
     recalculateWidths();
     window.addEventListener('resize', recalculateWidths);
     return () => window.removeEventListener('resize', recalculateWidths);
-  }, [filteredAndSorted, rankingMode, sortKey, lang]);
+  }, [filteredAndSorted, sortKey, lang]);
 
 
   const addFilter = () => {
@@ -270,9 +270,9 @@ export default function StatsPage() {
   const battleFiltersActive = battleFilters.length > 0;
 
   const exportCsv = () => {
-    const headers = ['Name', 'Type', 'Elo', 'BP', 'Scoring Rate', 'Points Gained', 'Points Conceded', 'Win Rate', 'Wins', 'Losses'];
+    const headers = ['Name', 'Type', 'BP', 'Scoring Rate', 'Points Gained', 'Points Conceded', 'Win Rate', 'Wins', 'Losses'];
     const rows = filteredAndSorted.map(p => [
-      p.name, p.type, p.elo, p.bp, p.scoringRate, p.pointsGained, p.pointsConceded, p.winRate, p.wins, p.losses
+      p.name, p.type, p.bp, p.scoringRate, p.pointsGained, p.pointsConceded, p.winRate, p.wins, p.losses
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -578,11 +578,11 @@ export default function StatsPage() {
                   <th className={styles.thPart}>{t('col_part')}</th>
                   <th className={styles.thTag}></th>
                   <th
-                    className={`${styles.th} ${styles.rankCellHeader} ${sortKey === rankingMode ? styles.activeCol : ''}`}
-                    onClick={() => handleSort(rankingMode)}
+                    className={`${styles.th} ${styles.rankCellHeader} ${sortKey === 'bp' ? styles.activeCol : ''}`}
+                    onClick={() => handleSort('bp')}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {rankLabel} <SortIndicator col={rankingMode} />
+                      {rankLabel} <SortIndicator col="bp" />
                       <button
                         className={styles.helpIconBtn}
                         onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_bp_title'), desc: t('modal_help_bp_desc') }); }}
@@ -631,7 +631,7 @@ export default function StatsPage() {
                   <th className={`${styles.thTag} ${styles.thHidden}`}></th>
                   <th className={`${styles.th} ${styles.rankCellHeader} ${styles.thHidden}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {rankLabel} <SortIndicator col={rankingMode} />
+                      {rankLabel} <SortIndicator col="bp" />
                       <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
                     </div>
                   </th>
@@ -651,7 +651,7 @@ export default function StatsPage() {
               <tbody className={styles.tbody}>
                 {filteredAndSorted.map((part, i) => {
                   const noData = part.totalMatches === 0;
-                  const rankValue = rankingMode === 'bp' ? part.bp : part.elo;
+                  const rankValue = part.bp;
                   const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
                   return (
                     <tr
