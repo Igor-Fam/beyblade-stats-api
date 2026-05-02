@@ -68,7 +68,7 @@ export default function ComboCard({
   }, [playerId]);
 
   const activeLine = lines.find(l => l.id === selectedLineId);
-  const slots = activeLine?.metadata?.slots || [];
+  const slots = useMemo(() => activeLine?.metadata?.slots || [], [activeLine]);
 
   const { disabledSlots, allowedRatchetHeights } = useMemo(() => {
     const disabled = new Map<string, string>();

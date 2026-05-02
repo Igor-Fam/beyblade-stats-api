@@ -250,7 +250,7 @@ export default function StatsPage() {
 
   const clearBattleFilters = () => setBattleFilters([]);
 
-  const SortIndicator = ({ col }: { col: SortKey }) => {
+  const renderSortIndicator = (col: SortKey) => {
     if (sortKey !== col) return <span className={styles.sortIcon}>↕</span>;
     return <span className={`${styles.sortIcon} ${styles.active}`}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
@@ -556,7 +556,7 @@ export default function StatsPage() {
                     onClick={() => handleSort('bp')}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {rankLabel} <SortIndicator col="bp" />
+                      {rankLabel} {renderSortIndicator('bp')}
                       <button
                         className={styles.helpIconBtn}
                         onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_bp_title'), desc: t('modal_help_bp_desc') }); }}
@@ -567,7 +567,7 @@ export default function StatsPage() {
                   </th>
                   <th className={`${styles.th} ${styles.scoringCellHeader}`} onClick={() => handleSort('scoringRate')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
+                      {t('col_scoring_rate')} {renderSortIndicator('scoringRate')}
                       <button
                         className={styles.helpIconBtn}
                         onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_scoring_title'), desc: t('modal_help_scoring_desc') }); }}
@@ -577,19 +577,19 @@ export default function StatsPage() {
                     </div>
                   </th>
                   <th className={styles.th} onClick={() => handleSort('pointsGained')}>
-                    {t('col_points_gained')} <SortIndicator col="pointsGained" />
+                    {t('col_points_gained')} {renderSortIndicator('pointsGained')}
                   </th>
                   <th className={styles.th} onClick={() => handleSort('pointsConceded')}>
-                    {t('col_points_conceded')} <SortIndicator col="pointsConceded" />
+                    {t('col_points_conceded')} {renderSortIndicator('pointsConceded')}
                   </th>
                   <th className={styles.th} onClick={() => handleSort('winRate')}>
-                    {t('col_winrate')} <SortIndicator col="winRate" />
+                    {t('col_winrate')} {renderSortIndicator('winRate')}
                   </th>
                   <th className={styles.th} onClick={() => handleSort('wins')}>
-                    {t('col_wins')} <SortIndicator col="wins" />
+                    {t('col_wins')} {renderSortIndicator('wins')}
                   </th>
                   <th className={styles.th} onClick={() => handleSort('losses')}>
-                    {t('col_losses')} <SortIndicator col="losses" />
+                    {t('col_losses')} {renderSortIndicator('losses')}
                   </th>
                 </tr>
               </thead>
@@ -605,21 +605,21 @@ export default function StatsPage() {
                   <th className={`${styles.thTag} ${styles.thHidden}`}></th>
                   <th className={`${styles.th} ${styles.rankCellHeader} ${styles.thHidden}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {rankLabel} <SortIndicator col="bp" />
+                      {rankLabel} {renderSortIndicator('bp')}
                       <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
                     </div>
                   </th>
                   <th className={`${styles.th} ${styles.scoringCellHeader} ${styles.thHidden}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {t('col_scoring_rate')} <SortIndicator col="scoringRate" />
+                      {t('col_scoring_rate')} {renderSortIndicator('scoringRate')}
                       <button className={styles.helpIconBtn}><HelpCircle size={14} /></button>
                     </div>
                   </th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_gained')} <SortIndicator col="pointsGained" /></th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_conceded')} <SortIndicator col="pointsConceded" /></th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_winrate')} <SortIndicator col="winRate" /></th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_wins')} <SortIndicator col="wins" /></th>
-                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_losses')} <SortIndicator col="losses" /></th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_gained')} {renderSortIndicator('pointsGained')}</th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_points_conceded')} {renderSortIndicator('pointsConceded')}</th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_winrate')} {renderSortIndicator('winRate')}</th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_wins')} {renderSortIndicator('wins')}</th>
+                  <th className={`${styles.th} ${styles.thHidden}`}>{t('col_losses')} {renderSortIndicator('losses')}</th>
                 </tr>
               </thead>
               <tbody className={styles.tbody}>

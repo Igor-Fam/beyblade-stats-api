@@ -6,6 +6,16 @@ import ComboCard from './ComboCard';
 import { useTranslation } from '../lib/i18n';
 import styles from './BattleLogger.module.css';
 
+interface SessionBattle {
+  id: number;
+  winner: number;
+  finishType: string;
+  points: number;
+  labelA: string;
+  labelB: string;
+  createdAt: number;
+}
+
 export default function BattleLogger() {
   const [lines, setLines] = useState<Line[]>([]);
   const [parts, setParts] = useState<Part[]>([]);
@@ -34,7 +44,7 @@ export default function BattleLogger() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [status, setStatus] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
-  const [sessionBattles, setSessionBattles] = useState<any[]>([]);
+  const [sessionBattles, setSessionBattles] = useState<SessionBattle[]>([]);
   const { t } = useTranslation();
   const [scoreResetAt, setScoreResetAt] = useState<number>(() => {
     return parseInt(localStorage.getItem('scoreResetAt') || Date.now().toString());
@@ -78,8 +88,8 @@ export default function BattleLogger() {
     try {
       await deleteBattle(battleId);
       setSessionBattles(prev => prev.filter(b => b.id !== battleId));
-    } catch (err: any) {
-      setStatus({ msg: t('status_remove_error') + err.message, type: 'error' });
+    } catch (err: unknown) {
+      setStatus({ msg: t('status_remove_error') + (err as Error).message, type: 'error' });
       setTimeout(() => setStatus(null), 3000);
     } finally {
       setLoading(false);
@@ -95,8 +105,8 @@ export default function BattleLogger() {
       setSessionBattles(prev => prev.slice(1));
       setStatus({ msg: t('status_undo_success'), type: 'success' });
       setTimeout(() => setStatus(null), 2000);
-    } catch (err: any) {
-      setStatus({ msg: t('status_undo_error') + err.message, type: 'error' });
+    } catch (err: unknown) {
+      setStatus({ msg: t('status_undo_error') + (err as Error).message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -155,7 +165,7 @@ export default function BattleLogger() {
         let existing = JSON.parse(localStorage.getItem('comboHistory') || '[]');
 
         const processPush = (lId: number, pMap: Record<string, number>, label: string) => {
-          existing = existing.filter((c: any) => !(c.lineId === lId && arePartsEqual(c.parts, pMap)));
+          existing = existing.filter((c: { lineId: number; parts: Record<string, number> }) => !(c.lineId === lId && arePartsEqual(c.parts, pMap)));
           const snap = { id: Date.now() + Math.random(), label, lineId: lId, parts: pMap };
           existing.unshift(snap);
         };
@@ -187,8 +197,8 @@ export default function BattleLogger() {
 
       setStatus({ msg: t('status_battle_logged', { winner: winnerIndex === 0 ? 'A' : 'B', type: finishType }), type: 'success' });
       setTimeout(() => setStatus(null), 3000);
-    } catch (err: any) {
-      setStatus({ msg: err.message || t('status_save_error'), type: 'error' });
+    } catch (err: unknown) {
+      setStatus({ msg: (err as Error).message || t('status_save_error'), type: 'error' });
       setTimeout(() => setStatus(null), 4000);
     } finally {
       setLoading(false);

@@ -38,8 +38,8 @@ export default function BattleHistoryPage() {
     try {
       const d = await fetchBattleHistory(page, LIMIT);
       setData(d);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -57,8 +57,8 @@ export default function BattleHistoryPage() {
       await deleteBattle(id);
       loadHistory();
       setConfirmDelete(null);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      alert((e as Error).message);
       setDeleting(null);
     }
   };
@@ -71,11 +71,11 @@ export default function BattleHistoryPage() {
     entry.parts.forEach(ep => {
       pMap[ep.part.partType.name] = { 
         name: ep.part.name, 
-        abbreviation: (ep.part as any).abbreviation 
+        abbreviation: (ep.part as unknown as { abbreviation?: string }).abbreviation 
       };
     });
 
-    const metadata = (line as any).metadata;
+    const metadata = (line as unknown as { metadata?: { slots?: string[]; nameTemplate?: string } }).metadata;
     const slotList = metadata?.slots || [];
     
     if (metadata?.nameTemplate) {
@@ -93,7 +93,7 @@ export default function BattleHistoryPage() {
       return p?.abbreviation || p?.name || '';
     }).filter(Boolean);
     
-    return lps.length > 0 ? lps.join(' ').replace(/-/g, '\u2011') : (line as any).name;
+    return lps.length > 0 ? lps.join(' ').replace(/-/g, '\u2011') : (line as unknown as { name: string }).name;
   };
 
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
