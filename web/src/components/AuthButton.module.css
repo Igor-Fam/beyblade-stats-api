@@ -1,0 +1,92 @@
+.loginBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary, #fff);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.loginBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.userMenu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.free {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+}
+
+.premium {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff;
+}
+
+.syncBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.syncBtn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.syncBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.syncMsg {
+    font-size: 0.78rem;
+    color: #86efac;
+    white-space: nowrap;
+}
+
+.logoutBtn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: #fff;
+}
