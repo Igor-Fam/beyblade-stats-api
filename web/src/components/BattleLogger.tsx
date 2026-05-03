@@ -4,6 +4,8 @@ import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle, deleteBattle } from '../lib/api';
 import ComboCard from './ComboCard';
 import { useTranslation } from '../lib/i18n';
+import { useAuth } from '../hooks/useAuth';
+import { syncToCloud } from '../hooks/useCloudSync';
 import styles from './BattleLogger.module.css';
 
 interface SessionBattle {
@@ -26,6 +28,7 @@ export default function BattleLogger() {
   const [partsA, setPartsA] = useState<Record<string, number>>({});
   const [partsB, setPartsB] = useState<Record<string, number>>({});
 
+  const { user, isPremium, getToken } = useAuth();
   const [stadiumId, setStadiumId] = useState<number | null>(() => {
     const saved = localStorage.getItem('lastStadiumId');
     return saved ? parseInt(saved) : null;
@@ -127,6 +130,27 @@ export default function BattleLogger() {
           { lineId: lineB, partsIds: Object.values(partsB) }
         ]
       });
+
+      // Auto-sync for premium users
+      console.log('BattleLogger: Battle saved locally. User state:', { 
+        isPremium, 
+        hasUser: !!user, 
+        metadata: user?.user_metadata 
+      });
+      if (isPremium) {
+        getToken().then(token => {
+          if (token) {
+            console.log('BattleLogger: Starting auto-sync...');
+            syncToCloud(token)
+              .then(res => console.log('BattleLogger: Sync success:', res))
+              .catch(err => console.error('BattleLogger: Sync failed:', err));
+          } else {
+            console.warn('BattleLogger: No auth token found for sync');
+          }
+        });
+      } else {
+        console.log('BattleLogger: Sync skipped (User not Premium or not logged in)');
+      }
 
       const makeLabel = (lId: number, pMap: Record<string, number>) => {
         const line = lines.find(l => l.id === lId);
