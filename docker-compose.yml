@@ -6,6 +6,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    command: sh -c "npx prisma generate && npm run build && npm start"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
@@ -19,7 +20,8 @@ services:
       - "5173:5173"
     volumes:
       - .:/app
-    command: npm run dev -- --host 0.0.0.0
+      - /app/web/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - api
 
