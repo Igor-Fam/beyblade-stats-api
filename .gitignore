@@ -7,3 +7,5 @@ build/
 /src/generated/prisma
 prisma/generated/
 coverage/
+.env.local
+.env.*.local

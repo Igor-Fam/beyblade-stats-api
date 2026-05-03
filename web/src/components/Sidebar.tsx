@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Swords, BarChart3, History } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import { fetchDatabaseHealth } from '../lib/api';
+import AuthButton from './AuthButton';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -73,6 +74,9 @@ export default function Sidebar() {
               </nav>
 
               <div className={styles['sidebar-footer']}>
+                <div className={styles['auth-section']}>
+                  <AuthButton />
+                </div>
                 <div className={styles['lang-toggle-container']}>
                   <span className={styles['lang-label']}>{lang.toUpperCase()}</span>
                   <div className={styles['lang-toggle-sidebar']}>
