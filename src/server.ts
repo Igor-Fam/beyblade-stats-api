@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { router } from './routes';
 import { prisma } from './database';
+import { authMiddleware } from './middleware/AuthMiddleware';
+import { syncBattles, restoreBattles } from './controllers/SyncController';
 
 import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
 import { StandardComboValidator } from './domain/validators/strategies/StandardComboValidator';
@@ -22,8 +24,8 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// Parse incoming JSON requests
-app.use(express.json());
+// Parse incoming JSON requests with a larger limit for sync
+app.use(express.json({ limit: '10mb' }));
 
 // Health check endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
@@ -46,6 +48,14 @@ app.get('/api/health', async (req: Request, res: Response) => {
 
 // Delegate '/api' requisitions to router's index.ts file
 app.use('/api', router);
+
+// Global error handler (Must be after all routes)
+app.use((err: any, req: Request, res: Response, next: any) => {
+    console.error('[SERVER ERROR]:', err);
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error'
+    });
+});
 
 // Start the Express server
 app.listen(PORT, () => {

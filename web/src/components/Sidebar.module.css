@@ -142,6 +142,14 @@
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   background: var(--surface); /* Ensure background covers everything */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-section {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 @media screen and (max-height: 500px) {

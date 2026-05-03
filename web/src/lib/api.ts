@@ -201,4 +201,42 @@ export async function fetchBattleDetails(id: number): Promise<BattleHistoryItem>
     }))
   };
 }
+
+// ==========================================
+// CLOUD SYNC ENDPOINTS (Premium)
+// ==========================================
+
+/**
+ * Pushes local battles to the cloud for premium users.
+ */
+export async function syncBattlesCloud(battles: LocalBattle[], token: string): Promise<{ synced: number }> {
+  const res = await fetch(`${API_URL}/battles/sync`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ battles })
+  });
+
+  if (!res.ok) throw new Error('Cloud sync failed.');
+  return res.json();
+}
+
+/**
+ * Fetches cloud battles for the current user.
+ */
+export async function restoreBattlesCloud(token: string): Promise<{ battles: LocalBattle[] }> {
+  const res = await fetch(`${API_URL}/battles/restore`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    const error: any = new Error('Cloud restore failed.');
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
+}
+
 export { type BattleFilterCondition };
