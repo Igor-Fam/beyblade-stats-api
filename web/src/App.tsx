@@ -1,5 +1,6 @@
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useSyncCatalog } from './hooks/useSyncCatalog';
 import Hub from './components/Hub';
 import BattleLogger from './components/BattleLogger';
 import Sidebar from './components/Sidebar';
@@ -17,6 +18,8 @@ function ScrollToTop() {
 }
 
 function App() {
+  useSyncCatalog();
+
   return (
     <Router>
       <ScrollToTop />
