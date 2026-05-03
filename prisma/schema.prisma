@@ -60,10 +60,12 @@ model Battle {
   id        Int           @id @default(autoincrement())
   createdAt DateTime      @default(now()) @map("created_at")
   stadiumId Int?          @map("stadium_id")
+  userId    String?       @map("user_id") // null = anonymous battle
   stadium   Stadium?      @relation(fields: [stadiumId], references: [id])
   entries   BattleEntry[]
 
   @@index([stadiumId])
+  @@index([userId])
   @@map("battles")
 }
 

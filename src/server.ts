@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { router } from './routes';
 import { prisma } from './database';
+import { authMiddleware } from './middleware/AuthMiddleware';
+import { syncBattles, restoreBattles } from './controllers/SyncController';
 
 import { ComboValidatorFactory } from './domain/validators/ComboValidatorFactory';
 import { StandardComboValidator } from './domain/validators/strategies/StandardComboValidator';
@@ -46,6 +48,10 @@ app.get('/api/health', async (req: Request, res: Response) => {
 
 // Delegate '/api' requisitions to router's index.ts file
 app.use('/api', router);
+
+// Premium cloud sync routes (require valid Supabase JWT)
+app.post('/api/battles/sync', authMiddleware, (req, res, next) => syncBattles(req, res).catch(next));
+app.get('/api/battles/restore', authMiddleware, (req, res, next) => restoreBattles(req, res).catch(next));
 
 // Start the Express server
 app.listen(PORT, () => {
