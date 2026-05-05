@@ -5,6 +5,7 @@ import { partsRoutes } from './parts.routes';
 import { battlesRoutes } from './battles.routes';
 import { statsRoutes } from './stats.routes';
 import { stadiumsRoutes } from './stadiums.routes';
+import { databasesRoutes } from './databases.routes';
 
 export const router = Router();
 
@@ -14,3 +15,4 @@ router.use('/parts', partsRoutes);
 router.use('/battles', battlesRoutes);
 router.use('/stats', statsRoutes);
 router.use('/stadiums', stadiumsRoutes);
+router.use('/databases', databasesRoutes);
