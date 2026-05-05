@@ -10,8 +10,11 @@ const battleController = new BattleController();
 battlesRoutes.post('/sync', authMiddleware, (req, res, next) => syncBattles(req, res).catch(next));
 battlesRoutes.get('/restore', authMiddleware, (req, res, next) => restoreBattles(req, res).catch(next));
 
-battlesRoutes.get('/', battleController.listBattles);
-battlesRoutes.get('/:id', battleController.getBattle);
-battlesRoutes.post('/', battleController.registerBattle);
-battlesRoutes.delete('/:id', battleController.deleteBattle);
+// All standard battle routes also require authentication
+battlesRoutes.use(authMiddleware);
+
+battlesRoutes.get('/', (req, res, next) => battleController.listBattles(req, res).catch(next));
+battlesRoutes.get('/:id', (req, res, next) => battleController.getBattle(req, res).catch(next));
+battlesRoutes.post('/', (req, res, next) => battleController.registerBattle(req, res).catch(next));
+battlesRoutes.delete('/:id', (req, res, next) => battleController.deleteBattle(req, res).catch(next));
 

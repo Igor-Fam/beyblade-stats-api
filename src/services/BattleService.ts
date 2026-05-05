@@ -10,6 +10,7 @@ export interface CreateBattleEntryDTO {
 }
 
 export interface CreateBattleDTO {
+    databaseId: string;
     entries: CreateBattleEntryDTO[];
     finishType: string;
     winner: number;
@@ -24,6 +25,10 @@ interface Combo {
 
 export class BattleService {
     public async registerBattle(data: CreateBattleDTO) {
+        if (!data.databaseId) {
+            throw new AppError('A database ID must be provided.');
+        }
+
         if (!data.stadiumId || isNaN(data.stadiumId)) {
             throw new AppError('A stadium must be selected.');
         }
@@ -43,13 +48,6 @@ export class BattleService {
         const combos: Combo[] = await Promise.all(
             data.entries.map((entry) => getComboFromEntry(entry))
         );
-
-        const finishTypePoints = {
-            "SPIN": 1,
-            "OVER": 2,
-            "BURST": 2,
-            "XTREME": 1 // This is the simplified internal logic
-        }
 
         // Standard points based on official Beyblade X rules
         const pointsMapping: Record<string, number> = {
@@ -72,6 +70,7 @@ export class BattleService {
         // Battle creation
         const battle = await prisma.battle.create({
             data: {
+                databaseId: data.databaseId,
                 stadiumId: data.stadiumId,
                 entries: {
                     create: combos.map((combo, index) => {
@@ -98,11 +97,11 @@ export class BattleService {
 
         return {
             message: "Battle successfully registered!",
-            battleId: (battle as any).id
+            battleId: battle.id
         };
     }
 
-    public async deleteBattle(id: number) {
+    public async deleteBattle(id: string) {
         try {
             await prisma.battle.delete({
                 where: { id }
