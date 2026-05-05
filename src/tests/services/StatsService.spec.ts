@@ -31,7 +31,7 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         (prisma.part.findMany as jest.Mock).mockImplementation(async (args: any) => {
             if (args?.where?.partType?.name === 'LOCK_CHIP') return [];
             return [
-                { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
+                { id: 1, name: 'Dran Sword', partType: { name: 'Blade' }, battleEntries: [] },
                 { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
             ];
         });
@@ -41,7 +41,7 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
                 id: 1,
                 createdAt: new Date('2024-01-01'),
                 entries: [
-                    { finishType: 'SPIN', points:  1, parts: [{ partId: 1 }] },
+                    { finishType: 'SPIN', points: 1, parts: [{ partId: 1 }] },
                     { finishType: 'SPIN', points: -1, parts: [{ partId: 2 }] },
                 ],
             },
@@ -63,7 +63,7 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
         (prisma.part.findMany as jest.Mock).mockImplementation(async (args: any) => {
             if (args?.where?.partType?.name === 'LOCK_CHIP') return [];
             return [
-                { id: 1, name: 'Dran Sword',  partType: { name: 'Blade' }, battleEntries: [] },
+                { id: 1, name: 'Dran Sword', partType: { name: 'Blade' }, battleEntries: [] },
                 { id: 2, name: 'Hell Scythe', partType: { name: 'Blade' }, battleEntries: [] },
             ];
         });
@@ -73,15 +73,15 @@ describe('StatsService (Colley Rating - Unit Test with Mocks)', () => {
                 id: 1,
                 createdAt: new Date('2024-01-01'),
                 entries: [
-                    { finishType: 'SPIN',   points:  1, parts: [{ partId: 1 }] },
-                    { finishType: 'SPIN',   points: -1, parts: [{ partId: 2 }] },
+                    { finishType: 'SPIN', points: 1, parts: [{ partId: 1 }] },
+                    { finishType: 'SPIN', points: -1, parts: [{ partId: 2 }] },
                 ],
             },
             {
                 id: 2,
                 createdAt: new Date('2024-01-02'),
                 entries: [
-                    { finishType: 'XTREME', points:  3, parts: [{ partId: 1 }] },
+                    { finishType: 'XTREME', points: 3, parts: [{ partId: 1 }] },
                     { finishType: 'XTREME', points: -3, parts: [{ partId: 2 }] },
                 ],
             },

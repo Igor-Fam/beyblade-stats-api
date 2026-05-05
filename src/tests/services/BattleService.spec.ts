@@ -39,7 +39,7 @@ describe('BattleService', () => {
         (ComboValidatorFactory.getValidator as jest.Mock).mockReturnValue(mockValidator);
 
         (prisma.line.findUniqueOrThrow as jest.Mock).mockResolvedValue({ id: 1, name: 'BX' });
-        
+
         (prisma.part.findMany as jest.Mock).mockImplementation(async (args) => {
             const ids = args.where.id.in as number[];
             return ids.map((id, idx) => ({
@@ -65,7 +65,7 @@ describe('BattleService', () => {
         it('should validate stadiumId', async () => {
             await expect(battleService.registerBattle({ ...validPayload, stadiumId: undefined as any }))
                 .rejects.toThrow(new AppError('A stadium must be selected.'));
-            
+
             await expect(battleService.registerBattle({ ...validPayload, stadiumId: 'not-a-number' as any }))
                 .rejects.toThrow(new AppError('A stadium must be selected.'));
         });
@@ -107,7 +107,7 @@ describe('BattleService', () => {
 
             const createCallArgs = (prisma.battle.create as jest.Mock).mock.calls[0][0];
             const entries = createCallArgs.data.entries.create;
-            
+
             expect(entries[0].points).toBe(1); // Winner
             expect(entries[1].points).toBe(-1); // Loser
         });
@@ -118,7 +118,7 @@ describe('BattleService', () => {
 
             const createCallArgs = (prisma.battle.create as jest.Mock).mock.calls[0][0];
             const entries = createCallArgs.data.entries.create;
-            
+
             expect(entries[0].points).toBe(-2); // Loser
             expect(entries[1].points).toBe(2); // Winner
         });
@@ -129,7 +129,7 @@ describe('BattleService', () => {
 
             const createCallArgs = (prisma.battle.create as jest.Mock).mock.calls[0][0];
             const entries = createCallArgs.data.entries.create;
-            
+
             expect(entries[0].points).toBe(3); // Winner
             expect(entries[1].points).toBe(-3); // Loser
         });
