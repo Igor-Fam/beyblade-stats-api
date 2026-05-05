@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchBattleHistory, deleteBattle, type BattleHistoryItem, type BattleEntry } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../lib/i18n';
 import styles from './BattleHistoryPage.module.css';
 
@@ -22,11 +23,12 @@ const FINISH_LABELS: Record<string, string> = {
 
 export default function BattleHistoryPage() {
   const { t } = useTranslation();
+  const { activeDatabaseId } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<{ total: number; battles: BattleHistoryItem[] } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<number | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 50;
@@ -36,7 +38,7 @@ export default function BattleHistoryPage() {
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const d = await fetchBattleHistory(page, LIMIT);
+      const d = await fetchBattleHistory(activeDatabaseId, page, LIMIT);
       setData(d);
     } catch (e: unknown) {
       setError((e as Error).message);

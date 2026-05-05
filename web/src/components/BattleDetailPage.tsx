@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar } from 'lucide-react';
 
 import { fetchBattleDetails, type BattleHistoryItem, type BattleEntry } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { PartLinkCard } from './ui/PartLinkCard';
@@ -19,6 +20,7 @@ const FINISH_LABELS: Record<string, string> = {
 export default function BattleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const { activeDatabaseId } = useAuth();
   const [battle, setBattle] = useState<BattleHistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function BattleDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchBattleDetails(Number(id))
+    fetchBattleDetails(activeDatabaseId, id)
       .then(setBattle)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));

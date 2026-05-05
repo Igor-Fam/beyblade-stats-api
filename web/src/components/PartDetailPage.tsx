@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle } from 'lucide-react';
 import { fetchPartDetails, fetchPartsList, type PartDetails } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { TYPE_COLORS } from './ui/PartLinkCard';
@@ -26,6 +27,7 @@ const FINISH_WEIGHTS: Record<string, number> = {
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const { activeDatabaseId } = useAuth();
   const location = useLocation();
   const [part, setPart] = useState<PartDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,8 @@ export default function PartDetailPage() {
     } catch (e) { console.error(e); }
 
     Promise.all([
-      fetchPartDetails(Number(id), battleFilters),
-      fetchPartsList(battleFilters)
+      fetchPartDetails(activeDatabaseId, Number(id), battleFilters),
+      fetchPartsList(activeDatabaseId, battleFilters)
     ])
       .then(([partData, partsList]) => {
         setPart(partData);

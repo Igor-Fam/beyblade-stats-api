@@ -60,7 +60,7 @@ export interface BattleEntry {
 }
 
 export interface BattleHistoryItem {
-  id: number;
+  id: string; // UUID
   createdAt: string;
   stadium: { name: string };
   entries: BattleEntry[];
@@ -109,51 +109,59 @@ export async function fetchStadiums(): Promise<Stadium[]> {
 
 export async function registerBattle(payload: any) {
   // Replicate the backend's Zero-Sum scoring:
-  // winner gets positive points, loser gets negative (e.g. +2/-2 for OVER)
   const pointValues: Record<string, number> = { SPIN: 1, OVER: 2, BURST: 2, XTREME: 3 };
   const pts = pointValues[payload.finishType] ?? 1;
   const winnerIdx: number = payload.winner;
+  const now = new Date().toISOString();
 
   const newBattle: LocalBattle = {
-    createdAt: new Date().toISOString(),
+    id: crypto.randomUUID(),
+    databaseId: payload.databaseId, // Must be provided by the caller
+    createdAt: now,
+    updatedAt: now,
     stadiumId: payload.stadiumId,
     entries: payload.entries.map((e: any, idx: number) => ({
       lineId: e.lineId,
       finishType: payload.finishType,
       points: idx === winnerIdx ? pts : -pts,
-      // BattleLogger uses 'partsIds'; normalize to 'partIds'
       partIds: e.partsIds ?? e.partIds ?? []
     }))
   };
 
-  const id = await db.battles.add(newBattle);
-  return { success: true, battleId: id as number };
+  await db.battles.add(newBattle);
+  return { success: true, battleId: newBattle.id };
 }
 
-export async function deleteBattle(id: number): Promise<void> {
+export async function deleteBattle(id: string): Promise<void> {
   await db.battles.delete(id);
 }
 
-export async function fetchPartsList(filters?: BattleFilterCondition[]): Promise<PartStats[]> {
+export async function fetchPartsList(databaseId: string, filters?: BattleFilterCondition[]): Promise<PartStats[]> {
   const tz = new Date().getTimezoneOffset();
-  return localStatsService.getPartsList(filters, tz);
+  return localStatsService.getPartsList(databaseId, filters, tz);
 }
 
-export async function fetchPartDetails(id: number, filters?: BattleFilterCondition[]): Promise<PartDetails> {
+export async function fetchPartDetails(databaseId: string, id: number, filters?: BattleFilterCondition[]): Promise<PartDetails> {
   const tz = new Date().getTimezoneOffset();
-  return localStatsService.getPartDetails(id, filters, tz);
+  return localStatsService.getPartDetails(databaseId, id, filters, tz);
 }
 
-export async function fetchBattleHistory(page = 1, limit = 50): Promise<BattleHistoryResponse> {
-  const battles = await db.battles.reverse().offset((page - 1) * limit).limit(limit).toArray();
-  const total = await db.battles.count();
+export async function fetchBattleHistory(databaseId: string, page = 1, limit = 50): Promise<BattleHistoryResponse> {
+  const battles = await db.battles
+    .where('databaseId')
+    .equals(databaseId)
+    .reverse()
+    .offset((page - 1) * limit)
+    .limit(limit)
+    .toArray();
+  const total = await db.battles.where('databaseId').equals(databaseId).count();
   
   const stadiums = new Map((await db.stadiums.toArray()).map(s => [s.id, s]));
   const lines = new Map((await db.lines.toArray()).map(l => [l.id, l]));
   const parts = new Map((await db.parts.toArray()).map(p => [p.id, p]));
 
   const mappedBattles: BattleHistoryItem[] = battles.map(b => ({
-    id: b.id!,
+    id: b.id,
     createdAt: b.createdAt,
     stadium: { name: b.stadiumId ? (stadiums.get(b.stadiumId)?.name || 'Unknown') : 'Unknown' },
     entries: b.entries.map((e, idx) => ({
@@ -174,8 +182,8 @@ export async function fetchBattleHistory(page = 1, limit = 50): Promise<BattleHi
   return { total, page, limit, battles: mappedBattles };
 }
 
-export async function fetchBattleDetails(id: number): Promise<BattleHistoryItem> {
-  const b = await db.battles.get(id);
+export async function fetchBattleDetails(databaseId: string, id: string): Promise<BattleHistoryItem> {
+  const b = await db.battles.where({ id, databaseId }).first();
   if (!b) throw new Error('Battle not found');
 
   const stadiums = new Map((await db.stadiums.toArray()).map(s => [s.id, s]));
@@ -183,7 +191,7 @@ export async function fetchBattleDetails(id: number): Promise<BattleHistoryItem>
   const parts = new Map((await db.parts.toArray()).map(p => [p.id, p]));
 
   return {
-    id: b.id!,
+    id: b.id,
     createdAt: b.createdAt,
     stadium: { name: b.stadiumId ? (stadiums.get(b.stadiumId)?.name || 'Unknown') : 'Unknown' },
     entries: b.entries.map((e, idx) => ({

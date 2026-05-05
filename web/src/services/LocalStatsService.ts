@@ -89,8 +89,9 @@ export class LocalStatsService {
         return map;
     }
 
-    private buildDexieBattleFilter(conditions?: BattleFilterCondition[], timezoneOffset: number = 0) {
+    private buildDexieBattleFilter(databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0) {
         return (battle: LocalBattle) => {
+            if (battle.databaseId !== databaseId) return false;
             if (!conditions || conditions.length === 0) return true;
             for (const cond of conditions) {
                 if (cond.field === 'stadium') {
@@ -137,8 +138,8 @@ export class LocalStatsService {
         return ColleyCalculator.calculate(partIds, colleyBattles);
     }
 
-    private async calculateColleyRatings(filterFn: (b: LocalBattle) => boolean): Promise<Map<number, number>> {
-        const allBattles = await db.battles.toArray();
+    private async calculateColleyRatings(databaseId: string, filterFn: (b: LocalBattle) => boolean): Promise<Map<number, number>> {
+        const allBattles = await db.battles.where('databaseId').equals(databaseId).toArray();
         const battles = allBattles.filter(filterFn);
         const effectiveIdMap = await this.getEffectivePartIdMap();
         
@@ -152,8 +153,8 @@ export class LocalStatsService {
         return this.calculateColleyRatingsFromBattles(battles, effectiveIdMap, partIds);
     }
 
-    async getPartWinRate(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
-        const battleWhere = this.buildDexieBattleFilter(conditions, timezoneOffset);
+    async getPartWinRate(databaseId: string, partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
+        const battleWhere = this.buildDexieBattleFilter(databaseId, conditions, timezoneOffset);
         const isVirtual = partId < 0;
 
         let targetPartIds: number[] = [];
@@ -214,12 +215,12 @@ export class LocalStatsService {
         };
     }
 
-    async getPartsList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
-        const battleWhere = this.buildDexieBattleFilter(conditions, timezoneOffset);
+    async getPartsList(databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
+        const battleWhere = this.buildDexieBattleFilter(databaseId, conditions, timezoneOffset);
 
         const allParts = await db.parts.toArray();
         const effectiveIdMap = await this.getEffectivePartIdMap();
-        const allBattles = await db.battles.toArray();
+        const allBattles = await db.battles.where('databaseId').equals(databaseId).toArray();
         const battles = allBattles.filter(battleWhere);
 
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
@@ -364,8 +365,8 @@ export class LocalStatsService {
         });
     }
 
-    async getPartDetails(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartDetailsDTO> {
-        const battleWhere = this.buildDexieBattleFilter(conditions, timezoneOffset);
+    async getPartDetails(databaseId: string, partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartDetailsDTO> {
+        const battleWhere = this.buildDexieBattleFilter(databaseId, conditions, timezoneOffset);
         const effectiveIdMap = await this.getEffectivePartIdMap();
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
         const allParts = await db.parts.toArray();
@@ -397,7 +398,7 @@ export class LocalStatsService {
             virtualType = part.partType.name;
         }
 
-        const allBattles = await db.battles.toArray();
+        const allBattles = await db.battles.where('databaseId').equals(databaseId).toArray();
         const filteredBattles = allBattles.filter(battleWhere);
 
         let totalMatches = 0;
@@ -410,7 +411,7 @@ export class LocalStatsService {
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const colleyRatings = await this.calculateColleyRatings(battleWhere);
+        const colleyRatings = await this.calculateColleyRatings(databaseId, battleWhere);
 
         const partnerStats: Record<number, any> = {};
         const counterStats: Record<number, any> = {};

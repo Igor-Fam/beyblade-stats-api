@@ -2,6 +2,9 @@ import { useState, useEffect, createContext, useContext, type ReactNode } from '
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/db';
+import { DatabaseService } from '../lib/DatabaseService';
+import { SyncService } from '../lib/SyncService';
+import { SyncConflictModal } from '../components/SyncConflictModal';
 
 export interface AuthState {
     user: User | null;
@@ -12,6 +15,7 @@ export interface AuthState {
     login: () => Promise<void>;
     logout: () => Promise<void>;
     getToken: () => Promise<string | null>;
+    activeDatabaseId: string;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -21,41 +25,62 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
     const [session, setSession] = useState<Session | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isPremium, setIsPremium] = useState(false);
-
-    // Fetches fresh user data from Supabase (bypasses cached JWT)
-    // and updates isPremium accordingly.
-    const refreshPremiumStatus = async (currentSession: Session | null) => {
-        if (!currentSession) {
-            setIsPremium(false);
-            return;
-        }
-        const { data } = await supabase.auth.getUser(currentSession.access_token);
-        const freshIsPremium = (data.user?.user_metadata?.is_premium ?? false) as boolean;
-        console.log('AuthProvider: Fresh isPremium status:', freshIsPremium);
-        setIsPremium(freshIsPremium);
-    };
+    const [showSyncModal, setShowSyncModal] = useState(false);
+    const [guestCount, setGuestCount] = useState(0);
+    const [activeDatabaseId, setActiveDatabaseId] = useState<string>('guest-db');
 
     useEffect(() => {
         console.log('AuthProvider: Initializing Supabase session...');
-        // Load initial session
-        supabase.auth.getSession().then(({ data, error }) => {
-            if (error) {
-                console.error('AuthProvider: Error getting session:', error);
-            } else {
-                console.log('AuthProvider: Initial session loaded:', data.session?.user?.email || 'None');
-                setSession(data.session);
-                setUser(data.session?.user ?? null);
-                refreshPremiumStatus(data.session);
-            }
-            setIsLoading(false);
-        });
-
-        // Listen for login/logout events
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-            console.log('AuthProvider: Auth state changed:', event, newSession?.user?.email || 'None');
+        
+        const handleAuthSession = async (newSession: Session | null) => {
             setSession(newSession);
             setUser(newSession?.user ?? null);
-            refreshPremiumStatus(newSession);
+            
+            if (newSession?.user) {
+                // 1. Check premium status
+                const freshIsPremium = (newSession.user.user_metadata?.is_premium ?? false) as boolean;
+                setIsPremium(freshIsPremium);
+
+                // 2. Handle data ownership / sync
+                const localGuestCount = await DatabaseService.getGuestBattleCount();
+                
+                if (localGuestCount > 0) {
+                    if (freshIsPremium) {
+                        setGuestCount(localGuestCount);
+                        setShowSyncModal(true);
+                    } else {
+                        // Free user: automatic transfer
+                        console.log('AuthProvider: Transferring guest data to free user...');
+                        await DatabaseService.transferGuestDataToUser(
+                            newSession.user.id, 
+                            newSession.user.user_metadata?.full_name || 'User'
+                        );
+                        window.location.reload(); // Refresh to show new data
+                    }
+                } else if (freshIsPremium) {
+                    // Premium user with no guest data: background sync primary DB
+                    const dbId = await DatabaseService.getOrCreateUserDatabase(
+                        newSession.user.id,
+                        newSession.user.user_metadata?.full_name || 'User'
+                    );
+                    setActiveDatabaseId(dbId);
+                    SyncService.syncDatabase(dbId, newSession.access_token).catch(console.error);
+                }
+            } else {
+                setIsPremium(false);
+                setActiveDatabaseId('guest-db');
+                // Ensure guest DB exists for anonymous browsing
+                DatabaseService.ensureGuestDatabase();
+            }
+            setIsLoading(false);
+        };
+
+        // Load initial session
+        supabase.auth.getSession().then(({ data }) => handleAuthSession(data.session));
+
+        // Listen for login/logout events
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+            handleAuthSession(newSession);
         });
 
         return () => subscription.unsubscribe();
@@ -94,10 +119,41 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
         user, session,
         isLoggedIn: !!user,
         isPremium, isLoading,
-        login, logout, getToken
+        login, logout, getToken,
+        activeDatabaseId
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    const handleSync = async () => {
+        if (!user || !session) return;
+        const dbId = await DatabaseService.getOrCreateUserDatabase(
+            user.id, 
+            user.user_metadata?.full_name || 'User'
+        );
+        // Move guest battles to user DB first
+        await DatabaseService.transferGuestDataToUser(user.id, user.user_metadata?.full_name || 'User');
+        // Then sync that DB to cloud
+        await SyncService.syncDatabase(dbId, session.access_token);
+        setShowSyncModal(false);
+        window.location.reload();
+    };
+
+    const handleDelete = async () => {
+        await DatabaseService.deleteGuestData();
+        setShowSyncModal(false);
+        window.location.reload();
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+            <SyncConflictModal 
+                isOpen={showSyncModal}
+                battleCount={guestCount}
+                onSync={handleSync}
+                onDelete={handleDelete}
+            />
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth(): AuthState {

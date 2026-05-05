@@ -9,7 +9,7 @@ import { syncToCloud } from '../hooks/useCloudSync';
 import styles from './BattleLogger.module.css';
 
 interface SessionBattle {
-  id: number;
+  id: string; // UUID
   winner: number;
   finishType: string;
   points: number;
@@ -28,7 +28,7 @@ export default function BattleLogger() {
   const [partsA, setPartsA] = useState<Record<string, number>>({});
   const [partsB, setPartsB] = useState<Record<string, number>>({});
 
-  const { user, isPremium, getToken } = useAuth();
+  const { user, isPremium, getToken, activeDatabaseId } = useAuth();
   const [stadiumId, setStadiumId] = useState<number | null>(() => {
     const saved = localStorage.getItem('lastStadiumId');
     return saved ? parseInt(saved) : null;
@@ -86,7 +86,7 @@ export default function BattleLogger() {
     setShowResetModal(false);
   };
 
-  const handleRemoveOne = async (battleId: number) => {
+  const handleRemoveOne = async (battleId: string) => {
     setLoading(true);
     try {
       await deleteBattle(battleId);
@@ -122,6 +122,7 @@ export default function BattleLogger() {
     setLoading(true);
     try {
       const { battleId } = await registerBattle({
+        databaseId: activeDatabaseId,
         stadiumId,
         finishType,
         winner: winnerIndex,

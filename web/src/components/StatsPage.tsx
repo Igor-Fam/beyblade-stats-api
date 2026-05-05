@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Filter, HelpCircle, X, Search, Download, AlertTriangle } from 'lucide-react';
 import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
 import { HelpModal } from './ui/HelpModal';
@@ -54,6 +55,7 @@ const TYPE_COLORS: Record<string, string> = {
 export default function StatsPage() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const { activeDatabaseId } = useAuth();
   const [parts, setParts] = useState<PartStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>('bp');
@@ -105,10 +107,10 @@ export default function StatsPage() {
   useEffect(() => {
     localStorage.setItem('battle_filters', JSON.stringify(battleFilters));
     setLoading(true);
-    fetchPartsList(battleFilters)
+    fetchPartsList(activeDatabaseId, battleFilters)
       .then(setParts)
       .finally(() => setLoading(false));
-  }, [battleFilters]);
+  }, [battleFilters, activeDatabaseId]);
 
   useEffect(() => {
     fetchStadiums()
