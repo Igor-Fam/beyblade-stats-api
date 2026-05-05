@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StatsService } from '../services/StatsService';
 import { AppError } from '../errors/AppError';
 import { AppCache } from '../utils/cache';
+import { ensureDatabaseOwnership } from '../utils/ownership';
 
 export class StatsController {
     
@@ -20,7 +21,13 @@ export class StatsController {
         try {
             const filtersStr = req.query.filters as string || '';
             const tz = req.query.tz as string || '0';
-            const cacheKey = `partsList_${filtersStr}_${tz}`;
+            const databaseId = req.query.databaseId as string;
+
+            if (!databaseId) {
+                throw new AppError('databaseId query parameter is required.', 400);
+            }
+
+            const cacheKey = `partsList_${databaseId}_${filtersStr}_${tz}`;
 
             const cached = AppCache.get(cacheKey);
             if (cached) {
@@ -33,8 +40,12 @@ export class StatsController {
             
             const filters = this.parseBattleFilters(req.query.filters);
             const tzParsed = parseInt(tz) || 0;
+
+            // Verify ownership
+            await ensureDatabaseOwnership(databaseId, req.userId!);
+
             const statsService = new StatsService();
-            const parts = await statsService.getPartsList(filters, tzParsed);
+            const parts = await statsService.getPartsList(databaseId, filters, tzParsed);
             
             AppCache.set(cacheKey, parts);
             const tEnd = Date.now();
@@ -57,7 +68,13 @@ export class StatsController {
 
             const filtersStr = req.query.filters as string || '';
             const tz = req.query.tz as string || '0';
-            const cacheKey = `partWinRate_${partId}_${filtersStr}_${tz}`;
+            const databaseId = req.query.databaseId as string;
+
+            if (!databaseId) {
+                throw new AppError('databaseId query parameter is required.', 400);
+            }
+
+            const cacheKey = `partWinRate_${partId}_${databaseId}_${filtersStr}_${tz}`;
 
             const cached = AppCache.get(cacheKey);
             if (cached) {
@@ -67,8 +84,12 @@ export class StatsController {
 
             const filters = this.parseBattleFilters(req.query.filters);
             const tzParsed = parseInt(tz) || 0;
+
+            // Verify ownership
+            await ensureDatabaseOwnership(databaseId, req.userId!);
+
             const statsService = new StatsService();
-            const stats = await statsService.getPartWinRate(partId, filters, tzParsed);
+            const stats = await statsService.getPartWinRate(partId, databaseId, filters, tzParsed);
 
             AppCache.set(cacheKey, stats);
             res.status(200).json(stats);
@@ -93,7 +114,13 @@ export class StatsController {
 
             const filtersStr = req.query.filters as string || '';
             const tz = req.query.tz as string || '0';
-            const cacheKey = `partDetails_${partId}_${filtersStr}_${tz}`;
+            const databaseId = req.query.databaseId as string;
+
+            if (!databaseId) {
+                throw new AppError('databaseId query parameter is required.', 400);
+            }
+
+            const cacheKey = `partDetails_${partId}_${databaseId}_${filtersStr}_${tz}`;
 
             const cached = AppCache.get(cacheKey);
             if (cached) {
@@ -103,8 +130,12 @@ export class StatsController {
 
             const filters = this.parseBattleFilters(req.query.filters);
             const tzParsed = parseInt(tz) || 0;
+
+            // Verify ownership
+            await ensureDatabaseOwnership(databaseId, req.userId!);
+
             const statsService = new StatsService();
-            const details = await statsService.getPartDetails(partId, filters, tzParsed);
+            const details = await statsService.getPartDetails(partId, databaseId, filters, tzParsed);
 
             AppCache.set(cacheKey, details);
             res.status(200).json(details);

@@ -93,10 +93,11 @@ export class StatsService {
         return map;
     }
 
-    private buildPrismaBattleFilter(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): any {
-        if (!conditions || conditions.length === 0) return undefined;
+    private buildPrismaBattleFilter(databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): any {
+        const where: any = { databaseId };
+        
+        if (!conditions || conditions.length === 0) return where;
 
-        const where: any = {};
         let createdAtFilters: any = {};
         let hasDateFilter = false;
 
@@ -140,7 +141,7 @@ export class StatsService {
             where.createdAt = createdAtFilters;
         }
 
-        return Object.keys(where).length > 0 ? where : undefined;
+        return where;
     }
 
     private calculateColleyRatingsFromBattles(battles: any[], effectiveIdMap: Map<number, number>, partIds: number[]): Map<number, number> {
@@ -163,10 +164,11 @@ export class StatsService {
         return ColleyCalculator.calculate(partIds, colleyBattles);
     }
 
-    private async calculateColleyRatings(filter?: any): Promise<Map<number, number>> {
+    private async calculateColleyRatings(databaseId: string, filter?: any): Promise<Map<number, number>> {
+        const queryFilter = filter ? { ...filter, databaseId } : { databaseId };
         const [battles, effectiveIdMap] = await Promise.all([
             prisma.battle.findMany({
-                where: filter,
+                where: queryFilter,
                 select: {
                     entries: {
                         select: {
@@ -190,8 +192,8 @@ export class StatsService {
         return this.calculateColleyRatingsFromBattles(battles, effectiveIdMap, partIds);
     }
 
-    async getPartWinRate(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
-        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+    async getPartWinRate(partId: number, databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<WinRateData> {
+        const battleWhere = this.buildPrismaBattleFilter(databaseId, conditions, timezoneOffset);
         const isVirtual = partId < 0;
 
         let parts: any[] = [];
@@ -261,9 +263,9 @@ export class StatsService {
         };
     }
 
-    async getPartsList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
+    async getPartsList(databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartStatsDTO[]> {
         const tStart = Date.now();
-        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+        const battleWhere = this.buildPrismaBattleFilter(databaseId, conditions, timezoneOffset);
 
         console.log(`[Perf] StatsService: Fetching DB data...`);
         const [allParts, effectiveIdMap, battles] = await Promise.all([
@@ -439,8 +441,8 @@ export class StatsService {
         });
     }
 
-    async getPartDetails(partId: number, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartDetailsDTO> {
-        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+    async getPartDetails(partId: number, databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<PartDetailsDTO> {
+        const battleWhere = this.buildPrismaBattleFilter(databaseId, conditions, timezoneOffset);
         const effectiveIdMap = await this.getEffectivePartIdMap();
         const getEffectiveId = (id: number) => effectiveIdMap.get(id) ?? id;
 
@@ -558,7 +560,7 @@ export class StatsService {
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
 
-        const colleyRatings = await this.calculateColleyRatings(battleWhere);
+        const colleyRatings = await this.calculateColleyRatings(databaseId, battleWhere);
 
         const partnerStats: Record<number, { name: string, type: string, gained: number, conceded: number, matches: number, totalPoE: number, isInfluential: boolean }> = {};
         const counterStats: Record<number, { name: string, type: string, myGained: number, myConceded: number, matches: number, totalPoE: number }> = {};
@@ -764,8 +766,8 @@ export class StatsService {
         };
     }
 
-    async getCombosList(conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<ComboStatsDTO[]> {
-        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+    async getCombosList(databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<ComboStatsDTO[]> {
+        const battleWhere = this.buildPrismaBattleFilter(databaseId, conditions, timezoneOffset);
         const entries = await prisma.battleEntry.findMany({
             where: battleWhere ? {
                 battle: battleWhere
@@ -779,7 +781,7 @@ export class StatsService {
             }
         });
 
-        const colleyRatings = await this.calculateColleyRatings(battleWhere);
+        const colleyRatings = await this.calculateColleyRatings(databaseId, battleWhere);
 
         const comboGroups: Record<string, {
             parts: { id: number, name: string, type: string }[],
@@ -817,14 +819,14 @@ export class StatsService {
         }).sort((a, b) => b.totalMatches - a.totalMatches);
     }
 
-    async analyzeCombo(partsIds: number[], conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<any> {
-        const battleWhere = this.buildPrismaBattleFilter(conditions, timezoneOffset);
+    async analyzeCombo(partsIds: number[], databaseId: string, conditions?: BattleFilterCondition[], timezoneOffset: number = 0): Promise<any> {
+        const battleWhere = this.buildPrismaBattleFilter(databaseId, conditions, timezoneOffset);
         const parts = await prisma.part.findMany({
             where: { id: { in: partsIds } },
             include: { partType: true }
         });
 
-        const colleyRatings = await this.calculateColleyRatings(battleWhere);
+        const colleyRatings = await this.calculateColleyRatings(databaseId, battleWhere);
         const avgBp = Math.round(parts.reduce((acc, p) => acc + (colleyRatings.get(p.id) ?? DEFAULT_COLLEY), 0) / parts.length);
         const comboHash = partsIds.sort((a, b) => a - b).join('-');
 
