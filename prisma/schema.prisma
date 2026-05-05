@@ -40,6 +40,18 @@ model Stadium {
   @@map("stadiums")
 }
 
+model Database {
+  id        String   @id @default(uuid())
+  ownerId   String   @map("owner_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  battles   Battle[]
+
+  @@index([ownerId])
+  @@map("databases")
+}
+
 model Part {
   id            Int               @id @default(autoincrement())
   name          String
@@ -57,21 +69,23 @@ model Part {
 }
 
 model Battle {
-  id        Int           @id @default(autoincrement())
-  createdAt DateTime      @default(now()) @map("created_at")
-  stadiumId Int?          @map("stadium_id")
-  userId    String?       @map("user_id") // null = anonymous battle
-  stadium   Stadium?      @relation(fields: [stadiumId], references: [id])
-  entries   BattleEntry[]
+  id         String        @id @default(uuid())
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+  stadiumId  Int?          @map("stadium_id")
+  databaseId String        @map("database_id")
+  stadium    Stadium?      @relation(fields: [stadiumId], references: [id])
+  database   Database      @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  entries    BattleEntry[]
 
   @@index([stadiumId])
-  @@index([userId])
+  @@index([databaseId])
   @@map("battles")
 }
 
 model BattleEntry {
   id         Int               @id @default(autoincrement())
-  battleId   Int               @map("battle_id")
+  battleId   String            @map("battle_id")
   lineId     Int               @map("line_id")
   finishType String            @map("finish_type")
   points     Int
