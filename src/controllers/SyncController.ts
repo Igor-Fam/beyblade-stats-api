@@ -46,8 +46,12 @@ export async function syncBattles(req: Request, res: Response): Promise<void> {
     }
 
     // 2. Fetch existing battles in these databases to check for updates
+    // We MUST filter by authorizedDbIds to prevent updating battles owned by other users
     const existingBattles = await prisma.battle.findMany({
-        where: { id: { in: authorizedBattles.map(b => b.id) } },
+        where: { 
+            id: { in: authorizedBattles.map(b => b.id) },
+            databaseId: { in: Array.from(authorizedDbIds) }
+        },
         select: { id: true, updatedAt: true }
     });
     const existingMap = new Map(existingBattles.map(b => [b.id, b.updatedAt.getTime()]));
