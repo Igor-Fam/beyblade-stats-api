@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 export interface AuthState {
     user: User | null;
@@ -71,7 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
     };
 
     const logout = async () => {
+        console.log('useAuth: Logging out...');
+        
+        if (isPremium) {
+            console.log('useAuth: Premium user detected, clearing local battles...');
+            await db.battles.clear();
+        }
+
         await supabase.auth.signOut();
+        
+        // Force a page reload to reset all states and clear any cached data
+        window.location.reload();
     };
 
     const getToken = async (): Promise<string | null> => {
