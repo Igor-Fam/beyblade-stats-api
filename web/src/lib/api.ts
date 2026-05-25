@@ -154,9 +154,15 @@ export async function fetchPartDetails(id: number, filters?: BattleFilterConditi
   return localStatsService.getPartDetails(id, filters, tz);
 }
 
-export async function fetchBattleHistory(page = 1, limit = 50): Promise<BattleHistoryResponse> {
-  const battles = await db.battles.reverse().offset((page - 1) * limit).limit(limit).toArray();
-  const total = await db.battles.count();
+export async function fetchBattleHistory(filters?: BattleFilterCondition[], page = 1, limit = 50): Promise<BattleHistoryResponse> {
+  const allBattles = await db.battles.reverse().toArray();
+  
+  const tz = new Date().getTimezoneOffset();
+  const filterFn = localStatsService.buildDexieBattleFilter(filters, tz);
+  const filteredBattles = allBattles.filter(filterFn);
+  
+  const total = filteredBattles.length;
+  const battles = filteredBattles.slice((page - 1) * limit, page * limit);
   
   const stadiums = new Map((await db.stadiums.toArray()).map(s => [s.id, s]));
   const lines = new Map((await db.lines.toArray()).map(l => [l.id, l]));

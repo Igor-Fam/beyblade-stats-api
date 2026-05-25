@@ -101,7 +101,7 @@ export class LocalStatsService {
         return map;
     }
 
-    private buildDexieBattleFilter(conditions?: BattleFilterCondition[], timezoneOffset: number = 0) {
+    buildDexieBattleFilter(conditions?: BattleFilterCondition[], timezoneOffset: number = 0) {
         return (battle: LocalBattle) => {
             if (!conditions || conditions.length === 0) return true;
             for (const cond of conditions) {
