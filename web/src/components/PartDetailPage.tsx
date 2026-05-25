@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle } from 'lucide-react';
-import { fetchPartDetails, fetchPartsList, type PartDetails } from '../lib/api';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers } from 'lucide-react';
+import { fetchPartDetails, fetchPartsList, fetchLines, type PartDetails, type Line } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { TYPE_COLORS } from './ui/PartLinkCard';
@@ -23,11 +23,25 @@ const FINISH_WEIGHTS: Record<string, number> = {
   XTREME: 3,
 };
 
+const PART_TYPE_ORDER = ['BLADE', 'RATCHET', 'BIT', 'LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'METAL_BLADE', 'OVER_BLADE'];
+
+const sortPartTypes = (types: string[]) => {
+  return [...types].sort((a, b) => {
+    const idxA = PART_TYPE_ORDER.indexOf(a);
+    const idxB = PART_TYPE_ORDER.indexOf(b);
+    if (idxA === -1 && idxB === -1) return a.localeCompare(b);
+    if (idxA === -1) return 1;
+    if (idxB === -1) return -1;
+    return idxA - idxB;
+  });
+};
+
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const location = useLocation();
   const [part, setPart] = useState<PartDetails | null>(null);
+  const [lines, setLines] = useState<Line[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rank, setRank] = useState<number | null>(null);
@@ -35,6 +49,11 @@ export default function PartDetailPage() {
   const [winFinishMode, setWinFinishMode] = useState<'matches' | 'points'>('matches');
   const [lossFinishMode, setLossFinishMode] = useState<'matches' | 'points'>('matches');
   const [hasBattleFilters, setHasBattleFilters] = useState(false);
+
+  // Tabs states
+  const [activeTab, setActiveTab] = useState<'overview' | 'synergies' | 'counters' | 'combos'>('overview');
+  const [synergySubTab, setSynergySubTab] = useState<string>('all');
+  const [counterSubTab, setCounterSubTab] = useState<string>('all');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -62,10 +81,12 @@ export default function PartDetailPage() {
 
     Promise.all([
       fetchPartDetails(Number(id), battleFilters),
-      fetchPartsList(battleFilters)
+      fetchPartsList(battleFilters),
+      fetchLines()
     ])
-      .then(([partData, partsList]) => {
+      .then(([partData, partsList, linesList]) => {
         setPart(partData);
+        setLines(linesList);
 
         // Calcular rank ignorando peças imprecisas ou sem partidas
         const consolidatedParts = partsList
@@ -82,6 +103,35 @@ export default function PartDetailPage() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+
+  const compatibleTypes = useMemo(() => {
+    if (!part || !lines.length) return [];
+    const currentType = part.type;
+    const matchingLines = lines.filter(line => 
+      line.metadata?.slots?.includes(currentType)
+    );
+    const types = new Set<string>();
+    matchingLines.forEach(line => {
+      line.metadata?.slots?.forEach(slot => {
+        if (slot !== currentType) {
+          types.add(slot);
+        }
+      });
+    });
+    return sortPartTypes(Array.from(types));
+  }, [part, lines]);
+
+  const allPartTypes = useMemo(() => {
+    if (!lines.length) return [];
+    const types = new Set<string>();
+    lines.forEach(line => {
+      line.metadata?.slots?.forEach(slot => {
+        types.add(slot);
+      });
+    });
+    return sortPartTypes(Array.from(types));
+  }, [lines]);
 
   if (loading) return <div className="view"><div className={layout.loading}>{t('stats_loading')}</div></div>;
   if (error || !part) return <div className="view"><div className={layout.error}>{error || 'Part not found'}</div></div>;
@@ -146,6 +196,15 @@ export default function PartDetailPage() {
     );
   };
 
+  // Filter lists based on nested sub-tabs
+  const filteredPartners = synergySubTab === 'all'
+    ? part.allPartners
+    : part.allPartners.filter(p => p.type === synergySubTab);
+
+  const filteredCounters = counterSubTab === 'all'
+    ? part.allCounters
+    : part.allCounters.filter(p => p.type === counterSubTab);
+
   return (
     <div className={`view ${layout.page}`}>
       <header className={layout.header}>
@@ -191,137 +250,259 @@ export default function PartDetailPage() {
         )}
       </header>
 
-      <StatsGrid>
-        <StatCard icon={<Activity size={24} />} iconColor="#38bdf8" label="Battle Power">
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-            <span>{part.isInaccurate ? <span className={styles.dash}>—</span> : part.bp}</span>
-            {rank !== null && !part.isInaccurate && (
-              <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                #{rank}
-              </span>
-            )}
-          </div>
-        </StatCard>
-        <StatCard icon={<Users size={24} />} iconColor="#94a3b8" label={t('col_battles')}>
-          {part.totalMatches}
-        </StatCard>
-      </StatsGrid>
-
-      <div className={styles.performanceStatsGrid}>
-        <div className={styles.performanceOverview}>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_winrate')}</span>
-            <span className={styles.perfValue} style={{ color: Number(part.winRate.replace('%', '')) > 50 ? '#4ade80' : '#f87171' }}>
-              {part.winRate}
-            </span>
-          </div>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_wins')}</span>
-            <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.wins}</span>
-          </div>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_losses')}</span>
-            <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
-          </div>
-        </div>
-
-        <div className={styles.performanceOverview}>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_scoring_rate')}</span>
-            <span className={styles.perfValue} style={{ color: part.scoringRate > 50 ? '#4ade80' : '#f87171' }}>
-              {part.scoringRate}%
-            </span>
-          </div>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_points_gained')}</span>
-            <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.totalGained}</span>
-          </div>
-          <div className={styles.performanceItem}>
-            <span className={styles.perfLabel}>{t('col_points_conceded')}</span>
-            <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.totalConceded}</span>
-          </div>
-        </div>
+      {/* Main Tabs Navigation Bar */}
+      <div className={styles.mainTabs}>
+        <button
+          className={`${styles.mainTabBtn} ${activeTab === 'overview' ? styles.mainTabActive : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          <Eye size={16} /> {t('tab_overview')}
+        </button>
+        <button
+          className={`${styles.mainTabBtn} ${activeTab === 'synergies' ? styles.mainTabActive : ''}`}
+          onClick={() => setActiveTab('synergies')}
+        >
+          <Target size={16} /> {t('tab_synergies')}
+        </button>
+        <button
+          className={`${styles.mainTabBtn} ${activeTab === 'counters' ? styles.mainTabActive : ''}`}
+          onClick={() => setActiveTab('counters')}
+        >
+          <Sword size={16} /> {t('tab_counters')}
+        </button>
+        <button
+          className={`${styles.mainTabBtn} ${activeTab === 'combos' ? styles.mainTabActive : ''}`}
+          onClick={() => setActiveTab('combos')}
+        >
+          <Layers size={16} /> {t('tab_combos')}
+        </button>
       </div>
 
-      <section className={styles.finishContainer}>
-        {renderFinishStats(part.winFinishes, t('win_finishes'), winFinishMode, setWinFinishMode)}
-        {renderFinishStats(part.lossFinishes, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
-      </section>
+      {/* Tab Panels */}
+      <div className={styles.tabContent}>
+        {activeTab === 'overview' && (
+          <div className={styles.tabPanelFade}>
+            <StatsGrid>
+              <StatCard icon={<Activity size={24} />} iconColor="#38bdf8" label="Battle Power">
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                  <span>{part.isInaccurate ? <span className={styles.dash}>—</span> : part.bp}</span>
+                  {rank !== null && !part.isInaccurate && (
+                    <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      #{rank}
+                    </span>
+                  )}
+                </div>
+              </StatCard>
+              <StatCard icon={<Users size={24} />} iconColor="#94a3b8" label={t('col_battles')}>
+                {part.totalMatches}
+              </StatCard>
+            </StatsGrid>
 
-      <div className={styles.analyticalGrid}>
-        <section className={styles.analyticsSection}>
-          <h2 className={styles.sectionTitle}>
-            <Target size={20} className={styles.sectionIcon} /> {t('best_synergies')}
-          </h2>
-          <p className={styles.sectionDesc}>{t('best_synergies_desc')}</p>
-          <div className={styles.analyticsTable}>
-            <table className={styles.partTable}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                  <th className={styles.tableHeaderMetric}>{t('col_efficiency_with', { part: t(part.name as any) })}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {part.bestPartners.length > 0 ? part.bestPartners.map(p => (
-                  <tr key={p.id} className={styles.tableRow}>
-                    <td>
-                      <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
-                        <span className={styles.partItemName}>{t(p.name as any)}</span>
-                        <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
-                      </Link>
-                    </td>
-                    <td className={styles.tableMetricCell}>
-                      <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
-                        {p.scoringRate}%
-                      </span>
-                      <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div className={styles.performanceStatsGrid}>
+              <div className={styles.performanceOverview}>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_winrate')}</span>
+                  <span className={styles.perfValue} style={{ color: Number(part.winRate.replace('%', '')) > 50 ? '#4ade80' : '#f87171' }}>
+                    {part.winRate}
+                  </span>
+                </div>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_wins')}</span>
+                  <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.wins}</span>
+                </div>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_losses')}</span>
+                  <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.losses}</span>
+                </div>
+              </div>
 
-        <section className={styles.analyticsSection}>
-          <h2 className={styles.sectionTitle}>
-            <Sword size={20} className={styles.sectionIcon} /> {t('best_counters')}
-          </h2>
-          <p className={styles.sectionDesc}>{t('best_counters_desc')}</p>
-          <div className={styles.analyticsTable}>
-            <table className={styles.partTable}>
-              <thead>
-                <tr>
-                  <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                  <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {part.bestCounters.length > 0 ? part.bestCounters.map(p => (
-                  <tr key={p.id} className={styles.tableRow}>
-                    <td>
-                      <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
-                        <span className={styles.partItemName}>{t(p.name as any)}</span>
-                        <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
-                      </Link>
-                    </td>
-                    <td className={styles.tableMetricCell}>
-                      <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
-                        {p.scoringRate}%
-                      </span>
-                      <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
-                )}
-              </tbody>
-            </table>
+              <div className={styles.performanceOverview}>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_scoring_rate')}</span>
+                  <span className={styles.perfValue} style={{ color: part.scoringRate > 50 ? '#4ade80' : '#f87171' }}>
+                    {part.scoringRate}%
+                  </span>
+                </div>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_points_gained')}</span>
+                  <span className={styles.perfValue} style={{ color: '#4ade80' }}>{part.totalGained}</span>
+                </div>
+                <div className={styles.performanceItem}>
+                  <span className={styles.perfLabel}>{t('col_points_conceded')}</span>
+                  <span className={styles.perfValue} style={{ color: '#f87171' }}>{part.totalConceded}</span>
+                </div>
+              </div>
+            </div>
+
+            <section className={styles.finishContainer}>
+              {renderFinishStats(part.winFinishes, t('win_finishes'), winFinishMode, setWinFinishMode)}
+              {renderFinishStats(part.lossFinishes, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
+            </section>
           </div>
-        </section>
+        )}
+
+        {activeTab === 'synergies' && (
+          <div className={styles.tabPanelFade}>
+            <p className={styles.tabSectionDesc}>
+              {t('synergies_general_desc')}
+            </p>
+
+            {/* Sub-tabs pills */}
+            <div className={styles.subTabs}>
+              <button
+                className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
+                onClick={() => setSynergySubTab('all')}
+              >
+                {t('tab_all')}
+              </button>
+              {compatibleTypes.map(type => (
+                <button
+                  key={type}
+                  className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
+                  onClick={() => setSynergySubTab(type)}
+                >
+                  <span className={styles.subTabColorDot} style={{ backgroundColor: TYPE_COLORS[type] }} />
+                  {type}
+                </button>
+              ))}
+            </div>
+
+            {/* List */}
+            <div className={styles.analyticsTable}>
+              <table className={styles.partTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.tableHeaderPart}>{t('col_part')}</th>
+                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPartners.length > 0 ? filteredPartners.map(p => (
+                    <tr key={p.id} className={styles.tableRow}>
+                      <td>
+                        <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
+                          <span className={styles.partItemName}>{t(p.name as any)}</span>
+                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                        </Link>
+                      </td>
+                      <td className={styles.tableMetricCell}>
+                        <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
+                          {p.scoringRate}%
+                        </span>
+                        <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'counters' && (
+          <div className={styles.tabPanelFade}>
+            <p className={styles.tabSectionDesc}>
+              {t('counters_general_desc')}
+            </p>
+
+            {/* Sub-tabs pills */}
+            <div className={styles.subTabs}>
+              <button
+                className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
+                onClick={() => setCounterSubTab('all')}
+              >
+                {t('tab_all')}
+              </button>
+              {allPartTypes.map(type => (
+                <button
+                  key={type}
+                  className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
+                  onClick={() => setCounterSubTab(type)}
+                >
+                  <span className={styles.subTabColorDot} style={{ backgroundColor: TYPE_COLORS[type] }} />
+                  {type}
+                </button>
+              ))}
+            </div>
+
+            {/* List */}
+            <div className={styles.analyticsTable}>
+              <table className={styles.partTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.tableHeaderPart}>{t('col_part')}</th>
+                    <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCounters.length > 0 ? filteredCounters.map(p => (
+                    <tr key={p.id} className={styles.tableRow}>
+                      <td>
+                        <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
+                          <span className={styles.partItemName}>{t(p.name as any)}</span>
+                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                        </Link>
+                      </td>
+                      <td className={styles.tableMetricCell}>
+                        <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
+                          {p.scoringRate}%
+                        </span>
+                        <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'combos' && (
+          <div className={styles.tabPanelFade}>
+            {/* List of full combos */}
+            <div className={styles.analyticsTable}>
+              <table className={styles.partTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.tableHeaderPart}>{t('col_combo')}</th>
+                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {part.combos && part.combos.length > 0 ? part.combos.map((combo, idx) => (
+                    <tr key={idx} className={styles.tableRow}>
+                      <td>
+                        <div className={styles.comboPartsContainer}>
+                          <span className={styles.lineBadge}>{combo.lineName}</span>
+                          <div className={styles.comboPartsList}>
+                            {combo.parts.map(p => (
+                              <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.comboPartPill}>
+                                <span className={p.id === part.id ? styles.comboPartDotActive : styles.comboPartDot} style={{ backgroundColor: TYPE_COLORS[p.type] || '#fff' }} />
+                                <span className={p.id === part.id ? styles.comboPartNameActive : styles.comboPartName}>{t(p.name as any)}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                      <td className={styles.tableMetricCell}>
+                        <span className={styles.metricValue} style={{ color: combo.scoringRate > 55 ? '#4ade80' : combo.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
+                          {combo.scoringRate}%
+                        </span>
+                        <span className={styles.metricBattles}>{combo.totalMatches} {t('col_battles').toLowerCase()}</span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_combos_found')}</div></td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {helpModal && (

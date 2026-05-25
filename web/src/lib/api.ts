@@ -41,6 +41,16 @@ export interface PartDetails extends PartStats {
   totalConceded: number;
   bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+  allPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+  allCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+  combos: {
+    lineName: string;
+    parts: { id: number; name: string; type: string }[];
+    totalMatches: number;
+    gained: number;
+    conceded: number;
+    scoringRate: number;
+  }[];
   winFinishes: Record<string, number>;
   lossFinishes: Record<string, number>;
   dependencies: Dependency[];

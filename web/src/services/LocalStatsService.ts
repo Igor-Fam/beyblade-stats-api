@@ -48,11 +48,23 @@ export interface DependencyDTO {
     scoringRateWithout: number;
 }
 
+export interface PartComboStatsDTO {
+    lineName: string;
+    parts: { id: number; name: string; type: string }[];
+    totalMatches: number;
+    gained: number;
+    conceded: number;
+    scoringRate: number;
+}
+
 export interface PartDetailsDTO extends PartStatsDTO {
     totalGained: number;
     totalConceded: number;
     bestPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
     bestCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+    allPartners: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+    allCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
+    combos: PartComboStatsDTO[];
     winFinishes: Record<string, number>;
     lossFinishes: Record<string, number>;
     dependencies: DependencyDTO[];
@@ -414,6 +426,8 @@ export class LocalStatsService {
 
         const partnerStats: Record<number, any> = {};
         const counterStats: Record<number, any> = {};
+        const comboStats: Record<string, any> = {};
+        const linesMap = new Map((await db.lines.toArray()).map(l => [l.id, l]));
 
         filteredBattles.forEach(battle => {
             const entry0 = battle.entries[0];
@@ -430,18 +444,35 @@ export class LocalStatsService {
                 const isWin = myEntry.points > 0;
                 totalPoints += myEntry.points;
 
+                const sortedPartIds = [...myEntry.partIds].sort((a, b) => a - b);
+                const comboKey = `${myEntry.lineId}_${sortedPartIds.join('-')}`;
+                if (!comboStats[comboKey]) {
+                    comboStats[comboKey] = {
+                        lineId: myEntry.lineId,
+                        partIds: sortedPartIds,
+                        gained: 0,
+                        conceded: 0,
+                        matches: 0,
+                        totalPoE: 0
+                    };
+                }
+
                 if (isWin) {
                     wins++;
                     totalGained += myEntry.points;
                     winFinishes[myEntry.finishType] = (winFinishes[myEntry.finishType] || 0) + 1;
+                    comboStats[comboKey].gained += myEntry.points;
                 } else {
                     losses++;
                     totalConceded += Math.abs(myEntry.points);
                     lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
+                    comboStats[comboKey].conceded += Math.abs(myEntry.points);
                 }
+                comboStats[comboKey].matches++;
 
                 const multiplier = myEntry.finishType === 'XTREME' ? 2.5 : myEntry.finishType === 'OVER' || myEntry.finishType === 'BURST' ? 1.8 : 1.0;
                 const poe = isWin ? 1 * multiplier : -1 * multiplier;
+                comboStats[comboKey].totalPoE += poe;
 
                 myEntry.partIds.forEach(pId => {
                     const pEffId = getEffectiveId(pId);
@@ -479,43 +510,77 @@ export class LocalStatsService {
             });
         });
 
-        const bestPartners = Object.entries(partnerStats)
-            .map(([id, data]: [string, any]) => {
-                const sum = data.gained + data.conceded;
-                const rawRate = sum > 0 ? (data.gained / sum) : 0.5;
-                const avgPoE = data.totalPoE / data.matches;
-                const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
-                const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
+        const computeList = (statsObj: Record<number, any>, isCounter: boolean) => {
+            return Object.entries(statsObj)
+                .map(([id, data]: [string, any]) => {
+                    const sum = isCounter ? (data.myGained + data.myConceded) : (data.gained + data.conceded);
+                    const rawRate = sum > 0 ? ((isCounter ? data.myGained : data.gained) / sum) : 0.5;
+                    const avgPoE = data.totalPoE / data.matches;
+                    const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
+                    const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
 
-                return {
-                    id: Number(id), name: data.name, type: data.type,
-                    totalMatches: data.matches,
-                    avgPoints: Number(((data.gained - data.conceded) / data.matches).toFixed(2)),
-                    scoringRate: Number((efficiency * 100).toFixed(2))
-                };
-            })
+                    return {
+                        id: Number(id),
+                        name: data.name,
+                        type: data.type,
+                        totalMatches: data.matches,
+                        avgPoints: Number((((isCounter ? data.myGained - data.myConceded : data.gained - data.conceded)) / data.matches).toFixed(2)),
+                        scoringRate: Number((efficiency * 100).toFixed(2))
+                    };
+                });
+        };
+
+        const allPartnersRaw = computeList(partnerStats, false);
+        const allCountersRaw = computeList(counterStats, true);
+
+        const bestPartners = allPartnersRaw
             .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
             .sort((a, b) => b.scoringRate - a.scoringRate)
             .slice(0, ANALYTICS_LIMIT);
 
-        const bestCounters = Object.entries(counterStats)
-            .map(([id, data]: [string, any]) => {
-                const sum = data.myGained + data.myConceded;
-                const rawRate = sum > 0 ? (data.myGained / sum) : 0.5;
-                const avgPoE = data.totalPoE / data.matches;
+        const bestCounters = allCountersRaw
+            .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
+            .sort((a, b) => a.scoringRate - b.scoringRate)
+            .slice(0, ANALYTICS_LIMIT);
+
+        const allPartners = allPartnersRaw
+            .filter(p => p.totalMatches > 0)
+            .sort((a, b) => b.scoringRate - a.scoringRate);
+
+        const allCounters = allCountersRaw
+            .filter(p => p.totalMatches > 0)
+            .sort((a, b) => a.scoringRate - b.scoringRate);
+
+        const combos = Object.values(comboStats)
+            .map((c: any) => {
+                const sum = c.gained + c.conceded;
+                const rawRate = sum > 0 ? (c.gained / sum) : 0.5;
+                const avgPoE = c.totalPoE / c.matches;
                 const normalizedPoE = ((avgPoE / 2.5) + 1) / 2;
                 const efficiency = (rawRate * 0.4) + (normalizedPoE * 0.6);
 
+                const line = linesMap.get(c.lineId);
+                const lineName = line ? line.name : 'Unknown';
+
+                const parts = c.partIds.map((pId: number) => {
+                    const pData = partsMap.get(pId);
+                    return {
+                        id: pId,
+                        name: pData?.name || 'Unknown',
+                        type: pData?.partType?.name || 'Unknown'
+                    };
+                });
+
                 return {
-                    id: Number(id), name: data.name, type: data.type,
-                    totalMatches: data.matches,
-                    avgPoints: Number(((data.myGained - data.myConceded) / data.matches).toFixed(2)),
+                    lineName,
+                    parts,
+                    totalMatches: c.matches,
+                    gained: c.gained,
+                    conceded: c.conceded,
                     scoringRate: Number((efficiency * 100).toFixed(2))
                 };
             })
-            .filter(p => p.totalMatches >= ANALYTICS_MIN_BATTLES)
-            .sort((a, b) => a.scoringRate - b.scoringRate) 
-            .slice(0, ANALYTICS_LIMIT);
+            .sort((a, b) => b.scoringRate - a.scoringRate);
 
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
@@ -546,7 +611,7 @@ export class LocalStatsService {
             avgPoints: totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(2)) : 0,
             scoringRate, pointsGained: totalGained, pointsConceded: totalConceded,
             isDependent, isInaccurate: totalMatches > 0 && totalMatches < INACCURATE_BATTLES_THRESHOLD,
-            totalGained, totalConceded, bestPartners, bestCounters, winFinishes, lossFinishes,
+            totalGained, totalConceded, bestPartners, bestCounters, allPartners, allCounters, combos, winFinishes, lossFinishes,
             dependencies: totalGained === 0 ? [] : Object.entries(partnerStats)
                 .map(([id, data]) => {
                     const sumWith = data.gained + data.conceded;
