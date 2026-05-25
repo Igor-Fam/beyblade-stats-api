@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RotateCcw, Smartphone, Trash2, X } from 'lucide-react';
 import type { Line, Part, Stadium } from '../lib/api';
 import { fetchLines, fetchParts, fetchStadiums, registerBattle, deleteBattle } from '../lib/api';
@@ -19,6 +19,9 @@ interface SessionBattle {
 }
 
 export default function BattleLogger() {
+  const isSubmitting = useRef(false);
+  const [highlightedBtn, setHighlightedBtn] = useState<{ player: number, type: string } | null>(null);
+
   const [lines, setLines] = useState<Line[]>([]);
   const [parts, setParts] = useState<Part[]>([]);
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
@@ -116,9 +119,12 @@ export default function BattleLogger() {
   };
 
   const handleFinish = async (winnerIndex: number, finishType: string) => {
+    if (isSubmitting.current) return;
     if (!stadiumId) return setStatus({ msg: t('status_select_stadium'), type: 'error' });
     if (!lineA || !lineB) return setStatus({ msg: t('status_select_lines'), type: 'error' });
 
+    isSubmitting.current = true;
+    setHighlightedBtn({ player: winnerIndex, type: finishType });
     setLoading(true);
     try {
       const { battleId } = await registerBattle({
@@ -226,6 +232,12 @@ export default function BattleLogger() {
       setTimeout(() => setStatus(null), 4000);
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        isSubmitting.current = false;
+      }, 300);
+      setTimeout(() => {
+        setHighlightedBtn(null);
+      }, 1800);
     }
   };
 
@@ -284,14 +296,14 @@ export default function BattleLogger() {
             </div>
 
             <div className={styles['finish-buttons-grid']}>
-              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'SPIN')}>Spin</button>
-              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'SPIN')}>Spin</button>
-              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'OVER')}>Over</button>
-              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'OVER')}>Over</button>
-              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'BURST')}>Burst</button>
-              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'BURST')}>Burst</button>
-              <button className={`${styles['finish-btn']} ${styles.blue}`} disabled={loading} onClick={() => handleFinish(0, 'XTREME')}>Xtreme</button>
-              <button className={`${styles['finish-btn']} ${styles.orange}`} disabled={loading} onClick={() => handleFinish(1, 'XTREME')}>Xtreme</button>
+              <button className={`${styles['finish-btn']} ${styles.blue} ${highlightedBtn?.player === 0 && highlightedBtn?.type === 'SPIN' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(0, 'SPIN')}>Spin</button>
+              <button className={`${styles['finish-btn']} ${styles.orange} ${highlightedBtn?.player === 1 && highlightedBtn?.type === 'SPIN' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(1, 'SPIN')}>Spin</button>
+              <button className={`${styles['finish-btn']} ${styles.blue} ${highlightedBtn?.player === 0 && highlightedBtn?.type === 'OVER' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(0, 'OVER')}>Over</button>
+              <button className={`${styles['finish-btn']} ${styles.orange} ${highlightedBtn?.player === 1 && highlightedBtn?.type === 'OVER' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(1, 'OVER')}>Over</button>
+              <button className={`${styles['finish-btn']} ${styles.blue} ${highlightedBtn?.player === 0 && highlightedBtn?.type === 'BURST' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(0, 'BURST')}>Burst</button>
+              <button className={`${styles['finish-btn']} ${styles.orange} ${highlightedBtn?.player === 1 && highlightedBtn?.type === 'BURST' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(1, 'BURST')}>Burst</button>
+              <button className={`${styles['finish-btn']} ${styles.blue} ${highlightedBtn?.player === 0 && highlightedBtn?.type === 'XTREME' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(0, 'XTREME')}>Xtreme</button>
+              <button className={`${styles['finish-btn']} ${styles.orange} ${highlightedBtn?.player === 1 && highlightedBtn?.type === 'XTREME' ? styles.highlighted : ''}`} disabled={loading} onClick={() => handleFinish(1, 'XTREME')}>Xtreme</button>
             </div>
 
             <div className={styles['history-actions']}>

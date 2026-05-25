@@ -140,10 +140,15 @@
   font-size: 1.1rem;
   font-weight: 700;
   border-radius: 0.5rem;
-  border: none;
+  border: 3px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.2s;
+  transition: transform 0.1s, box-shadow 0.2s, background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease;
   text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.finish-btn.highlighted {
+  transition: none !important;
 }
 
 
@@ -152,9 +157,39 @@
   color: #fff;
 }
 
+.finish-btn.blue.highlighted {
+  animation: fadeOutBlueBorder 1.8s ease-out forwards;
+}
+
 .finish-btn.orange {
   background: var(--accent-ux);
   color: #fff;
+}
+
+.finish-btn.orange.highlighted {
+  animation: fadeOutOrangeBorder 1.8s ease-out forwards;
+}
+
+@keyframes fadeOutBlueBorder {
+  0% {
+    border-color: #e0f2fe;
+    transform: scale(1.03);
+  }
+  100% {
+    border-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOutOrangeBorder {
+  0% {
+    border-color: #ffedd5;
+    transform: scale(1.03);
+  }
+  100% {
+    border-color: transparent;
+    transform: scale(1);
+  }
 }
 
 .history-actions {
@@ -379,11 +414,10 @@
   }
   
   .combo-column, .action-column { 
-    overflow-y: auto; 
-    overflow-x: visible; 
-    padding-right: 0.25rem; 
+    overflow: hidden !important; 
+    padding-right: 0 !important; 
   }
-  .combo-column::-webkit-scrollbar, .action-column::-webkit-scrollbar { width: 3px; }
+  .combo-column::-webkit-scrollbar, .action-column::-webkit-scrollbar { display: none; }
   
   .score-numbers { 
     font-size: 3.5rem; 
