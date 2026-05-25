@@ -443,6 +443,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   opacity: 0.85;
+  color: var(--accent-cx);
 }
 
 /* Ranking value — slightly larger/bolder to stand out */

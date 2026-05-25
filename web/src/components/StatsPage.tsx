@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, HelpCircle, X, Search, Download, AlertTriangle } from 'lucide-react';
+import { Filter, HelpCircle, X, Search, AlertTriangle } from 'lucide-react';
 import { type PartStats, type Stadium, type BattleFilterCondition, fetchPartsList, fetchStadiums } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import styles from './StatsPage.module.css';
@@ -252,24 +252,8 @@ export default function StatsPage() {
   };
 
   const rankLabel = t('col_bp');
-  const rankDesc = 'Colley — order-independent, strength-aware';
 
   const battleFiltersActive = battleFilters.length > 0;
-
-  const exportCsv = () => {
-    const headers = ['Name', 'Type', 'BP', 'Scoring Rate', 'Points Gained', 'Points Conceded', 'Win Rate', 'Wins', 'Losses'];
-    const rows = filteredAndSorted.map(p => [
-      p.name, p.type, p.bp, p.scoringRate, p.pointsGained, p.pointsConceded, p.winRate, p.wins, p.losses
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'parts_stats.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className={`view ${styles.page}`}>
@@ -277,13 +261,6 @@ export default function StatsPage() {
         <h1>{t('stats_title')}</h1>
 
         <div className={styles.controls}>
-          <div className={styles.rankingModeRow}>
-            <span className={styles.modeDesc}>{rankDesc}</span>
-            <button className={styles.exportBtn} onClick={exportCsv} title="Export CSV">
-              <Download size={16} />
-            </button>
-          </div>
-
           <div className={styles.filterGroup}>
             <div className={styles.filterBtnWrapper}>
               <button
