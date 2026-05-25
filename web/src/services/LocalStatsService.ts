@@ -440,9 +440,16 @@ export class LocalStatsService {
                 const usesPart = myEntry.partIds.some(id => targetPartIds.includes(id));
                 if (!usesPart) return;
 
+                const opponentBpRaw = opponentEntry.partIds.reduce((sum, id) => sum + (colleyRatings.get(id) ?? DEFAULT_COLLEY), 0);
+                const opponentBp = opponentEntry.partIds.length > 0 ? opponentBpRaw / opponentEntry.partIds.length : DEFAULT_COLLEY;
+                const winMultiplier = opponentBp / DEFAULT_COLLEY;
+                const lossMultiplier = DEFAULT_COLLEY / (opponentBp || 1);
+
                 totalMatches++;
                 const isWin = myEntry.points > 0;
                 totalPoints += myEntry.points;
+                
+                const scaledPoints = isWin ? myEntry.points * winMultiplier : Math.abs(myEntry.points) * lossMultiplier;
 
                 const sortedPartIds = [...myEntry.partIds].sort((a, b) => a - b);
                 const comboKey = `${myEntry.lineId}_${sortedPartIds.join('-')}`;
@@ -461,18 +468,19 @@ export class LocalStatsService {
                     wins++;
                     totalGained += myEntry.points;
                     winFinishes[myEntry.finishType] = (winFinishes[myEntry.finishType] || 0) + 1;
-                    comboStats[comboKey].gained += myEntry.points;
+                    comboStats[comboKey].gained += scaledPoints;
                 } else {
                     losses++;
                     totalConceded += Math.abs(myEntry.points);
                     lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
-                    comboStats[comboKey].conceded += Math.abs(myEntry.points);
+                    comboStats[comboKey].conceded += scaledPoints;
                 }
                 comboStats[comboKey].matches++;
 
-                const multiplier = myEntry.finishType === 'XTREME' ? 2.5 : myEntry.finishType === 'OVER' || myEntry.finishType === 'BURST' ? 1.8 : 1.0;
-                const poe = isWin ? 1 * multiplier : -1 * multiplier;
-                comboStats[comboKey].totalPoE += poe;
+                const finishMultiplier = myEntry.finishType === 'XTREME' ? 2.5 : myEntry.finishType === 'OVER' || myEntry.finishType === 'BURST' ? 1.8 : 1.0;
+                const basePoe = isWin ? 1 * finishMultiplier : -1 * finishMultiplier;
+                const scaledPoe = isWin ? basePoe * winMultiplier : basePoe * lossMultiplier;
+                comboStats[comboKey].totalPoE += scaledPoe;
 
                 myEntry.partIds.forEach(pId => {
                     const pEffId = getEffectiveId(pId);
@@ -485,10 +493,10 @@ export class LocalStatsService {
                                 gained: 0, conceded: 0, matches: 0, totalPoE: 0, isInfluential: true
                             };
                         }
-                        if (isWin) partnerStats[pEffId].gained += myEntry.points;
-                        else partnerStats[pEffId].conceded += Math.abs(myEntry.points);
+                        if (isWin) partnerStats[pEffId].gained += scaledPoints;
+                        else partnerStats[pEffId].conceded += scaledPoints;
                         partnerStats[pEffId].matches++;
-                        partnerStats[pEffId].totalPoE += poe;
+                        partnerStats[pEffId].totalPoE += scaledPoe;
                     }
                 });
 
@@ -502,10 +510,10 @@ export class LocalStatsService {
                             myGained: 0, myConceded: 0, matches: 0, totalPoE: 0
                         };
                     }
-                    if (isWin) counterStats[pEffId].myGained += myEntry.points;
-                    else counterStats[pEffId].myConceded += Math.abs(myEntry.points);
+                    if (isWin) counterStats[pEffId].myGained += scaledPoints;
+                    else counterStats[pEffId].myConceded += scaledPoints;
                     counterStats[pEffId].matches++;
-                    counterStats[pEffId].totalPoE += poe;
+                    counterStats[pEffId].totalPoE += scaledPoe;
                 });
             });
         });
