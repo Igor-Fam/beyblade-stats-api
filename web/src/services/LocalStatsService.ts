@@ -270,6 +270,8 @@ export class LocalStatsService {
                     totalPoints: 0,
                     totalGained: 0,
                     totalConceded: 0,
+                    totalScaledGained: 0,
+                    totalScaledConceded: 0,
                     partnerStats: {} as Record<number, any>
                 });
             }
@@ -280,7 +282,17 @@ export class LocalStatsService {
             const entry1 = battle.entries[1];
             if (!entry0 || !entry1) return;
 
-            [entry0, entry1].forEach(entry => {
+            [entry0, entry1].forEach((entry, idx) => {
+                const opponentEntry = idx === 0 ? entry1 : entry0;
+
+                const opponentBpRaw = opponentEntry.partIds.reduce((sum, id) => sum + (colleyRatings.get(getEffectiveId(id)) ?? DEFAULT_COLLEY), 0);
+                const opponentBp = opponentEntry.partIds.length > 0 ? opponentBpRaw / opponentEntry.partIds.length : DEFAULT_COLLEY;
+                const winMultiplier = opponentBp / DEFAULT_COLLEY;
+                const lossMultiplier = DEFAULT_COLLEY / (opponentBp || 1);
+
+                const isWin = entry.points > 0;
+                const scaledPoints = isWin ? entry.points * winMultiplier : Math.abs(entry.points) * lossMultiplier;
+
                 entry.partIds.forEach(partId => {
                     const effectiveId = getEffectiveId(partId);
                     const stats = aggregatedStats.get(effectiveId);
@@ -289,12 +301,14 @@ export class LocalStatsService {
                     stats.totalMatches++;
                     stats.totalPoints += entry.points;
 
-                    if (entry.points > 0) {
+                    if (isWin) {
                         stats.wins++;
                         stats.totalGained += entry.points;
+                        stats.totalScaledGained += scaledPoints;
                     } else {
                         stats.losses++;
                         stats.totalConceded += Math.abs(entry.points);
+                        stats.totalScaledConceded += scaledPoints;
                     }
 
                     entry.partIds.forEach(partnerId => {
@@ -308,13 +322,17 @@ export class LocalStatsService {
                                     type: isVP ? 'LOCK_CHIP' : (pData?.partType?.name || 'Unknown'),
                                     isInfluential: isVP ? false : (pData?.partType?.isInfluential ?? true),
                                     gained: 0,
-                                    conceded: 0
+                                    conceded: 0,
+                                    unscaledGained: 0,
+                                    unscaledConceded: 0
                                 };
                             }
-                            if (entry.points > 0) {
-                                stats.partnerStats[partnerEffId].gained += entry.points;
+                            if (isWin) {
+                                stats.partnerStats[partnerEffId].gained += scaledPoints;
+                                stats.partnerStats[partnerEffId].unscaledGained += entry.points;
                             } else {
-                                stats.partnerStats[partnerEffId].conceded += Math.abs(entry.points);
+                                stats.partnerStats[partnerEffId].conceded += scaledPoints;
+                                stats.partnerStats[partnerEffId].unscaledConceded += Math.abs(entry.points);
                             }
                         }
                     });
@@ -326,23 +344,26 @@ export class LocalStatsService {
             const pointsSum = stats.totalGained + stats.totalConceded;
             const scoringRate = pointsSum > 0 ? Number(((stats.totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
+            const totalScaledSum = stats.totalScaledGained + stats.totalScaledConceded;
+            const scaledScoringRate = totalScaledSum > 0 ? (stats.totalScaledGained * 100) / totalScaledSum : DEFAULT_SCORING_RATE;
+
             let isDependent = false;
             let dependencies: DependencyDTO[] = [];
 
             if (stats.totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
                 const dominantPartners = Object.entries(stats.partnerStats).map(([partnerId, p]: [string, any]) => {
-                    const pointShare = stats.totalGained > 0 ? p.gained / stats.totalGained : 0;
-                    const gainedWithout = stats.totalGained - p.gained;
-                    const concededWithout = stats.totalConceded - p.conceded;
+                    const pointShare = stats.totalScaledGained > 0 ? p.gained / stats.totalScaledGained : 0;
+                    const gainedWithout = stats.totalScaledGained - p.gained;
+                    const concededWithout = stats.totalScaledConceded - p.conceded;
                     const pointsSumWithout = gainedWithout + concededWithout;
                     const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
-                    const drop = scoringRate - scoringRateWithout;
+                    const drop = scaledScoringRate - scoringRateWithout;
                     const scoringRateWith = (p.gained + p.conceded) > 0 ? (p.gained * 100) / (p.gained + p.conceded) : 0;
 
                     return { id: Number(partnerId), data: p, pointShare, drop, scoringRateWith, scoringRateWithout };
                 }).filter(p => {
                     if (!p.data.isInfluential) return false;
-                    if (p.pointShare < DEPENDENCY_POINT_SHARE || p.data.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
+                    if (p.pointShare < DEPENDENCY_POINT_SHARE || p.data.unscaledGained < DEPENDENCY_POINTS_THRESHOLD) return false;
                     return p.drop > DEPENDENCY_SCORING_RATE_DROP;
                 });
 
@@ -351,6 +372,8 @@ export class LocalStatsService {
                     id: d.id,
                     name: d.data.name,
                     type: d.data.type,
+                    pointsGained: d.data.unscaledGained,
+                    share: Number((d.pointShare * 100).toFixed(2)),
                     scoringRateWith: Number(d.scoringRateWith.toFixed(2)),
                     scoringRateWithout: Number(d.scoringRateWithout.toFixed(2))
                 }));
@@ -449,7 +472,7 @@ export class LocalStatsService {
                 const usesPart = myEntry.partIds.some(id => targetPartIds.includes(id));
                 if (!usesPart) return;
 
-                const opponentBpRaw = opponentEntry.partIds.reduce((sum, id) => sum + (colleyRatings.get(id) ?? DEFAULT_COLLEY), 0);
+                const opponentBpRaw = opponentEntry.partIds.reduce((sum, id) => sum + (colleyRatings.get(getEffectiveId(id)) ?? DEFAULT_COLLEY), 0);
                 const opponentBp = opponentEntry.partIds.length > 0 ? opponentBpRaw / opponentEntry.partIds.length : DEFAULT_COLLEY;
                 const winMultiplier = opponentBp / DEFAULT_COLLEY;
                 const lossMultiplier = DEFAULT_COLLEY / (opponentBp || 1);
