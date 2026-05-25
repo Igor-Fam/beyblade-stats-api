@@ -619,7 +619,7 @@ export default function PartDetailPage() {
             </ScrollTabs>
 
             {/* Controls Header */}
-            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-start' }}>
               <div className={styles.minBattlesWrapper}>
                 <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
                 <input
@@ -713,7 +713,7 @@ export default function PartDetailPage() {
             </ScrollTabs>
 
             {/* Controls Header */}
-            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-start' }}>
               <div className={styles.minBattlesWrapper}>
                 <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
                 <input
@@ -784,7 +784,7 @@ export default function PartDetailPage() {
         {activeTab === 'combos' && (
           <div className={styles.tabPanelFade}>
             {/* Controls Header */}
-            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-start' }}>
               <div className={styles.minBattlesWrapper}>
                 <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
                 <input
