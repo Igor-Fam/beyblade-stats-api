@@ -599,25 +599,27 @@ export default function PartDetailPage() {
               {t('synergies_general_desc')}
             </p>
 
-            {/* Sub-tabs pills and controls */}
-            <div className={styles.tabControlsHeader}>
-              <ScrollTabs className={styles.subTabs} style={{ marginBottom: 0 }}>
+            {/* Sub-tabs pills */}
+            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
+              <button
+                className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
+                onClick={() => setSynergySubTab('all')}
+              >
+                {t('tab_all')}
+              </button>
+              {compatibleTypes.map(type => (
                 <button
-                  className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
-                  onClick={() => setSynergySubTab('all')}
+                  key={type}
+                  className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
+                  onClick={() => setSynergySubTab(type)}
                 >
-                  {t('tab_all')}
+                  {formatTypeTitleCase(type)}
                 </button>
-                {compatibleTypes.map(type => (
-                  <button
-                    key={type}
-                    className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
-                    onClick={() => setSynergySubTab(type)}
-                  >
-                    {formatTypeTitleCase(type)}
-                  </button>
-                ))}
-              </ScrollTabs>
+              ))}
+            </ScrollTabs>
+
+            {/* Controls Header */}
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
               <div className={styles.minBattlesWrapper}>
                 <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
                 <input
@@ -691,25 +693,27 @@ export default function PartDetailPage() {
               {t('counters_general_desc')}
             </p>
 
-            {/* Sub-tabs pills and controls */}
-            <div className={styles.tabControlsHeader}>
-              <ScrollTabs className={styles.subTabs} style={{ marginBottom: 0 }}>
+            {/* Sub-tabs pills */}
+            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
+              <button
+                className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
+                onClick={() => setCounterSubTab('all')}
+              >
+                {t('tab_all')}
+              </button>
+              {allPartTypes.map(type => (
                 <button
-                  className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
-                  onClick={() => setCounterSubTab('all')}
+                  key={type}
+                  className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
+                  onClick={() => setCounterSubTab(type)}
                 >
-                  {t('tab_all')}
+                  {formatTypeTitleCase(type)}
                 </button>
-                {allPartTypes.map(type => (
-                  <button
-                    key={type}
-                    className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
-                    onClick={() => setCounterSubTab(type)}
-                  >
-                    {formatTypeTitleCase(type)}
-                  </button>
-                ))}
-              </ScrollTabs>
+              ))}
+            </ScrollTabs>
+
+            {/* Controls Header */}
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
               <div className={styles.minBattlesWrapper}>
                 <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
                 <input
