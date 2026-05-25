@@ -921,3 +921,30 @@
     padding: 0.35rem !important;
   }
 }
+
+.sortHeaderBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  transition: color 0.15s ease;
+}
+
+.sortHeaderBtn:hover {
+  color: #38bdf8;
+}
+
+.sortIcon {
+  display: inline-block;
+  vertical-align: middle;
+  color: #38bdf8;
+}
