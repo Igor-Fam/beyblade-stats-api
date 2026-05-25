@@ -119,6 +119,7 @@ export default function PartDetailPage() {
   const [synergySortOrder, setSynergySortOrder] = useState<'desc' | 'asc'>('desc');
   const [counterSortOrder, setCounterSortOrder] = useState<'desc' | 'asc'>('asc');
   const [comboSortOrder, setComboSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [minBattles, setMinBattles] = useState<number>(10);
 
   // Reset tabs when navigating to a different part
   useEffect(() => {
@@ -128,6 +129,7 @@ export default function PartDetailPage() {
     setSynergySortOrder('desc');
     setCounterSortOrder('asc');
     setComboSortOrder('desc');
+    setMinBattles(10);
     window.scrollTo(0, 0);
   }, [id]);
 
@@ -243,36 +245,36 @@ export default function PartDetailPage() {
     const filtered = synergySubTab === 'all'
       ? part.allPartners
       : part.allPartners.filter(p => p.type === synergySubTab);
-    const list = [...filtered];
+    const list = filtered.filter(p => p.totalMatches >= minBattles);
     return list.sort((a, b) => {
       const rateA = a.scoringRate;
       const rateB = b.scoringRate;
       return synergySortOrder === 'desc' ? rateB - rateA : rateA - rateB;
     });
-  }, [part, synergySubTab, synergySortOrder]);
+  }, [part, synergySubTab, synergySortOrder, minBattles]);
 
   const sortedCounters = useMemo(() => {
     if (!part) return [];
     const filtered = counterSubTab === 'all'
       ? part.allCounters
       : part.allCounters.filter(p => p.type === counterSubTab);
-    const list = [...filtered];
+    const list = filtered.filter(p => p.totalMatches >= minBattles);
     return list.sort((a, b) => {
       const rateA = a.scoringRate;
       const rateB = b.scoringRate;
       return counterSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
     });
-  }, [part, counterSubTab, counterSortOrder]);
+  }, [part, counterSubTab, counterSortOrder, minBattles]);
 
   const sortedCombos = useMemo(() => {
     if (!part || !part.combos) return [];
-    const list = [...part.combos];
+    const list = part.combos.filter(c => c.totalMatches >= minBattles);
     return list.sort((a, b) => {
       const rateA = a.scoringRate;
       const rateB = b.scoringRate;
       return comboSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
     });
-  }, [part, comboSortOrder]);
+  }, [part, comboSortOrder, minBattles]);
 
   if (loading) return <div className="view"><div className={layout.loading}>{t('stats_loading')}</div></div>;
   if (error || !part) return <div className="view"><div className={layout.error}>{error || 'Part not found'}</div></div>;
@@ -597,24 +599,36 @@ export default function PartDetailPage() {
               {t('synergies_general_desc')}
             </p>
 
-            {/* Sub-tabs pills */}
-            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
-              <button
-                className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
-                onClick={() => setSynergySubTab('all')}
-              >
-                {t('tab_all')}
-              </button>
-              {compatibleTypes.map(type => (
+            {/* Sub-tabs pills and controls */}
+            <div className={styles.tabControlsHeader}>
+              <ScrollTabs className={styles.subTabs} style={{ marginBottom: 0 }}>
                 <button
-                  key={type}
-                  className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
-                  onClick={() => setSynergySubTab(type)}
+                  className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
+                  onClick={() => setSynergySubTab('all')}
                 >
-                  {formatTypeTitleCase(type)}
+                  {t('tab_all')}
                 </button>
-              ))}
-            </ScrollTabs>
+                {compatibleTypes.map(type => (
+                  <button
+                    key={type}
+                    className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
+                    onClick={() => setSynergySubTab(type)}
+                  >
+                    {formatTypeTitleCase(type)}
+                  </button>
+                ))}
+              </ScrollTabs>
+              <div className={styles.minBattlesWrapper}>
+                <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.minBattlesInput}
+                  value={minBattles}
+                  onChange={e => setMinBattles(Math.max(0, parseInt(e.target.value) || 0))}
+                />
+              </div>
+            </div>
 
             {/* List */}
             <div className={styles.analyticsTable}>
@@ -677,24 +691,36 @@ export default function PartDetailPage() {
               {t('counters_general_desc')}
             </p>
 
-            {/* Sub-tabs pills */}
-            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
-              <button
-                className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
-                onClick={() => setCounterSubTab('all')}
-              >
-                {t('tab_all')}
-              </button>
-              {allPartTypes.map(type => (
+            {/* Sub-tabs pills and controls */}
+            <div className={styles.tabControlsHeader}>
+              <ScrollTabs className={styles.subTabs} style={{ marginBottom: 0 }}>
                 <button
-                  key={type}
-                  className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
-                  onClick={() => setCounterSubTab(type)}
+                  className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
+                  onClick={() => setCounterSubTab('all')}
                 >
-                  {formatTypeTitleCase(type)}
+                  {t('tab_all')}
                 </button>
-              ))}
-            </ScrollTabs>
+                {allPartTypes.map(type => (
+                  <button
+                    key={type}
+                    className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
+                    onClick={() => setCounterSubTab(type)}
+                  >
+                    {formatTypeTitleCase(type)}
+                  </button>
+                ))}
+              </ScrollTabs>
+              <div className={styles.minBattlesWrapper}>
+                <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.minBattlesInput}
+                  value={minBattles}
+                  onChange={e => setMinBattles(Math.max(0, parseInt(e.target.value) || 0))}
+                />
+              </div>
+            </div>
 
             {/* List */}
             <div className={styles.analyticsTable}>
@@ -753,6 +779,20 @@ export default function PartDetailPage() {
 
         {activeTab === 'combos' && (
           <div className={styles.tabPanelFade}>
+            {/* Controls Header */}
+            <div className={styles.tabControlsHeader} style={{ justifyContent: 'flex-end' }}>
+              <div className={styles.minBattlesWrapper}>
+                <label className={styles.minBattlesLabel}>{t('min_battles_label')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={styles.minBattlesInput}
+                  value={minBattles}
+                  onChange={e => setMinBattles(Math.max(0, parseInt(e.target.value) || 0))}
+                />
+              </div>
+            </div>
+
             {/* List of full combos */}
             <div className={styles.analyticsTable}>
               <table className={styles.partTable}>

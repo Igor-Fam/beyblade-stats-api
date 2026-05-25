@@ -948,3 +948,65 @@
   vertical-align: middle;
   color: #38bdf8;
 }
+
+.tabControlsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.minBattlesWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 0.35rem 0.8rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.minBattlesLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.minBattlesInput {
+  width: 50px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.4rem;
+  color: #f1f5f9;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.2rem 0.4rem;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.minBattlesInput:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+/* Chrome, Safari, Edge, Opera: Remove spin buttons */
+.minBattlesInput::-webkit-outer-spin-button,
+.minBattlesInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Firefox: Remove spin buttons */
+.minBattlesInput[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
