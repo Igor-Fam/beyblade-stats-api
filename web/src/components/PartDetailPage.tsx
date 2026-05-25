@@ -338,6 +338,102 @@ export default function PartDetailPage() {
               {renderFinishStats(part.winFinishes, t('win_finishes'), winFinishMode, setWinFinishMode)}
               {renderFinishStats(part.lossFinishes, t('loss_finishes'), lossFinishMode, setLossFinishMode)}
             </section>
+
+            <div className={styles.analyticalGrid} style={{ marginTop: '2rem' }}>
+              <section className={styles.analyticsSection}>
+                <h2 className={styles.sectionTitle}>
+                  <Target size={20} className={styles.sectionIcon} /> {t('best_synergies')}
+                </h2>
+                <p className={styles.sectionDesc}>{t('best_synergies_desc')}</p>
+                <div className={styles.analyticsTable}>
+                  <table className={styles.partTable}>
+                    <thead>
+                      <tr>
+                        <th className={styles.tableHeaderPart}>{t('col_part')}</th>
+                        <th className={styles.tableHeaderMetric}>{t('col_efficiency_with', { part: t(part.name as any) })}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {part.bestPartners.length > 0 ? part.bestPartners.map(p => (
+                        <tr key={p.id} className={styles.tableRow}>
+                          <td>
+                            <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
+                              <span className={styles.partItemName}>{t(p.name as any)}</span>
+                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                            </Link>
+                          </td>
+                          <td className={styles.tableMetricCell}>
+                            <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
+                              {p.scoringRate}%
+                            </span>
+                            <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {part.bestPartners.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                    <button
+                      className={styles.seeMoreBtn}
+                      onClick={() => { setActiveTab('synergies'); setSynergySubTab('all'); }}
+                    >
+                      {t('see_more')} &rarr;
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              <section className={styles.analyticsSection}>
+                <h2 className={styles.sectionTitle}>
+                  <Sword size={20} className={styles.sectionIcon} /> {t('best_counters')}
+                </h2>
+                <p className={styles.sectionDesc}>{t('best_counters_desc')}</p>
+                <div className={styles.analyticsTable}>
+                  <table className={styles.partTable}>
+                    <thead>
+                      <tr>
+                        <th className={styles.tableHeaderPart}>{t('col_part')}</th>
+                        <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {part.bestCounters.length > 0 ? part.bestCounters.map(p => (
+                        <tr key={p.id} className={styles.tableRow}>
+                          <td>
+                            <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
+                              <span className={styles.partItemName}>{t(p.name as any)}</span>
+                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                            </Link>
+                          </td>
+                          <td className={styles.tableMetricCell}>
+                            <span className={styles.metricValue} style={{ color: p.scoringRate > 55 ? '#4ade80' : p.scoringRate < 45 ? '#f87171' : '#fbbf24' }}>
+                              {p.scoringRate}%
+                            </span>
+                            <span className={styles.metricBattles}>{p.totalMatches} {t('col_battles').toLowerCase()}</span>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan={2}><div className={styles.emptyMsg}>{t('no_analytics_data')}</div></td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {part.bestCounters.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                    <button
+                      className={styles.seeMoreBtn}
+                      onClick={() => { setActiveTab('counters'); setCounterSubTab('all'); }}
+                    >
+                      {t('see_more')} &rarr;
+                    </button>
+                  </div>
+                )}
+              </section>
+            </div>
           </div>
         )}
 

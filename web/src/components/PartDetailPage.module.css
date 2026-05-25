@@ -679,3 +679,23 @@
     transform: translateY(0);
   }
 }
+
+.seeMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.seeMoreBtn:hover {
+  background: rgba(56, 189, 248, 0.08);
+  transform: translateX(3px);
+}
