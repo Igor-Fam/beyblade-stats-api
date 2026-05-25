@@ -237,7 +237,7 @@ export default function BattleLogger() {
       }, 300);
       setTimeout(() => {
         setHighlightedBtn(null);
-      }, 1800);
+      }, 5000);
     }
   };
 
