@@ -883,7 +883,27 @@
   color: #ef4444;
 }
 
+.helpIconBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.helpIconBtn:hover {
+  color: #38bdf8;
+}
+
 @media (max-width: 480px) {
+  .filterInput {
+    padding: 0.25rem 0.4rem !important;
+  }
   .filterRow {
     padding: 0.4rem !important;
     gap: 0.25rem !important;

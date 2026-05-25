@@ -450,7 +450,17 @@ export default function PartDetailPage() {
                     <thead>
                       <tr>
                         <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                        <th className={styles.tableHeaderMetric}>{t('col_efficiency_with', { part: t(part.name as any) })}</th>
+                        <th className={styles.tableHeaderMetric}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                            {t('col_efficiency_with', { part: t(part.name as any) })}
+                            <button
+                              className={styles.helpIconBtn}
+                              onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_efficiency_title'), desc: t('modal_help_efficiency_desc') }); }}
+                            >
+                              <HelpCircle size={14} />
+                            </button>
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -497,7 +507,17 @@ export default function PartDetailPage() {
                     <thead>
                       <tr>
                         <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                        <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
+                        <th className={styles.tableHeaderMetric}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                            {t('col_efficiency_against', { part: t(part.name as any) })}
+                            <button
+                              className={styles.helpIconBtn}
+                              onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_efficiency_title'), desc: t('modal_help_efficiency_desc') }); }}
+                            >
+                              <HelpCircle size={14} />
+                            </button>
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -568,7 +588,17 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                        {t('col_efficiency')}
+                        <button
+                          className={styles.helpIconBtn}
+                          onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_efficiency_title'), desc: t('modal_help_efficiency_desc') }); }}
+                        >
+                          <HelpCircle size={14} />
+                        </button>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -627,7 +657,17 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                        {t('col_efficiency_against', { part: t(part.name as any) })}
+                        <button
+                          className={styles.helpIconBtn}
+                          onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_efficiency_title'), desc: t('modal_help_efficiency_desc') }); }}
+                        >
+                          <HelpCircle size={14} />
+                        </button>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -663,7 +703,17 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_combo')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                        {t('col_efficiency')}
+                        <button
+                          className={styles.helpIconBtn}
+                          onClick={(e) => { e.stopPropagation(); setHelpModal({ title: t('modal_help_efficiency_title'), desc: t('modal_help_efficiency_desc') }); }}
+                        >
+                          <HelpCircle size={14} />
+                        </button>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
