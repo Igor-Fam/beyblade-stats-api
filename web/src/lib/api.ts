@@ -45,7 +45,7 @@ export interface PartDetails extends PartStats {
   allCounters: { id: number; name: string; type: string; scoringRate: number; totalMatches: number }[];
   combos: {
     lineName: string;
-    parts: { id: number; name: string; type: string }[];
+    parts: { id: number; name: string; type: string; abbreviation?: string }[];
     totalMatches: number;
     gained: number;
     conceded: number;

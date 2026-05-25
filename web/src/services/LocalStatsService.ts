@@ -567,6 +567,7 @@ export class LocalStatsService {
                     return {
                         id: pId,
                         name: pData?.name || 'Unknown',
+                        abbreviation: pData?.abbreviation || '',
                         type: pData?.partType?.name || 'Unknown'
                     };
                 });
