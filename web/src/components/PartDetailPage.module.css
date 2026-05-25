@@ -322,6 +322,23 @@
   .tableMetricCell {
     white-space: normal;
   }
+  .mainTabs {
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+  }
+  .mainTabBtn {
+    flex: 1;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.72rem;
+    border-radius: 0.5rem;
+  }
+  .mainTabBtn svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
 }
 
 
