@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers, ChevronLeft, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { fetchPartDetails, fetchPartsList, fetchLines, fetchStadiums, type PartDetails, type Line, type Stadium, type BattleFilterCondition } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
@@ -116,12 +116,18 @@ export default function PartDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'synergies' | 'counters' | 'combos'>('overview');
   const [synergySubTab, setSynergySubTab] = useState<string>('all');
   const [counterSubTab, setCounterSubTab] = useState<string>('all');
+  const [synergySortOrder, setSynergySortOrder] = useState<'desc' | 'asc'>('desc');
+  const [counterSortOrder, setCounterSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [comboSortOrder, setComboSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Reset tabs when navigating to a different part
   useEffect(() => {
     setActiveTab('overview');
     setSynergySubTab('all');
     setCounterSubTab('all');
+    setSynergySortOrder('desc');
+    setCounterSortOrder('desc');
+    setComboSortOrder('desc');
     window.scrollTo(0, 0);
   }, [id]);
 
@@ -302,6 +308,35 @@ export default function PartDetailPage() {
   const filteredCounters = counterSubTab === 'all'
     ? part.allCounters
     : part.allCounters.filter(p => p.type === counterSubTab);
+
+  // Sort lists by efficiency
+  const sortedPartners = useMemo(() => {
+    const list = [...filteredPartners];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return synergySortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [filteredPartners, synergySortOrder]);
+
+  const sortedCounters = useMemo(() => {
+    const list = [...filteredCounters];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return counterSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [filteredCounters, counterSortOrder]);
+
+  const sortedCombos = useMemo(() => {
+    if (!part.combos) return [];
+    const list = [...part.combos];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return comboSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [part.combos, comboSortOrder]);
 
   return (
     <div className={`view ${layout.page}`}>
@@ -568,11 +603,24 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <button
+                        className={styles.sortHeaderBtn}
+                        onClick={() => setSynergySortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                        title={t('toggle_sort_order')}
+                      >
+                        {t('col_efficiency')}
+                        {synergySortOrder === 'desc' ? (
+                          <ArrowDown size={14} className={styles.sortIcon} />
+                        ) : (
+                          <ArrowUp size={14} className={styles.sortIcon} />
+                        )}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPartners.length > 0 ? filteredPartners.map(p => (
+                  {sortedPartners.length > 0 ? sortedPartners.map(p => (
                     <tr key={p.id} className={styles.tableRow}>
                       <td>
                         <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
@@ -627,11 +675,24 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_part')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency_against', { part: t(part.name as any) })}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <button
+                        className={styles.sortHeaderBtn}
+                        onClick={() => setCounterSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                        title={t('toggle_sort_order')}
+                      >
+                        {t('col_efficiency_against', { part: t(part.name as any) })}
+                        {counterSortOrder === 'desc' ? (
+                          <ArrowDown size={14} className={styles.sortIcon} />
+                        ) : (
+                          <ArrowUp size={14} className={styles.sortIcon} />
+                        )}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCounters.length > 0 ? filteredCounters.map(p => (
+                  {sortedCounters.length > 0 ? sortedCounters.map(p => (
                     <tr key={p.id} className={styles.tableRow}>
                       <td>
                         <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
@@ -663,11 +724,24 @@ export default function PartDetailPage() {
                 <thead>
                   <tr>
                     <th className={styles.tableHeaderPart}>{t('col_combo')}</th>
-                    <th className={styles.tableHeaderMetric}>{t('col_efficiency')}</th>
+                    <th className={styles.tableHeaderMetric}>
+                      <button
+                        className={styles.sortHeaderBtn}
+                        onClick={() => setComboSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                        title={t('toggle_sort_order')}
+                      >
+                        {t('col_efficiency')}
+                        {comboSortOrder === 'desc' ? (
+                          <ArrowDown size={14} className={styles.sortIcon} />
+                        ) : (
+                          <ArrowUp size={14} className={styles.sortIcon} />
+                        )}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {part.combos && part.combos.length > 0 ? part.combos.map((combo, idx) => (
+                  {sortedCombos && sortedCombos.length > 0 ? sortedCombos.map((combo, idx) => (
                     <tr key={idx} className={styles.tableRow}>
                       <td>
                         <div className={styles.comboPartsContainer}>
