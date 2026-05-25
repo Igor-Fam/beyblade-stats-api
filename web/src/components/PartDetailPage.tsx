@@ -237,6 +237,43 @@ export default function PartDetailPage() {
     return sortPartTypes(Array.from(types));
   }, [lines]);
 
+  // Sort lists by efficiency
+  const sortedPartners = useMemo(() => {
+    if (!part) return [];
+    const filtered = synergySubTab === 'all'
+      ? part.allPartners
+      : part.allPartners.filter(p => p.type === synergySubTab);
+    const list = [...filtered];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return synergySortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [part, synergySubTab, synergySortOrder]);
+
+  const sortedCounters = useMemo(() => {
+    if (!part) return [];
+    const filtered = counterSubTab === 'all'
+      ? part.allCounters
+      : part.allCounters.filter(p => p.type === counterSubTab);
+    const list = [...filtered];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return counterSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [part, counterSubTab, counterSortOrder]);
+
+  const sortedCombos = useMemo(() => {
+    if (!part || !part.combos) return [];
+    const list = [...part.combos];
+    return list.sort((a, b) => {
+      const rateA = a.scoringRate;
+      const rateB = b.scoringRate;
+      return comboSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
+    });
+  }, [part, comboSortOrder]);
+
   if (loading) return <div className="view"><div className={layout.loading}>{t('stats_loading')}</div></div>;
   if (error || !part) return <div className="view"><div className={layout.error}>{error || 'Part not found'}</div></div>;
 
@@ -299,44 +336,6 @@ export default function PartDetailPage() {
       </div>
     );
   };
-
-  // Filter lists based on nested sub-tabs
-  const filteredPartners = synergySubTab === 'all'
-    ? part.allPartners
-    : part.allPartners.filter(p => p.type === synergySubTab);
-
-  const filteredCounters = counterSubTab === 'all'
-    ? part.allCounters
-    : part.allCounters.filter(p => p.type === counterSubTab);
-
-  // Sort lists by efficiency
-  const sortedPartners = useMemo(() => {
-    const list = [...filteredPartners];
-    return list.sort((a, b) => {
-      const rateA = a.scoringRate;
-      const rateB = b.scoringRate;
-      return synergySortOrder === 'desc' ? rateB - rateA : rateA - rateB;
-    });
-  }, [filteredPartners, synergySortOrder]);
-
-  const sortedCounters = useMemo(() => {
-    const list = [...filteredCounters];
-    return list.sort((a, b) => {
-      const rateA = a.scoringRate;
-      const rateB = b.scoringRate;
-      return counterSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
-    });
-  }, [filteredCounters, counterSortOrder]);
-
-  const sortedCombos = useMemo(() => {
-    if (!part.combos) return [];
-    const list = [...part.combos];
-    return list.sort((a, b) => {
-      const rateA = a.scoringRate;
-      const rateB = b.scoringRate;
-      return comboSortOrder === 'desc' ? rateB - rateA : rateA - rateB;
-    });
-  }, [part.combos, comboSortOrder]);
 
   return (
     <div className={`view ${layout.page}`}>
