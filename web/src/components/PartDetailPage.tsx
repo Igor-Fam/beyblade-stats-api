@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchPartDetails, fetchPartsList, fetchLines, type PartDetails, type Line } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
@@ -35,6 +35,58 @@ const sortPartTypes = (types: string[]) => {
     return idxA - idxB;
   });
 };
+
+function ScrollTabs({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (el) {
+      const canScrollLeft = el.scrollLeft > 5;
+      const canScrollRight = el.scrollLeft < (el.scrollWidth - el.clientWidth - 5);
+      setShowLeft(canScrollLeft);
+      setShowRight(canScrollRight);
+    }
+  };
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el) {
+      checkScroll();
+      el.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+      
+      const observer = new ResizeObserver(() => checkScroll());
+      observer.observe(el);
+      
+      return () => {
+        el.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+        observer.disconnect();
+      };
+    }
+  }, [children]);
+
+  return (
+    <div className={styles.scrollWrapper}>
+      {showLeft && (
+        <div className={styles.scrollArrowLeft}>
+          <ChevronLeft size={14} />
+        </div>
+      )}
+      <div ref={containerRef} className={`${styles.scrollContainer} ${className}`}>
+        {children}
+      </div>
+      {showRight && (
+        <div className={styles.scrollArrowRight}>
+          <ChevronRight size={14} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -251,7 +303,7 @@ export default function PartDetailPage() {
       </header>
 
       {/* Main Tabs Navigation Bar */}
-      <div className={styles.mainTabs}>
+      <ScrollTabs className={styles.mainTabs}>
         <button
           className={`${styles.mainTabBtn} ${activeTab === 'overview' ? styles.mainTabActive : ''}`}
           onClick={() => setActiveTab('overview')}
@@ -276,7 +328,7 @@ export default function PartDetailPage() {
         >
           <Layers size={16} /> {t('tab_combos')}
         </button>
-      </div>
+      </ScrollTabs>
 
       {/* Tab Panels */}
       <div className={styles.tabContent}>
@@ -444,7 +496,7 @@ export default function PartDetailPage() {
             </p>
 
             {/* Sub-tabs pills */}
-            <div className={styles.subTabs}>
+            <ScrollTabs className={styles.subTabs}>
               <button
                 className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
                 onClick={() => setSynergySubTab('all')}
@@ -461,7 +513,7 @@ export default function PartDetailPage() {
                   {type}
                 </button>
               ))}
-            </div>
+            </ScrollTabs>
 
             {/* List */}
             <div className={styles.analyticsTable}>
@@ -504,7 +556,7 @@ export default function PartDetailPage() {
             </p>
 
             {/* Sub-tabs pills */}
-            <div className={styles.subTabs}>
+            <ScrollTabs className={styles.subTabs}>
               <button
                 className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
                 onClick={() => setCounterSubTab('all')}
@@ -521,7 +573,7 @@ export default function PartDetailPage() {
                   {type}
                 </button>
               ))}
-            </div>
+            </ScrollTabs>
 
             {/* List */}
             <div className={styles.analyticsTable}>
