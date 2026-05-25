@@ -100,8 +100,14 @@ export async function fetchStadiumsRemote(): Promise<Stadium[]> {
 }
 
 export async function fetchDatabaseHealth(): Promise<{ status: string, env: 'production' | 'sandbox' }> {
-  // In a local-first model, health is essentially always OK if the browser works
-  return { status: 'ok', env: 'production' };
+  try {
+    const res = await fetch(`${API_URL}/health`);
+    if (!res.ok) throw new Error('Health check failed');
+    const data = await res.json();
+    return { status: data.status || 'ok', env: data.env || 'production' };
+  } catch (err) {
+    return { status: 'offline', env: 'production' };
+  }
 }
 
 // ==========================================

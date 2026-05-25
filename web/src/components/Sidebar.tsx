@@ -35,7 +35,7 @@ export default function Sidebar() {
           aria-label="Open Menu"
         >
           <Menu size={24} />
-          {dbEnv && (
+          {dbEnv === 'sandbox' && (
             <div className={`${styles['env-dot-floating']} ${styles[dbEnv]}`} />
           )}
         </button>
@@ -49,7 +49,7 @@ export default function Sidebar() {
              </div>
              <div className={styles['logo-text']}>
                 BX Stats
-                {isOpen && dbEnv && (
+                {isOpen && dbEnv === 'sandbox' && (
                   <span className={`${styles['db-env-badge-small']} ${styles[dbEnv]}`}>
                     {dbEnv.toUpperCase()}
                   </span>
