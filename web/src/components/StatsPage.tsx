@@ -39,17 +39,9 @@ const FILTER_FIELDS = [
 const FILTER_BATTLE_FIELDS = [
   { id: 'stadium', label: 'filter_stadium', select_placeholder: 'select_placeholder' },
   { id: 'date', label: 'filter_date', select_placeholder: 'select_placeholder' },
-  { id: 'finishType', label: 'filter_finish_type', select_placeholder: 'select_placeholder' }
+  { id: 'finishType', label: 'filter_finish_type', select_placeholder: 'select_placeholder' },
+  { id: 'parts', label: 'filter_parts', select_placeholder: 'select_placeholder' }
 ];
-
-const TYPE_COLORS: Record<string, string> = {
-  Blade: '#38bdf8',
-  Ratchet: '#fb923c',
-  Bit: '#4ade80',
-  'Lock Chip': '#a78bfa',
-  'Metal Blade': '#facc15',
-  'Assist Blade': '#f472b6',
-};
 
 export default function StatsPage() {
   const { t, lang } = useTranslation();
@@ -136,6 +128,10 @@ export default function StatsPage() {
   const availableTypes = useMemo(() => {
     const types = new Set(parts.map(p => p.type));
     return Array.from(types).sort();
+  }, [parts]);
+
+  const allPartsList = useMemo(() => {
+    return [...parts].sort((a, b) => a.name.localeCompare(b.name));
   }, [parts]);
 
   const filteredAndSorted = useMemo(() => {
@@ -374,7 +370,7 @@ export default function StatsPage() {
                           >
                             <option value="">{t('select_placeholder')}</option>
                             {availableTypes.map(type => (
-                              <option key={type} value={type}>{type}</option>
+                              <option key={type} value={type}>{type.replace(/_/g, ' ').toUpperCase()}</option>
                             ))}
                           </select>
                         ) : (
@@ -471,6 +467,47 @@ export default function StatsPage() {
                           <option value="BURST">Burst Finish</option>
                           <option value="XTREME">Xtreme Finish</option>
                         </select>
+                      ) : f.field === 'parts' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1.5, gap: '0.25rem', minWidth: '120px' }}>
+                          <select
+                            value=""
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (!val) return;
+                              const currentSelectedIds = String(f.value || '').split(',').filter(Boolean);
+                              if (!currentSelectedIds.includes(val)) {
+                                updateBattleFilter(i, { value: [...currentSelectedIds, val].join(',') });
+                              }
+                            }}
+                            className={`${styles.filterValueSelect} ${styles.placeholderSelect}`}
+                            style={{ width: '100%' }}
+                          >
+                            <option value="">{t('select_placeholder')}</option>
+                            {allPartsList.map(p => (
+                              <option key={p.id} value={p.id}>{t(p.name as any)}</option>
+                            ))}
+                          </select>
+                          <div className={styles.selectedPartsContainer}>
+                            {String(f.value || '').split(',').filter(Boolean).map(idStr => {
+                              const partObj = parts.find(p => p.id === Number(idStr));
+                              return (
+                                <span key={idStr} className={styles.partFilterPill}>
+                                  {partObj ? t(partObj.name as any) : idStr}
+                                  <button
+                                    type="button"
+                                    className={styles.removePillBtn}
+                                    onClick={() => {
+                                      const nextIds = String(f.value || '').split(',').filter(id => id !== idStr && id !== '');
+                                      updateBattleFilter(i, { value: nextIds.join(',') });
+                                    }}
+                                  >
+                                    &times;
+                                  </button>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
                       ) : (
                         <input
                           type={f.operator === 'eq' ? 'date' : 'datetime-local'}
@@ -626,7 +663,6 @@ export default function StatsPage() {
                 {filteredAndSorted.map((part, i) => {
                   const noData = part.totalMatches === 0;
                   const rankValue = part.bp;
-                  const typeColor = TYPE_COLORS[part.type] ?? '#94a3b8';
                   return (
                     <tr
                       key={part.id}
@@ -642,7 +678,7 @@ export default function StatsPage() {
                           <div className={styles.partNameRow}>
                             <span className={styles.partName}>{t(part.name as any)}</span>
                           </div>
-                          <span className={styles.typeBadge} style={{ color: typeColor }}>{part.type}</span>
+                          <span className={styles.typeBadge}>{part.type.replace(/_/g, ' ').toUpperCase()}</span>
                         </div>
                       </td>
                       <td className={styles.tdTag}>
