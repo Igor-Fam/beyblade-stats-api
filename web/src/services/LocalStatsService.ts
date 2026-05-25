@@ -299,7 +299,7 @@ export class LocalStatsService {
                                 stats.partnerStats[partnerEffId] = {
                                     name: isVP ? (partnerEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : (pData?.name || 'Unknown'),
                                     type: isVP ? 'LOCK_CHIP' : (pData?.partType?.name || 'Unknown'),
-                                    isInfluential: isVP ? false : (true), // Simplification: local parts can be influential
+                                    isInfluential: isVP ? false : (pData?.partType?.isInfluential ?? true),
                                     gained: 0,
                                     conceded: 0
                                 };
@@ -490,7 +490,8 @@ export class LocalStatsService {
                             partnerStats[pEffId] = {
                                 name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : (pData?.name || 'Unknown'),
                                 type: pEffId < 0 ? 'LOCK_CHIP' : (pData?.partType?.name || 'Unknown'),
-                                gained: 0, conceded: 0, matches: 0, totalPoE: 0, isInfluential: true
+                                gained: 0, conceded: 0, matches: 0, totalPoE: 0,
+                                isInfluential: pEffId < 0 ? false : (pData?.partType?.isInfluential ?? true)
                             };
                         }
                         if (isWin) partnerStats[pEffId].gained += scaledPoints;
