@@ -117,7 +117,7 @@ export default function PartDetailPage() {
   const [synergySubTab, setSynergySubTab] = useState<string>('all');
   const [counterSubTab, setCounterSubTab] = useState<string>('all');
   const [synergySortOrder, setSynergySortOrder] = useState<'desc' | 'asc'>('desc');
-  const [counterSortOrder, setCounterSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [counterSortOrder, setCounterSortOrder] = useState<'desc' | 'asc'>('asc');
   const [comboSortOrder, setComboSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Reset tabs when navigating to a different part
@@ -126,7 +126,7 @@ export default function PartDetailPage() {
     setSynergySubTab('all');
     setCounterSubTab('all');
     setSynergySortOrder('desc');
-    setCounterSortOrder('desc');
+    setCounterSortOrder('asc');
     setComboSortOrder('desc');
     window.scrollTo(0, 0);
   }, [id]);
