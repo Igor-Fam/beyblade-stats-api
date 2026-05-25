@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchPartDetails, fetchPartsList, fetchLines, type PartDetails, type Line } from '../lib/api';
+import { ArrowLeft, Users, Activity, Target, Sword, HelpCircle, Filter, AlertTriangle, Eye, Layers, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { fetchPartDetails, fetchPartsList, fetchLines, fetchStadiums, type PartDetails, type Line, type Stadium, type BattleFilterCondition } from '../lib/api';
 import { useTranslation } from '../lib/i18n';
 import { StatCard, StatsGrid } from './ui/StatCard';
 import { TYPE_COLORS } from './ui/PartLinkCard';
@@ -23,7 +23,16 @@ const FINISH_WEIGHTS: Record<string, number> = {
   XTREME: 3,
 };
 
+const FILTER_BATTLE_FIELDS = [
+  { id: 'stadium', label: 'filter_stadium', select_placeholder: 'select_placeholder' },
+  { id: 'date', label: 'filter_date', select_placeholder: 'select_placeholder' },
+  { id: 'finishType', label: 'filter_finish_type', select_placeholder: 'select_placeholder' }
+];
+
 const PART_TYPE_ORDER = ['BLADE', 'RATCHET', 'BIT', 'LOCK_CHIP', 'MAIN_BLADE', 'ASSIST_BLADE', 'METAL_BLADE', 'OVER_BLADE'];
+
+const formatTypeUpper = (type: string) => type.replace(/_/g, ' ').toUpperCase();
+const formatTypeTitleCase = (type: string) => type.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 
 const sortPartTypes = (types: string[]) => {
   return [...types].sort((a, b) => {
@@ -36,7 +45,7 @@ const sortPartTypes = (types: string[]) => {
   });
 };
 
-function ScrollTabs({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function ScrollTabs({ children, className = '', style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
@@ -70,10 +79,10 @@ function ScrollTabs({ children, className = '' }: { children: React.ReactNode; c
   }, [children]);
 
   return (
-    <div className={styles.scrollWrapper}>
+    <div className={styles.scrollWrapper} style={style}>
       {showLeft && (
         <div className={styles.scrollArrowLeft}>
-          <ChevronLeft size={14} />
+          <ChevronLeft size={20} />
         </div>
       )}
       <div ref={containerRef} className={`${styles.scrollContainer} ${className}`}>
@@ -81,7 +90,7 @@ function ScrollTabs({ children, className = '' }: { children: React.ReactNode; c
       </div>
       {showRight && (
         <div className={styles.scrollArrowRight}>
-          <ChevronRight size={14} />
+          <ChevronRight size={20} />
         </div>
       )}
     </div>
@@ -100,12 +109,56 @@ export default function PartDetailPage() {
   const [helpModal, setHelpModal] = useState<{ title: string, desc: string, dependencies?: any[] } | null>(null);
   const [winFinishMode, setWinFinishMode] = useState<'matches' | 'points'>('matches');
   const [lossFinishMode, setLossFinishMode] = useState<'matches' | 'points'>('matches');
-  const [hasBattleFilters, setHasBattleFilters] = useState(false);
+  const [stadiums, setStadiums] = useState<Stadium[]>([]);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   // Tabs states
   const [activeTab, setActiveTab] = useState<'overview' | 'synergies' | 'counters' | 'combos'>('overview');
   const [synergySubTab, setSynergySubTab] = useState<string>('all');
   const [counterSubTab, setCounterSubTab] = useState<string>('all');
+
+  // Reset tabs when navigating to a different part
+  useEffect(() => {
+    setActiveTab('overview');
+    setSynergySubTab('all');
+    setCounterSubTab('all');
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  const [battleFilters, setBattleFilters] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('battle_filters');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchStadiums().then(setStadiums).catch(console.error);
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const addBattleFilter = () => {
+    setBattleFilters([...battleFilters, { field: 'stadium', operator: 'eq', value: '' }]);
+  };
+
+  const removeBattleFilter = (index: number) => {
+    const updated = battleFilters.filter((_, i) => i !== index);
+    setBattleFilters(updated);
+  };
+
+  const updateBattleFilter = (index: number, updates: Partial<BattleFilterCondition>) => {
+    const updated = battleFilters.map((f, i) => i === index ? { ...f, ...updates } : f);
+    setBattleFilters(updated);
+  };
+
+  const clearBattleFilters = () => {
+    setBattleFilters([]);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -122,14 +175,7 @@ export default function PartDetailPage() {
     if (!id) return;
     setLoading(true);
 
-    let battleFilters: any[] = [];
-    try {
-      const saved = localStorage.getItem('battle_filters');
-      if (saved) {
-        battleFilters = JSON.parse(saved);
-        setHasBattleFilters(battleFilters.length > 0);
-      }
-    } catch (e) { console.error(e); }
+    localStorage.setItem('battle_filters', JSON.stringify(battleFilters));
 
     Promise.all([
       fetchPartDetails(Number(id), battleFilters),
@@ -154,7 +200,7 @@ export default function PartDetailPage() {
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, battleFilters]);
 
 
   const compatibleTypes = useMemo(() => {
@@ -260,13 +306,21 @@ export default function PartDetailPage() {
   return (
     <div className={`view ${layout.page}`}>
       <header className={layout.header}>
-        <Link to="/stats" className={layout.backLink}>
-          <ArrowLeft size={20} /> {t('back_to_stats')}
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Link to="/stats" className={layout.backLink}>
+            <ArrowLeft size={20} /> {t('back_to_stats')}
+          </Link>
+          {battleFilters.length > 0 && (
+            <button className={styles.filterNotice} onClick={() => setIsFilterModalOpen(true)} style={{ marginTop: 0, cursor: 'pointer' }}>
+              <Filter size={14} />
+              <span>{t('filter_active_notice')}</span>
+            </button>
+          )}
+        </div>
         <div className={styles.titleInfo}>
           <h1 className={layout.title}>{t(part.name as any)}</h1>
           <span className={styles.typeBadge} style={{ backgroundColor: `${typeColor}22`, color: typeColor, borderColor: `${typeColor}44` }}>
-            {part.type}
+            {formatTypeUpper(part.type)}
           </span>
           {part.isDependent && (
             <button
@@ -294,16 +348,10 @@ export default function PartDetailPage() {
             </button>
           )}
         </div>
-        {hasBattleFilters && (
-          <div className={styles.filterNotice}>
-            <Filter size={14} />
-            <span>{t('filter_active_notice')}</span>
-          </div>
-        )}
       </header>
 
       {/* Main Tabs Navigation Bar */}
-      <ScrollTabs className={styles.mainTabs}>
+      <ScrollTabs className={styles.mainTabs} style={{ marginBottom: '1.5rem' }}>
         <button
           className={`${styles.mainTabBtn} ${activeTab === 'overview' ? styles.mainTabActive : ''}`}
           onClick={() => setActiveTab('overview')}
@@ -411,7 +459,7 @@ export default function PartDetailPage() {
                           <td>
                             <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
                               <span className={styles.partItemName}>{t(p.name as any)}</span>
-                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{formatTypeUpper(p.type)}</span>
                             </Link>
                           </td>
                           <td className={styles.tableMetricCell}>
@@ -458,7 +506,7 @@ export default function PartDetailPage() {
                           <td>
                             <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
                               <span className={styles.partItemName}>{t(p.name as any)}</span>
-                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                              <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{formatTypeUpper(p.type)}</span>
                             </Link>
                           </td>
                           <td className={styles.tableMetricCell}>
@@ -496,7 +544,7 @@ export default function PartDetailPage() {
             </p>
 
             {/* Sub-tabs pills */}
-            <ScrollTabs className={styles.subTabs}>
+            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
               <button
                 className={`${styles.subTabBtn} ${synergySubTab === 'all' ? styles.subTabActive : ''}`}
                 onClick={() => setSynergySubTab('all')}
@@ -509,8 +557,7 @@ export default function PartDetailPage() {
                   className={`${styles.subTabBtn} ${synergySubTab === type ? styles.subTabActive : ''}`}
                   onClick={() => setSynergySubTab(type)}
                 >
-                  <span className={styles.subTabColorDot} style={{ backgroundColor: TYPE_COLORS[type] }} />
-                  {type}
+                  {formatTypeTitleCase(type)}
                 </button>
               ))}
             </ScrollTabs>
@@ -530,7 +577,7 @@ export default function PartDetailPage() {
                       <td>
                         <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
                           <span className={styles.partItemName}>{t(p.name as any)}</span>
-                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{formatTypeUpper(p.type)}</span>
                         </Link>
                       </td>
                       <td className={styles.tableMetricCell}>
@@ -556,7 +603,7 @@ export default function PartDetailPage() {
             </p>
 
             {/* Sub-tabs pills */}
-            <ScrollTabs className={styles.subTabs}>
+            <ScrollTabs className={styles.subTabs} style={{ marginBottom: '1.25rem' }}>
               <button
                 className={`${styles.subTabBtn} ${counterSubTab === 'all' ? styles.subTabActive : ''}`}
                 onClick={() => setCounterSubTab('all')}
@@ -569,8 +616,7 @@ export default function PartDetailPage() {
                   className={`${styles.subTabBtn} ${counterSubTab === type ? styles.subTabActive : ''}`}
                   onClick={() => setCounterSubTab(type)}
                 >
-                  <span className={styles.subTabColorDot} style={{ backgroundColor: TYPE_COLORS[type] }} />
-                  {type}
+                  {formatTypeTitleCase(type)}
                 </button>
               ))}
             </ScrollTabs>
@@ -590,7 +636,7 @@ export default function PartDetailPage() {
                       <td>
                         <Link to={`/stats/parts/${p.id}`} className={styles.tablePartLink}>
                           <span className={styles.partItemName}>{t(p.name as any)}</span>
-                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{p.type}</span>
+                          <span className={styles.partItemType} style={{ color: TYPE_COLORS[p.type] }}>{formatTypeUpper(p.type)}</span>
                         </Link>
                       </td>
                       <td className={styles.tableMetricCell}>
@@ -625,7 +671,27 @@ export default function PartDetailPage() {
                     <tr key={idx} className={styles.tableRow}>
                       <td>
                         <div className={styles.comboPartsContainer}>
-                          <span className={styles.lineBadge}>{combo.lineName}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                            <span className={styles.lineBadge}>{combo.lineName}</span>
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#f8fafc', letterSpacing: '0.02em' }}>
+                              {(() => {
+                                const line = lines.find(l => l.name === combo.lineName);
+                                let label = '';
+                                if (line?.metadata?.nameTemplate) {
+                                  label = line.metadata.nameTemplate;
+                                  line.metadata.slots.forEach((s: string) => {
+                                    const p = combo.parts.find(cp => cp.type === s);
+                                    const val = p?.abbreviation || p?.name || '';
+                                    label = label.replace(`{${s}}`, val);
+                                  });
+                                  label = label.trim().replace(/\s+/g, ' ');
+                                } else {
+                                  label = combo.parts.map(p => p.abbreviation || p.name).join(' ');
+                                }
+                                return label.toUpperCase();
+                              })()}
+                            </span>
+                          </div>
                           <div className={styles.comboPartsList}>
                             {combo.parts.map(p => (
                               <Link key={p.id} to={`/stats/parts/${p.id}`} className={styles.comboPartPill}>
@@ -660,6 +726,99 @@ export default function PartDetailPage() {
           dependencies={helpModal.dependencies}
           onClose={() => setHelpModal(null)}
         />
+      )}
+
+      {isFilterModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsFilterModalOpen(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitleRow}>
+                <Filter className={styles.modalTitleIcon} size={20} />
+                <h2>{t('modal_filter_battles_title')}</h2>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setIsFilterModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.filterList}>
+                {battleFilters.map((f, i) => (
+                  <div key={i} className={styles.filterRow}>
+                    <select
+                      value={f.field}
+                      onChange={e => updateBattleFilter(i, { field: e.target.value as any, value: '', operator: 'eq' })}
+                      className={styles.filterSelect}
+                    >
+                      {FILTER_BATTLE_FIELDS.map(ff => (
+                        <option key={ff.id} value={ff.id}>{t(ff.label as any)}</option>
+                      ))}
+                    </select>
+
+                    {f.field === 'date' && (
+                      <select
+                        value={f.operator}
+                        onChange={e => updateBattleFilter(i, { operator: e.target.value as any, value: '' })}
+                        className={styles.filterOperator}
+                      >
+                        <option value="eq">{isMobileView ? '=' : t('filter_op_eq')}</option>
+                        <option value="gt">{isMobileView ? '>' : t('filter_op_gt')}</option>
+                        <option value="lt">{isMobileView ? '<' : t('filter_op_lt')}</option>
+                      </select>
+                    )}
+
+                    {f.field === 'stadium' ? (
+                      <select
+                        value={String(f.value)}
+                        onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                        className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
+                      >
+                        <option value="">{t('select_placeholder')}</option>
+                        {stadiums.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    ) : f.field === 'finishType' ? (
+                      <select
+                        value={String(f.value)}
+                        onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                        className={`${styles.filterValueSelect} ${!f.value ? styles.placeholderSelect : ''}`}
+                      >
+                        <option value="">{t('select_placeholder')}</option>
+                        <option value="SPIN">Spin Finish</option>
+                        <option value="OVER">Over Finish</option>
+                        <option value="BURST">Burst Finish</option>
+                        <option value="XTREME">Xtreme Finish</option>
+                      </select>
+                    ) : (
+                      <input
+                        type={f.operator === 'eq' ? 'date' : 'datetime-local'}
+                        value={String(f.value)}
+                        onChange={e => updateBattleFilter(i, { value: e.target.value })}
+                        className={`${styles.filterInput} ${!f.value ? styles.placeholderSelect : ''}`}
+                        style={{ flex: 1 }}
+                        placeholder={t('select_placeholder')}
+                      />
+                    )}
+
+                    <button className={styles.removeFilterBtn} onClick={() => removeBattleFilter(i)}>&times;</button>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button className={styles.addFilterBtn} onClick={addBattleFilter}>
+                  + {t('btn_add_filter')}
+                </button>
+                {battleFilters.length > 0 && (
+                  <button className={styles.clearAllBtn} onClick={clearBattleFilters}>
+                    {t('btn_clear_filters')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
