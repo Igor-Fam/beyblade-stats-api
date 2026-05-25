@@ -15,7 +15,7 @@ const VIRTUAL_NAME_LOCK_CHIP = 'part_lock_chip';
 const VIRTUAL_NAME_METAL_LOCK_CHIP = 'part_metal_lock_chip';
 
 export interface BattleFilterCondition {
-    field: 'stadium' | 'date' | 'finishType';
+    field: 'stadium' | 'date' | 'finishType' | 'parts';
     operator: 'eq' | 'gt' | 'lt';
     value: string | number;
 }
@@ -110,6 +110,13 @@ export class LocalStatsService {
                 } else if (cond.field === 'finishType') {
                     const hasFinish = battle.entries.some(e => e.finishType === String(cond.value));
                     if (!hasFinish) return false;
+                } else if (cond.field === 'parts') {
+                    const selectedPartIds = String(cond.value).split(',').map(Number).filter(id => !isNaN(id));
+                    if (selectedPartIds.length > 0) {
+                        const allBattlePartIds = battle.entries.flatMap(e => e.partIds);
+                        const hasAllParts = selectedPartIds.every(id => allBattlePartIds.includes(id));
+                        if (!hasAllParts) return false;
+                    }
                 } else if (cond.field === 'date') {
                     const bDate = new Date(battle.createdAt);
                     const cDate = new Date(String(cond.value));
