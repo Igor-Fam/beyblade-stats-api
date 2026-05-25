@@ -425,6 +425,8 @@ export class LocalStatsService {
         let totalPoints = 0;
         let totalGained = 0;
         let totalConceded = 0;
+        let totalScaledGained = 0;
+        let totalScaledConceded = 0;
 
         const winFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
         const lossFinishes: Record<string, number> = { SPIN: 0, OVER: 0, BURST: 0, XTREME: 0 };
@@ -474,11 +476,13 @@ export class LocalStatsService {
                 if (isWin) {
                     wins++;
                     totalGained += myEntry.points;
+                    totalScaledGained += scaledPoints;
                     winFinishes[myEntry.finishType] = (winFinishes[myEntry.finishType] || 0) + 1;
                     comboStats[comboKey].gained += scaledPoints;
                 } else {
                     losses++;
                     totalConceded += Math.abs(myEntry.points);
+                    totalScaledConceded += scaledPoints;
                     lossFinishes[myEntry.finishType] = (lossFinishes[myEntry.finishType] || 0) + 1;
                     comboStats[comboKey].conceded += scaledPoints;
                 }
@@ -497,12 +501,17 @@ export class LocalStatsService {
                             partnerStats[pEffId] = {
                                 name: pEffId < 0 ? (pEffId === VIRTUAL_ID_LOCK_CHIP ? VIRTUAL_NAME_LOCK_CHIP : VIRTUAL_NAME_METAL_LOCK_CHIP) : (pData?.name || 'Unknown'),
                                 type: pEffId < 0 ? 'LOCK_CHIP' : (pData?.partType?.name || 'Unknown'),
-                                gained: 0, conceded: 0, matches: 0, totalPoE: 0,
+                                gained: 0, conceded: 0, unscaledGained: 0, unscaledConceded: 0, matches: 0, totalPoE: 0,
                                 isInfluential: pEffId < 0 ? false : (pData?.partType?.isInfluential ?? true)
                             };
                         }
-                        if (isWin) partnerStats[pEffId].gained += scaledPoints;
-                        else partnerStats[pEffId].conceded += scaledPoints;
+                        if (isWin) {
+                            partnerStats[pEffId].gained += scaledPoints;
+                            partnerStats[pEffId].unscaledGained += myEntry.points;
+                        } else {
+                            partnerStats[pEffId].conceded += scaledPoints;
+                            partnerStats[pEffId].unscaledConceded += Math.abs(myEntry.points);
+                        }
                         partnerStats[pEffId].matches++;
                         partnerStats[pEffId].totalPoE += scaledPoe;
                     }
@@ -602,17 +611,20 @@ export class LocalStatsService {
         const pointsSum = totalGained + totalConceded;
         const scoringRate = pointsSum > 0 ? Number(((totalGained * 100) / pointsSum).toFixed(2)) : DEFAULT_SCORING_RATE;
 
+        const totalScaledSum = totalScaledGained + totalScaledConceded;
+        const scaledScoringRate = totalScaledSum > 0 ? (totalScaledGained * 100) / totalScaledSum : DEFAULT_SCORING_RATE;
+
         let isDependent = false;
         if (totalGained >= DEPENDENCY_POINTS_THRESHOLD) {
             const dominantPartners = Object.values(partnerStats).filter(p => {
                 if (!p.isInfluential) return false;
-                const pointShare = totalGained > 0 ? p.gained / totalGained : 0;
-                if (pointShare < DEPENDENCY_POINT_SHARE || p.gained < DEPENDENCY_POINTS_THRESHOLD) return false;
-                const gainedWithout = totalGained - p.gained;
-                const concededWithout = totalConceded - p.conceded;
+                const pointShare = totalScaledGained > 0 ? p.gained / totalScaledGained : 0;
+                if (pointShare < DEPENDENCY_POINT_SHARE || p.unscaledGained < DEPENDENCY_POINTS_THRESHOLD) return false;
+                const gainedWithout = totalScaledGained - p.gained;
+                const concededWithout = totalScaledConceded - p.conceded;
                 const pointsSumWithout = gainedWithout + concededWithout;
                 const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
-                const drop = scoringRate - scoringRateWithout;
+                const drop = scaledScoringRate - scoringRateWithout;
                 return drop > DEPENDENCY_SCORING_RATE_DROP;
             });
             isDependent = dominantPartners.length > 0;
@@ -632,25 +644,25 @@ export class LocalStatsService {
             dependencies: totalGained === 0 ? [] : Object.entries(partnerStats)
                 .map(([id, data]) => {
                     const sumWith = data.gained + data.conceded;
-                    const gainedWithout = totalGained - data.gained;
-                    const sumWithout = gainedWithout + (totalConceded - data.conceded);
+                    const gainedWithout = totalScaledGained - data.gained;
+                    const sumWithout = gainedWithout + (totalScaledConceded - data.conceded);
                     return {
                         id: Number(id), name: data.name, type: data.type,
-                        pointsGained: data.gained, conceded: data.conceded,
-                        share: Number(((data.gained * 100) / totalGained).toFixed(2)),
+                        pointsGained: data.unscaledGained, conceded: data.unscaledConceded,
+                        share: Number(((data.gained * 100) / totalScaledGained).toFixed(2)),
                         isInfluential: data.isInfluential,
                         scoringRateWith: sumWith > 0 ? Number(((data.gained * 100) / sumWith).toFixed(2)) : 0,
                         scoringRateWithout: sumWithout > 0 ? Number(((gainedWithout * 100) / sumWithout).toFixed(2)) : 0
                     };
                 }).filter(d => {
                     if (!d.isInfluential) return false;
-                    const pointShare = totalGained > 0 ? d.pointsGained / totalGained : 0;
-                    if (pointShare < DEPENDENCY_POINT_SHARE || d.pointsGained < DEPENDENCY_POINTS_THRESHOLD) return false;
-                    const gainedWithout = totalGained - d.pointsGained;
-                    const concededWithout = totalConceded - d.conceded;
+                    const pointShare = totalScaledGained > 0 ? (partnerStats[d.id].gained / totalScaledGained) : 0;
+                    if (pointShare < DEPENDENCY_POINT_SHARE || partnerStats[d.id].unscaledGained < DEPENDENCY_POINTS_THRESHOLD) return false;
+                    const gainedWithout = totalScaledGained - (partnerStats[d.id].gained);
+                    const concededWithout = totalScaledConceded - (partnerStats[d.id].conceded);
                     const pointsSumWithout = gainedWithout + concededWithout;
                     const scoringRateWithout = pointsSumWithout > 0 ? (gainedWithout * 100) / pointsSumWithout : 0;
-                    const drop = scoringRate - scoringRateWithout;
+                    const drop = scaledScoringRate - scoringRateWithout;
                     return drop > DEPENDENCY_SCORING_RATE_DROP;
                 })
         };
