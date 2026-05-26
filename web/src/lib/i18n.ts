@@ -25,7 +25,8 @@ const translations = {
     hub_title: 'Beyblade X Hub',
     hub_logger_desc: 'Register matches, test setups, and tally performance.',
     hub_stats_title: 'Statistics',
-    hub_stats_desc: 'Coming Soon: Analyze matchups, metagame trends, and counters.',
+    hub_stats_desc: 'Analyze part efficiency, Colley strength ratings, and discover top synergies and counters.',
+    hub_history_desc: 'View your full match history, manage past battles, and inspect finish types.',
 
     // Status/Toasts
     status_select_stadium: 'Please select a stadium!',
@@ -177,7 +178,8 @@ const translations = {
     hub_title: 'Painel Central',
     hub_logger_desc: 'Registre partidas, teste setups e contabilize performance.',
     hub_stats_title: 'Estatísticas',
-    hub_stats_desc: 'Em Breve: Analise confrontos, tendências de metagame e counters.',
+    hub_stats_desc: 'Analise a eficiência de cada peça, ranqueamento de força por Colley e descubra as melhores sinergias e counters.',
+    hub_history_desc: 'Veja o histórico completo de batalhas, gerencie registros e analise tipos de finalizações.',
 
     // Status/Toasts
     status_select_stadium: 'Por favor, selecione uma arena!',

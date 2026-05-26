@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Swords, BarChart3 } from 'lucide-react';
+import { Swords, BarChart3, History } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import styles from './Hub.module.css';
 
@@ -21,6 +21,11 @@ export default function Hub() {
         <Link to="/stats" className={styles['menu-card']}>
           <h2><BarChart3 style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} /> {t('hub_stats_title')}</h2>
           <p>{t('hub_stats_desc')}</p>
+        </Link>
+
+        <Link to="/battles" className={styles['menu-card']}>
+          <h2><History style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} /> {t('battle_history_title')}</h2>
+          <p>{t('hub_history_desc')}</p>
         </Link>
       </div>
     </div>
