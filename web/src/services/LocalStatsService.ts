@@ -612,8 +612,12 @@ export class LocalStatsService {
 
                 const parts = c.partIds.map((pId: number) => {
                     const pData = partsMap.get(pId);
+                    const isLockChip = pData?.partType?.name === 'LOCK_CHIP';
+                    const effId = isLockChip
+                        ? (pData?.metadata?.isMetal ? VIRTUAL_ID_METAL_LOCK_CHIP : VIRTUAL_ID_LOCK_CHIP)
+                        : pId;
                     return {
-                        id: pId,
+                        id: effId,
                         name: pData?.name || 'Unknown',
                         abbreviation: pData?.abbreviation || '',
                         type: pData?.partType?.name || 'Unknown'
