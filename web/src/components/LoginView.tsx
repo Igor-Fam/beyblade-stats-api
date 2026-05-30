@@ -61,7 +61,7 @@ export default function LoginView({ isUnauthorized = false }: LoginViewProps) {
       <div className={styles.card}>
         <div className={styles.logoArea}>
           <h1 className={styles.logoTitle}>BX Stats</h1>
-          <span className={styles.logoSubtitle}>Alpha Tester Release</span>
+          <span className={styles.logoSubtitle}>Alpha</span>
         </div>
 
         <p className={styles.welcomeText}>
