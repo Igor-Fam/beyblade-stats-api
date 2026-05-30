@@ -10,6 +10,8 @@ import StatsPage from './components/StatsPage';
 import PartDetailPage from './components/PartDetailPage';
 import BattleHistoryPage from './components/BattleHistoryPage';
 import BattleDetailPage from './components/BattleDetailPage';
+import LoginView from './components/LoginView';
+import { ALLOWED_TESTER_EMAILS } from './config/testers';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,7 +34,41 @@ function CloudSyncEffect() {
 }
 
 function AppContent() {
+  const { isLoggedIn, user, isLoading } = useAuth();
   useSyncCatalog();
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0f172a' }}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid rgba(56, 189, 248, 0.1)',
+          borderTopColor: '#38bdf8',
+          borderRadius: '50%',
+          animation: 'spin 1s infinite linear'
+        }} />
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <LoginView />;
+  }
+
+  const isAllowed = user?.email 
+    ? ALLOWED_TESTER_EMAILS.map(e => e.toLowerCase()).includes(user.email.toLowerCase()) 
+    : false;
+
+  if (!isAllowed) {
+    return <LoginView isUnauthorized={true} />;
+  }
 
   return (
     <Router>
