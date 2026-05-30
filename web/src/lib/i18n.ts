@@ -27,6 +27,12 @@ const translations = {
     hub_stats_title: 'Statistics',
     hub_stats_desc: 'Analyze part efficiency, strength ratings, and discover top synergies and counters.',
     hub_history_desc: 'View your full match history, manage past battles, and inspect finish types.',
+    auth_login_title: 'Sign In with Google',
+    auth_login: 'Sign In',
+    auth_logout: 'Sign Out',
+    auth_sync_title: 'Sync battles with cloud',
+    auth_synced: '✓ Synced',
+    auth_sync_error: 'Error {status} syncing',
 
     // Status/Toasts
     status_select_stadium: 'Please select a stadium!',
@@ -180,6 +186,12 @@ const translations = {
     hub_stats_title: 'Estatísticas',
     hub_stats_desc: 'Analise a eficiência de cada peça, ranqueamento de força e descubra as melhores sinergias e counters.',
     hub_history_desc: 'Veja o histórico completo de batalhas, gerencie registros e analise tipos de finalizações.',
+    auth_login_title: 'Entrar com Google',
+    auth_login: 'Entrar',
+    auth_logout: 'Sair',
+    auth_sync_title: 'Sincronizar batalhas com a nuvem',
+    auth_synced: '✓ Sincronizado',
+    auth_sync_error: 'Erro {status} ao sincronizar',
 
     // Status/Toasts
     status_select_stadium: 'Por favor, selecione uma arena!',
