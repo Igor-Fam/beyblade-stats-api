@@ -161,7 +161,8 @@ export async function fetchPartDetails(id: number, filters?: BattleFilterConditi
 }
 
 export async function fetchBattleHistory(filters?: BattleFilterCondition[], page = 1, limit = 50): Promise<BattleHistoryResponse> {
-  const allBattles = await db.battles.reverse().toArray();
+  const allBattles = await db.battles.toArray();
+  allBattles.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   
   const tz = new Date().getTimezoneOffset();
   const filterFn = localStatsService.buildDexieBattleFilter(filters, tz);
