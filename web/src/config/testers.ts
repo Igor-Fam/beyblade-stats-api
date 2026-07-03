@@ -3,5 +3,6 @@ export const ALLOWED_TESTER_EMAILS = [
   'igor.mfam@gmail.com', // Developer email
   'ch.jnts@gmail.com',
   'marceloquesado@gmail.com',
-  'andrewsalles13@hotmail.com'
+  'andrewsalles13@hotmail.com',
+  'cunhamarcelo317@gmail.com'
 ];
