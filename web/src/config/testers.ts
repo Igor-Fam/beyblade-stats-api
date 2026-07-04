@@ -4,5 +4,6 @@ export const ALLOWED_TESTER_EMAILS = [
   'ch.jnts@gmail.com',
   'marceloquesado@gmail.com',
   'andrewsalles13@hotmail.com',
-  'cunhamarcelo317@gmail.com'
+  'cunhamarcelo317@gmail.com',
+  'filipedeadpool97@gmail.com'
 ];
